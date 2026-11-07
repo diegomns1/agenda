@@ -62,6 +62,21 @@ export type ServicoInsert = Pick<Servico, "profissional_id" | "nome" | "duracao_
 
 export type ServicoUpdate = Partial<Omit<Servico, "id" | "profissional_id" | "created_at" | "updated_at">>;
 
+export type Cliente = {
+  id: string;
+  profissional_id: string;
+  nome: string;
+  telefone: string | null; // só dígitos com DDI: 5511999999999
+  observacoes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ClienteInsert = Pick<Cliente, "profissional_id" | "nome"> &
+  Partial<Pick<Cliente, "id" | "telefone" | "observacoes">>;
+
+export type ClienteUpdate = Partial<Omit<Cliente, "id" | "profissional_id" | "created_at" | "updated_at">>;
+
 export type Database = {
   public: {
     Tables: {
@@ -75,6 +90,12 @@ export type Database = {
         Row: Servico;
         Insert: ServicoInsert;
         Update: ServicoUpdate;
+        Relationships: [];
+      };
+      clientes: {
+        Row: Cliente;
+        Insert: ClienteInsert;
+        Update: ClienteUpdate;
         Relationships: [];
       };
     };
