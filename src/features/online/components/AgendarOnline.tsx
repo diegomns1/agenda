@@ -200,7 +200,7 @@ export function AgendarOnline({ perfil }: Props) {
             <p className="font-bold">{servico.nome}</p>
             <p className="flex items-center gap-1.5 text-sm">
               <ClockIcon className="size-4 text-primary" />
-              <span className="capitalize">{formatarDataISO(dia, "EEEE, dd 'de' MMMM")}</span> às {hora} · {formatarDuracao(servico.duracao_min)}
+              <span className="inline-block first-letter:uppercase">{formatarDataISO(dia, "EEEE, dd 'de' MMMM")}</span> às {hora} · {formatarDuracao(servico.duracao_min)}
               {servico.valor > 0 ? ` · ${formatarMoeda(servico.valor)}` : ""}
             </p>
           </div>
@@ -280,7 +280,7 @@ function Confirmacao({ perfil, pedido, aoNovo }: { perfil: PerfilPublico; pedido
       </div>
       <div className="rounded-2xl border bg-card p-4 text-left">
         <p className="font-bold">{pedido.servico}</p>
-        <p className="text-sm capitalize">{formatarData(pedido.inicio, "EEEE, dd 'de' MMMM")}</p>
+        <p className="text-sm first-letter:uppercase">{formatarData(pedido.inicio, "EEEE, dd 'de' MMMM")}</p>
         <p className="text-sm">
           {horaDe(pedido.inicio)} às {horaDe(pedido.fim)}
         </p>

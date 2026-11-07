@@ -107,6 +107,15 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - `agendamentos.servico_id` é `on delete restrict` (serviço usado vira inativo); `cliente_id` é `set null`
   (histórico sobrevive via `cliente_nome`). Erro 23P01 = conflito de horário.
 - Abrir o formulário por URL: `/agenda?novo=atendimento&cliente=<id>&servico=<id>&data=AAAA-MM-DD`.
+- Agendamento pela cliente (etapa 3, migração 0010): página `app/p/[slug]/page.tsx` (sem login) usa só RPCs
+  `security definer` (`perfil_publico`, `horarios_ocupados`, `criar_agendamento_online`) via cliente anon
+  (`features/online/publico.ts`); toda validação de negócio fica na função SQL (expediente, grade, antecedência,
+  limite de 3 futuros por telefone, conflito via EXCLUDE). Status `pendente` = aguardando confirmação (reserva o horário).
+  Configuração no Perfil: `slug`, `agendamento_online`, `confirmacao_online`, `antecedencia_min_horas`.
+  Regra de plano duplicada em SQL em `plano_tem_agendamento_online()` — manter em sincronia com `src/lib/planos.ts`.
+- Formulário com Switch/Checkbox do Radix que continua na tela após salvar (ex.: Perfil): enviar por `onSubmit` +
+  `startTransition(() => acao(formData))` e usar o 3º retorno de `useActionState` no botão. Com `action={acao}` o
+  React 19 reseta o form depois da ação e o Radix devolve o Switch ao valor inicial da página (bug visto em 07/11).
 - Funções puras compartilhadas entre servidor e cliente ficam em `src/lib/*` (nunca exportar de um arquivo "use client":
   o servidor não consegue chamá-las e a página quebra com erro 500 — já aconteceu duas vezes).
 - Padrão de lista + diálogo (criar/editar) + menu de opções + confirmação de exclusão: ver `features/servicos/components/ListaServicos.tsx`.

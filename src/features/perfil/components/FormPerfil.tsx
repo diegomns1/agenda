@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import { toast } from "sonner";
 import { salvarPerfil } from "@/features/perfil/actions";
 import { Campo } from "@/components/formulario/Campo";
@@ -56,7 +56,7 @@ function slugDe(texto: string) {
 }
 
 export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm) {
-  const [estado, acao] = useActionState(salvarComToast, ESTADO_INICIAL);
+  const [estado, acao, salvando] = useActionState(salvarComToast, ESTADO_INICIAL);
   const [slug, setSlug] = useState(perfil.slug ?? slugDe(perfil.nome_negocio || perfil.nome));
   const [online, setOnline] = useState(perfil.agendamento_online);
   const [cores, setCores] = useState<Cores>({ primaria: perfil.cor_primaria, secundaria: perfil.cor_secundaria });
@@ -68,7 +68,17 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
   const v = estado.valores;
 
   return (
-    <form action={acao} className="grid gap-5" noValidate>
+    // Enviado por onSubmit (e não por `action=`) de propósito: com `action`, o React 19 reseta o formulário
+    // após salvar e os Switch do Radix voltam ao valor inicial da página ("Link ativo" e dias do expediente).
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const dados = new FormData(e.currentTarget);
+        startTransition(() => acao(dados));
+      }}
+      className="grid gap-5"
+      noValidate
+    >
       {estado.erro ? <Aviso>{estado.erro}</Aviso> : null}
 
       <Card>
@@ -266,7 +276,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
       </Card>
 
       <div className="sticky bottom-20 z-10 sm:bottom-4">
-        <BotaoEnviar textoCarregando="Salvando..." className="shadow-lg">
+        <BotaoEnviar carregando={salvando} textoCarregando="Salvando..." className="shadow-lg">
           Salvar perfil
         </BotaoEnviar>
       </div>

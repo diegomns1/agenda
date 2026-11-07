@@ -82,7 +82,7 @@ export const PALETAS = [
   { nome: "Rosa", primaria: "#C2185B", secundaria: "#FCE4EC" },
   { nome: "Pink", primaria: "#E91E63", secundaria: "#FFF0F5" },
   { nome: "Lilás", primaria: "#7B1FA2", secundaria: "#F3E5F5" },
-  { nome: "Vinho", primaria: "#880E4F", secundaria: "#FBE9EF" },
+  { nome: "Framboesa", primaria: "#880E4F", secundaria: "#FBE9EF" },
   { nome: "Coral", primaria: "#E64A19", secundaria: "#FFF3EE" },
   { nome: "Dourado", primaria: "#B8860B", secundaria: "#FFF8E1" },
   { nome: "Nude", primaria: "#A1887F", secundaria: "#F7F1EE" },
