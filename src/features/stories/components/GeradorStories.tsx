@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { TEMAS, TIPOS_STORY, type TipoStory } from "@/features/stories/temas";
+// A prévia não usa estado de carregamento: o spinner fica atrás da <img> e some quando ela pinta.
 
 type Props = { hoje: string; corPrimaria: string; corSecundaria: string };
 
@@ -16,7 +17,6 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria }: Props) {
   const [temaId, setTemaId] = useState("neutro");
   const [data, setData] = useState(hoje);
   const [versao, setVersao] = useState(0);
-  const [carregando, setCarregando] = useState(true);
   const [ocupado, setOcupado] = useState<"baixar" | "compartilhar" | null>(null);
 
   const url = useMemo(() => {
@@ -81,10 +81,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria }: Props) {
               <button
                 key={t.id}
                 type="button"
-                onClick={() => {
-                  setTipo(t.id);
-                  setCarregando(true);
-                }}
+                onClick={() => setTipo(t.id)}
                 className={cn(
                   "rounded-xl border p-3 text-left transition-colors",
                   tipo === t.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/60",
@@ -108,10 +105,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria }: Props) {
                 <button
                   key={t.id}
                   type="button"
-                  onClick={() => {
-                    setTemaId(t.id);
-                    setCarregando(true);
-                  }}
+                  onClick={() => setTemaId(t.id)}
                   className={cn(
                     "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors",
                     temaId === t.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/60",
@@ -133,10 +127,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria }: Props) {
               id="data-story"
               type="date"
               value={data}
-              onChange={(e) => {
-                setData(e.target.value);
-                setCarregando(true);
-              }}
+              onChange={(e) => setData(e.target.value)}
               className="h-11 w-48 text-base"
             />
           </section>
@@ -153,10 +144,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria }: Props) {
           </Button>
           <Button
             variant="ghost"
-            onClick={() => {
-              setVersao((v) => v + 1);
-              setCarregando(true);
-            }}
+            onClick={() => setVersao((v) => v + 1)}
             className="h-11"
             aria-label="Atualizar prévia"
           >
@@ -172,22 +160,17 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria }: Props) {
       {/* Prévia */}
       <div className="mx-auto w-full max-w-[300px]">
         <div className="relative aspect-[9/16] overflow-hidden rounded-2xl border bg-muted shadow-sm">
-          {carregando ? (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-              <Loader2Icon className="size-6 animate-spin" />
-            </div>
-          ) : null}
+          {/* O spinner fica atrás da imagem: aparece enquanto a nova prévia ainda não pintou */}
+          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground" aria-hidden="true">
+            <Loader2Icon className="size-6 animate-spin" />
+          </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             key={url}
             src={url}
             alt="Prévia do story"
-            className={cn("size-full object-cover transition-opacity", carregando ? "opacity-0" : "opacity-100")}
-            onLoad={() => setCarregando(false)}
-            onError={() => {
-              setCarregando(false);
-              toast.error("Não foi possível gerar a prévia.");
-            }}
+            className="relative size-full object-cover"
+            onError={() => toast.error("Não foi possível gerar a prévia.")}
           />
         </div>
         <p className="mt-2 text-center text-xs text-muted-foreground">Prévia em tamanho reduzido</p>

@@ -41,7 +41,7 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 4. ✅ Clientes (cadastro, WhatsApp com máscara, observações, busca; histórico e "agendar de novo" ligam no módulo 5)
 5. ✅ Agenda (dia/semana/mês; marcar, remarcar, concluir, faltou, cancelar, bloquear; EXCLUDE no banco; histórico da cliente)
 6. ✅ Lembretes (push 1 dia/1 h via pg_cron → /api/cron/lembretes; botão wa.me com modelo; lista de pendentes com check)
-7. ⬜ Gerador de stories 9:16
+7. ✅ Gerador de stories 9:16 (`/api/stories/[tipo]` com ImageResponse; templates em `features/stories/templates`)
 8. ✅ PWA instalável (manifest, ícones, SW com cache, /offline, aviso "Instale o app") + otimização (getClaims, loading.tsx)
 
 ## Como trabalhar
@@ -79,6 +79,10 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Domínios: oficial `painel.vaguinha.app` (o apex `vaguinha.app` será o site institucional, fora deste projeto);
   `agenda.digstudio.com.br` e `agenda-murex-five.vercel.app` continuam válidos. Redirect URLs no Supabase cobrem os três.
 - Sessão: `obterUsuario()` usa `getClaims()` (JWT local). `obterPerfil()` é a única ida ao banco para dados da conta.
+- Stories (satori): só `display:flex` em quem tem vários filhos, estilos inline, sem emoji (fonte padrão), logo SVG não
+  renderiza (cai na inicial). Temas em `features/stories/temas.ts`; dados em `dados.ts`; rota `app/api/stories/[tipo]/route.tsx`.
+- MVP (8 módulos) concluído em 07/11/2026. Próximos passos possíveis: cobrança (Asaas/Mercado Pago), agendamento
+  público pela cliente (`/p/[slug]`), e-mail de boas-vindas/aprovação, site institucional em vaguinha.app.
 - Agenda: `features/agenda/disponibilidade.ts` (horários livres, puro), `GradeHoraria.tsx` (eixo de horas +
   colunas; dia e semana), `VisaoMes.tsx`, `FormAgendamento.tsx` (atendimento/bloqueio; busca horários via
   Server Action `consultarHorarios`), `DetalheAgendamento.tsx` (status). Datas civis "AAAA-MM-DD" em SP:
