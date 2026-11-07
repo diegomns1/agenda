@@ -17,6 +17,9 @@ export { PLANOS, type Plano } from "@/lib/planos";
 export const MODELO_LEMBRETE_PADRAO =
   "Oi {nome}! Passando para lembrar do seu horário de {servico} {dia} às {hora}. Te espero! 💅";
 
+/** Site institucional (apex). O painel fica em painel.vaguinha.app (URL_APP). */
+export const URL_SITE = "https://vaguinha.app";
+
 /** URL pública do app: NEXT_PUBLIC_APP_URL, ou o domínio de produção da Vercel, ou localhost. */
 export const URL_APP =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??

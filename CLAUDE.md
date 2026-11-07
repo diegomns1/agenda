@@ -94,8 +94,11 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   importar como `import * as webpush`), `features/lembretes/*`. Cron: `app/api/cron/lembretes/route.ts`
   (Bearer CRON_SECRET, service_role; janela "≤" para 1 dia e 1 h; marca `lembrete_1d/1h_enviado_em`).
 - Ícones em `public/icons/` gerados por `node scripts/gerar-icones.mjs` (sharp). Trocar o desenho = editar o SVG no script.
-- Domínios: oficial `painel.vaguinha.app` (o apex `vaguinha.app` será o site institucional, fora deste projeto);
-  `agenda.digstudio.com.br` e `agenda-murex-five.vercel.app` continuam válidos. Redirect URLs no Supabase cobrem os três.
+- Domínios: painel em `painel.vaguinha.app`; site institucional no apex `vaguinha.app`, servido pelo MESMO projeto:
+  `src/proxy.ts` reescreve `/` do apex para `app/(site)/site/page.tsx`, deixa passar `/termos`, `/privacidade` e `/site/*`
+  e redireciona o resto (login, agenda...) para o painel; `www` → apex. `agenda.digstudio.com.br` e
+  `agenda-murex-five.vercel.app` redirecionam (308) para o painel. Textos do site ficam em listas no topo do page.tsx;
+  preços vêm de `src/lib/planos.ts`. Efeito de aparecer ao rolar: `components/site/Revelar.tsx` + `.revelar` no CSS.
 - Sessão: `obterUsuario()` usa `getClaims()` (JWT local). `obterPerfil()` é a única ida ao banco para dados da conta.
 - Stories (satori): só `display:flex` em quem tem vários filhos, estilos inline, sem emoji (fonte padrão), logo SVG não
   renderiza (cai na inicial). Temas em `features/stories/temas.ts`; dados em `dados.ts`; rota `app/api/stories/[tipo]/route.tsx`.

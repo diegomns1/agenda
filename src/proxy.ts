@@ -2,7 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { atualizarSessao } from "@/lib/supabase/middleware";
 
 /** Rotas que não exigem login. */
-const ROTAS_PUBLICAS = ["/login", "/cadastro", "/recuperar-senha", "/auth/callback", "/offline", "/p", "/termos", "/privacidade"];
+const ROTAS_PUBLICAS = ["/login", "/cadastro", "/recuperar-senha", "/auth/callback", "/offline", "/p", "/termos", "/privacidade", "/site"];
+
+/** Domínio do site institucional (apex). Serve a pasta app/(site)/site. */
+const HOST_SITE = "vaguinha.app";
+/** Caminhos que o site pode servir diretamente (o resto vai para o painel). */
+const CAMINHOS_DO_SITE = ["/site", "/termos", "/privacidade", "/offline", "/manifest.webmanifest"];
 
 function ehPublica(pathname: string) {
   return ROTAS_PUBLICAS.some((r) => pathname === r || pathname.startsWith(`${r}/`));
@@ -20,6 +25,37 @@ export async function proxy(request: NextRequest) {
     url.host = HOST_OFICIAL;
     url.port = "";
     return NextResponse.redirect(url, 308);
+  }
+
+  // ---- site institucional (vaguinha.app) ----
+  if (host === `www.${HOST_SITE}`) {
+    const url = request.nextUrl.clone();
+    url.protocol = "https:";
+    url.host = HOST_SITE;
+    url.port = "";
+    return NextResponse.redirect(url, 308);
+  }
+  if (host === HOST_SITE) {
+    const { pathname } = request.nextUrl;
+    if (pathname === "/") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/site";
+      return NextResponse.rewrite(url);
+    }
+    if (CAMINHOS_DO_SITE.some((c) => pathname === c || pathname.startsWith(`${c}/`))) {
+      return NextResponse.next();
+    }
+    // /login, /cadastro, /agenda... no apex → manda para o painel
+    const url = request.nextUrl.clone();
+    url.protocol = "https:";
+    url.host = HOST_OFICIAL;
+    url.port = "";
+    return NextResponse.redirect(url, 308);
+  }
+  // /site aberto no painel → vai para o domínio do site (em localhost continua servindo, para testar)
+  if (host === HOST_OFICIAL && request.nextUrl.pathname.startsWith("/site")) {
+    const destino = request.nextUrl.pathname.replace(/^\/site/, "") || "/";
+    return NextResponse.redirect(`https://${HOST_SITE}${destino}${request.nextUrl.search}`, 308);
   }
 
   const { response, claims } = await atualizarSessao(request);
