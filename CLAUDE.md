@@ -41,7 +41,7 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 5. ✅ Agenda (dia/semana/mês; marcar, remarcar, concluir, faltou, cancelar, bloquear; EXCLUDE no banco; histórico da cliente)
 6. ✅ Lembretes (push 1 dia/1 h via pg_cron → /api/cron/lembretes; botão wa.me com modelo; lista de pendentes com check)
 7. ⬜ Gerador de stories 9:16
-8. ⬜ PWA instalável com aviso "Instale o app para receber lembretes"
+8. ✅ PWA instalável (manifest, ícones, SW com cache, /offline, aviso "Instale o app") + otimização (getClaims, loading.tsx)
 
 ## Como trabalhar
 
@@ -74,7 +74,9 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Push: `public/sw.js` (push + notificationclick), `components/pwa/RegistroSW.tsx`, `src/lib/push.ts` (web-push,
   importar como `import * as webpush`), `features/lembretes/*`. Cron: `app/api/cron/lembretes/route.ts`
   (Bearer CRON_SECRET, service_role; janela "≤" para 1 dia e 1 h; marca `lembrete_1d/1h_enviado_em`).
-- Ícones `/icons/icon-192.png` e `/icons/badge-72.png` referenciados pelo SW ainda não existem (módulo 8).
+- Ícones em `public/icons/` gerados por `node scripts/gerar-icones.mjs` (sharp). Trocar o desenho = editar o SVG no script.
+- Domínio: `agenda.digstudio.com.br` (cadastrado na Vercel; DNS CNAME por conta do Diego). O `.vercel.app` continua válido.
+- Sessão: `obterUsuario()` usa `getClaims()` (JWT local). `obterPerfil()` é a única ida ao banco para dados da conta.
 - Agenda: `features/agenda/disponibilidade.ts` (horários livres, puro), `GradeHoraria.tsx` (eixo de horas +
   colunas; dia e semana), `VisaoMes.tsx`, `FormAgendamento.tsx` (atendimento/bloqueio; busca horários via
   Server Action `consultarHorarios`), `DetalheAgendamento.tsx` (status). Datas civis "AAAA-MM-DD" em SP:
