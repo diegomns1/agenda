@@ -1,7 +1,7 @@
 /* Service worker do app Agenda: notificações push + cache leve para abrir rápido e funcionar
    minimamente sem internet. */
 
-const VERSAO = "agenda-v2";
+const VERSAO = "vaguinha-v3";
 const CACHE_ESTATICO = `${VERSAO}-estatico`;
 const CACHE_PAGINAS = `${VERSAO}-paginas`;
 const PAGINA_OFFLINE = "/offline";
@@ -73,10 +73,10 @@ self.addEventListener("push", (event) => {
     dados = { body: event.data ? event.data.text() : "" };
   }
 
-  const titulo = dados.title || "Agenda";
+  const titulo = dados.title || "Vaguinha";
   const opcoes = {
     body: dados.body || "",
-    tag: dados.tag || "agenda",
+    tag: dados.tag || "vaguinha",
     renotify: true,
     data: { url: dados.url || "/" },
     icon: "/icons/icon-192.png",

@@ -1,6 +1,7 @@
-# Agenda SaaS — CLAUDE.md
+# Vaguinha — CLAUDE.md
 
-SaaS de agenda para profissionais autônomas (ex.: manicure). Nome provisório: **Agenda** (a definir).
+SaaS de agenda para profissionais autônomas (ex.: manicure). Nome do produto: **Vaguinha** (domínio vaguinha.app,
+definido em 07/11/2026; antes era o provisório "Agenda"). `NOME_APP` em `src/lib/constantes.ts`.
 Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 
 ## Stack (não mudar sem aprovação)
@@ -75,7 +76,8 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   importar como `import * as webpush`), `features/lembretes/*`. Cron: `app/api/cron/lembretes/route.ts`
   (Bearer CRON_SECRET, service_role; janela "≤" para 1 dia e 1 h; marca `lembrete_1d/1h_enviado_em`).
 - Ícones em `public/icons/` gerados por `node scripts/gerar-icones.mjs` (sharp). Trocar o desenho = editar o SVG no script.
-- Domínio: `agenda.digstudio.com.br` (cadastrado na Vercel; DNS CNAME por conta do Diego). O `.vercel.app` continua válido.
+- Domínios: oficial `painel.vaguinha.app` (o apex `vaguinha.app` será o site institucional, fora deste projeto);
+  `agenda.digstudio.com.br` e `agenda-murex-five.vercel.app` continuam válidos. Redirect URLs no Supabase cobrem os três.
 - Sessão: `obterUsuario()` usa `getClaims()` (JWT local). `obterPerfil()` é a única ida ao banco para dados da conta.
 - Agenda: `features/agenda/disponibilidade.ts` (horários livres, puro), `GradeHoraria.tsx` (eixo de horas +
   colunas; dia e semana), `VisaoMes.tsx`, `FormAgendamento.tsx` (atendimento/bloqueio; busca horários via

@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Agenda",
-  "short_name": "Agenda",
-  "description": "Agenda de serviços para profissionais autônomas: clientes, horários e lembretes.",
+  "name": "Vaguinha",
+  "short_name": "Vaguinha",
+  "description": "Vaguinha: agenda de serviços para profissionais autônomas, com clientes, horários e lembretes.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "/?origem=pwa",

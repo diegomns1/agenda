@@ -1,4 +1,4 @@
-export const NOME_APP = "Agenda";
+export const NOME_APP = "Vaguinha";
 
 export const FUSO = "America/Sao_Paulo";
 

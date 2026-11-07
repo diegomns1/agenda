@@ -1,4 +1,4 @@
-# Agenda (nome provisório)
+# Vaguinha
 
 SaaS de agenda de serviços para profissionais autônomas (manicures, cabeleireiras, etc.).
 Next.js 16 (App Router) + TypeScript + Tailwind 4 + shadcn/ui + Supabase + PWA.
