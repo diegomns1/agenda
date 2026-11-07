@@ -68,7 +68,7 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Supabase Auth: Confirm email desligado; Redirect URLs cadastradas para localhost e produção.
 - Storage: bucket público `logos` (migração 0002), arquivo em `{uid}/logo.png|svg`; upload feito pelo navegador
   (`UploadLogo.tsx` redimensiona para 800px) e a URL pública é gravada em `profiles.logo_url` por Server Action.
-- Migrações aplicadas em produção: 0001 a 0006. A 0007 (pg_cron) é rodada pelo Diego com os valores reais
+- Migrações aplicadas em produção: 0001 a 0007 (job `lembretes-agenda`, a cada 5 min). A 0007 foi rodada pelo Diego com os valores reais
   (`supabase/0007_cron_lembretes.PREENCHIDO.local.sql`, git-ignored). Chaves VAPID/CRON_SECRET: `.env.local`
   e `.env.vercel.local` (bloco para colar na Vercel). Nunca imprimir esses valores em comandos.
 - Push: `public/sw.js` (push + notificationclick), `components/pwa/RegistroSW.tsx`, `src/lib/push.ts` (web-push,
