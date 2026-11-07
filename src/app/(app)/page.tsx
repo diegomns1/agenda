@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BellIcon, CalendarDaysIcon, CalendarPlusIcon, ChevronRightIcon, ImagePlusIcon, UserRoundPenIcon } from "lucide-react";
 import { obterPerfil } from "@/lib/auth";
 import { contarLembretesPendentes } from "@/features/lembretes/queries";
+import { PLANOS, temRecurso } from "@/lib/planos";
 import { dataDe, formatarData, hojeISO, horaDe, rotuloRelativo } from "@/lib/datas";
 import { formatarMoeda } from "@/lib/moeda";
 import { primeiroNome } from "@/lib/texto";
@@ -16,10 +17,11 @@ export const metadata: Metadata = { title: "Hoje" };
 export default async function PaginaHoje() {
   const perfil = await obterPerfil();
   const hoje = hojeISO();
+  const podeLembretes = temRecurso(perfil?.plano, "lembretes");
   const [deHoje, proximos, lembretes] = await Promise.all([
     listarAgendamentosDias(hoje),
     listarProximosAtendimentos(5),
-    contarLembretesPendentes(),
+    podeLembretes ? contarLembretesPendentes() : Promise.resolve(0),
   ]);
 
   const atendimentosHoje = deHoje.filter((a) => a.tipo === "atendimento" && a.status !== "cancelado");
@@ -30,7 +32,10 @@ export default async function PaginaHoje() {
     <div className="grid gap-5">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Olá, {primeiroNome(perfil?.nome ?? "")}!</h1>
-        <p className="text-sm text-muted-foreground first-letter:uppercase">{formatarData(new Date(), "EEEE, dd 'de' MMMM")}</p>
+        <p className="text-sm text-muted-foreground">
+          <span className="inline-block first-letter:uppercase">{formatarData(new Date(), "EEEE, dd 'de' MMMM")}</span>
+          {perfil ? ` · plano ${PLANOS[perfil.plano]?.nome ?? perfil.plano}` : ""}
+        </p>
       </div>
 
       {perfilIncompleto ? (

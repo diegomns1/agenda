@@ -33,7 +33,7 @@ export function ListaContas({ contas }: { contas: Profile[] }) {
                 {c.telefone ? ` · ${formatarTelefone(c.telefone)}` : ""}
               </p>
               <p className="text-xs text-muted-foreground">
-                {PLANOS[c.plano]}
+                {PLANOS[c.plano]?.nome ?? c.plano}
                 {c.ativa_ate ? ` até ${formatarDataISO(c.ativa_ate)}` : ""}
                 {" · cadastro em "}
                 {formatarData(c.created_at, "dd/MM/yyyy")}

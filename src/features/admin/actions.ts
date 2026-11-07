@@ -54,5 +54,5 @@ export async function alterarPlanoConta(_: EstadoForm, formData: FormData): Prom
   if (error) return { erro: `Não foi possível salvar o plano: ${error.message}` };
 
   revalidarConta(id);
-  return { ok: true, mensagem: `Plano "${PLANOS[plano]}" salvo.` };
+  return { ok: true, mensagem: `Plano "${PLANOS[plano].nome}" salvo.` };
 }

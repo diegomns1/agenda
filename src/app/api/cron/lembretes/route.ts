@@ -3,6 +3,7 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { enviarPush, pushConfigurado } from "@/lib/push";
 import { formatarData, horaDe } from "@/lib/datas";
 import { primeiroNome } from "@/lib/texto";
+import { temRecurso } from "@/lib/planos";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -75,12 +76,15 @@ async function executar(request: NextRequest) {
     return NextResponse.json({ ok: true, enviados: 0, verificados: linhas.length });
   }
 
-  // Inscrições das profissionais envolvidas
-  const profissionais = [...new Set(envios.map((e) => e.linha.profissional_id))];
-  const { data: inscricoes } = await admin
-    .from("push_subscriptions")
-    .select("profissional_id, endpoint, p256dh, auth")
-    .in("profissional_id", profissionais);
+  // Só profissionais cujo plano inclui lembretes
+  const todas = [...new Set(envios.map((e) => e.linha.profissional_id))];
+  const { data: perfis } = await admin.from("profiles").select("id, plano").in("id", todas);
+  const liberadas = new Set((perfis ?? []).filter((p) => temRecurso(p.plano, "lembretes")).map((p) => p.id));
+  const profissionais = todas.filter((id) => liberadas.has(id));
+
+  const { data: inscricoes } = profissionais.length
+    ? await admin.from("push_subscriptions").select("profissional_id, endpoint, p256dh, auth").in("profissional_id", profissionais)
+    : { data: [] as { profissional_id: string; endpoint: string; p256dh: string; auth: string }[] };
 
   const porProfissional = new Map<string, { endpoint: string; p256dh: string; auth: string }[]>();
   for (const i of inscricoes ?? []) {

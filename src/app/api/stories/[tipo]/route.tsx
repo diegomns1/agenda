@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { NextResponse, type NextRequest } from "next/server";
 import { obterPerfil } from "@/lib/auth";
 import { ehDataISO, hojeISO } from "@/lib/datas";
+import { temRecurso } from "@/lib/planos";
 import { dadosDia, dadosMes, dadosSemana, dadosServicos, marcaDoPerfil } from "@/features/stories/dados";
 import { ALTURA_STORY, LARGURA_STORY, obterTema, type TipoStory } from "@/features/stories/temas";
 import { StoryDia } from "@/features/stories/templates/StoryDia";
@@ -24,6 +25,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const perfil = await obterPerfil();
   if (!perfil) return NextResponse.json({ erro: "Não autorizado" }, { status: 401 });
+  if (!temRecurso(perfil.plano, "stories")) return NextResponse.json({ erro: "Recurso não incluído no plano" }, { status: 403 });
 
   const sp = request.nextUrl.searchParams;
   const data = ehDataISO(sp.get("data")) ? (sp.get("data") as string) : hojeISO();

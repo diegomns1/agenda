@@ -97,9 +97,10 @@ export function AcoesConta({ conta }: { conta: Profile }) {
               defaultValue={conta.plano}
               className="h-10 rounded-lg border border-input bg-background px-3 text-sm"
             >
-              {Object.entries(PLANOS).map(([valor, rotulo]) => (
+              {Object.entries(PLANOS).map(([valor, p]) => (
                 <option key={valor} value={valor}>
-                  {rotulo}
+                  {p.nome}
+                  {p.preco > 0 ? ` · R$ ${p.preco.toFixed(2).replace(".", ",")}` : ""}
                 </option>
               ))}
             </select>

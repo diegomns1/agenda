@@ -20,6 +20,14 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Deploy: Vercel. Cron: `pg_cron` + `pg_net` no Supabase chamando `/api/cron/lembretes` com `CRON_SECRET`
   (o plano Hobby da Vercel só permite cron 1x/dia, insuficiente para lembrete de 1h)
 
+## Planos (07/11/2026)
+
+- `teste` (grátis, tudo liberado), `essencial` R$ 19,90 (perfil, serviços, clientes, agenda),
+  `profissional` R$ 29,90 (+ agendamento pela cliente + lembretes), `premium` R$ 39,90 (+ stories).
+- Regra única em `src/lib/planos.ts` (`temRecurso(plano, recurso)`); telas travadas usam `components/layout/BloqueioPlano.tsx`.
+  Rotas de API também checam (`/api/stories` → 403; cron só envia push para planos com lembretes).
+- A barra inferior só reflete o plano após recarregar a página (layout não re-renderiza em navegação entre páginas irmãs).
+
 ## Decisões de produto
 
 - Fase de testes gratuita. Cadastro nasce com `status = 'pendente'`; só o admin aprova/recusa/suspende.

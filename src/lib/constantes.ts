@@ -11,14 +11,8 @@ export const STATUS_CONTA = {
 
 export type StatusConta = keyof typeof STATUS_CONTA;
 
-export const PLANOS = {
-  teste: "Teste gratuito",
-  mensal: "Mensal",
-  trimestral: "Trimestral",
-  anual: "Anual",
-} as const;
-
-export type Plano = keyof typeof PLANOS;
+// Planos e recursos: ver src/lib/planos.ts
+export { PLANOS, type Plano } from "@/lib/planos";
 
 export const MODELO_LEMBRETE_PADRAO =
   "Oi {nome}! Passando para lembrar do seu horário de {servico} {dia} às {hora}. Te espero! 💅";

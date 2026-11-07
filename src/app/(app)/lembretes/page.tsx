@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { obterPerfil } from "@/lib/auth";
+import { temRecurso } from "@/lib/planos";
 import { contarInscricoesPush, listarLembretes } from "@/features/lembretes/queries";
 import { ListaLembretes } from "@/features/lembretes/components/ListaLembretes";
 import { AtivarNotificacoes } from "@/features/lembretes/components/AtivarNotificacoes";
+import { BloqueioPlano } from "@/components/layout/BloqueioPlano";
 
 export const metadata: Metadata = { title: "Lembretes" };
 
@@ -12,6 +14,23 @@ export default async function PaginaLembretes({ searchParams }: PageProps<"/lemb
   const { agendamento } = await searchParams;
   const perfil = await obterPerfil();
   if (!perfil) redirect("/aguardando-aprovacao");
+
+  if (!temRecurso(perfil.plano, "lembretes")) {
+    return (
+      <BloqueioPlano
+        recurso="lembretes"
+        planoAtual={perfil.plano}
+        titulo="Lembretes"
+        descricao="Avisos automáticos para você e mensagens prontas para suas clientes."
+        beneficios={[
+          "Notificação no celular 1 dia e 1 hora antes de cada atendimento",
+          "Botão que abre o WhatsApp da cliente com a mensagem pronta",
+          "Lista do que ainda falta avisar, com check de enviado",
+          "Agendamento pela própria cliente pelo seu link",
+        ]}
+      />
+    );
+  }
 
   const [{ pendentes, avisados }, aparelhos] = await Promise.all([listarLembretes(), contarInscricoesPush()]);
 
