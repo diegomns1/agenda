@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition, type CSSProperties } from "react";
 import { toast } from "sonner";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
   EyeIcon,
   EyeOffIcon,
+  GripVerticalIcon,
   MoreVerticalIcon,
   PencilIcon,
   PlusIcon,
@@ -19,6 +20,7 @@ import {
   alternarAtivoServico,
   excluirServico,
   moverServico,
+  reordenarServicos,
 } from "@/features/servicos/actions";
 import { FormServico } from "./FormServico";
 import { EstadoVazio } from "@/components/layout/EstadoVazio";
@@ -55,10 +57,26 @@ import type { Servico } from "@/types/database";
 
 type Dialogo = { modo: "novo" } | { modo: "editar"; servico: Servico } | null;
 
+/** Estado visual de um arrasto em andamento (índices na lista exibida). */
+type Arrasto = { de: number; para: number; dy: number; altura: number };
+
 export function ListaServicos({ servicos }: { servicos: Servico[] }) {
   const [dialogo, setDialogo] = useState<Dialogo>(null);
   const [excluindo, setExcluindo] = useState<Servico | null>(null);
   const [pendente, iniciar] = useTransition();
+
+  // Ordem otimista enquanto o servidor salva; descartada quando a lista do servidor chega
+  const [servicosAnteriores, setServicosAnteriores] = useState(servicos);
+  const [ordemLocal, setOrdemLocal] = useState<Servico[] | null>(null);
+  if (servicos !== servicosAnteriores) {
+    setServicosAnteriores(servicos);
+    setOrdemLocal(null);
+  }
+  const lista = ordemLocal ?? servicos;
+
+  const ulRef = useRef<HTMLUListElement>(null);
+  const arrastoRef = useRef<{ de: number; para: number; inicioY: number; retangulos: DOMRect[] } | null>(null);
+  const [arrasto, setArrasto] = useState<Arrasto | null>(null);
 
   function executar(fn: () => Promise<EstadoForm>) {
     iniciar(async () => {
@@ -66,6 +84,54 @@ export function ListaServicos({ servicos }: { servicos: Servico[] }) {
       if (r.ok && r.mensagem) toast.success(r.mensagem);
       else if (r.erro) toast.error(r.erro);
     });
+  }
+
+  // ---- arrastar e soltar (pointer events: funciona com dedo e com mouse) ----
+  function iniciarArrasto(e: React.PointerEvent<HTMLButtonElement>, i: number) {
+    if (pendente || !ulRef.current) return;
+    const retangulos = [...ulRef.current.children].map((el) => el.getBoundingClientRect());
+    arrastoRef.current = { de: i, para: i, inicioY: e.clientY, retangulos };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setArrasto({ de: i, para: i, dy: 0, altura: retangulos[i].height });
+  }
+
+  function moverArrasto(e: React.PointerEvent<HTMLButtonElement>) {
+    const a = arrastoRef.current;
+    if (!a) return;
+    const dy = e.clientY - a.inicioY;
+    const r = a.retangulos[a.de];
+    const centro = r.top + r.height / 2 + dy;
+    // Nova posição = quantos outros itens têm o centro acima do item arrastado
+    const para = a.retangulos.filter((x, idx) => idx !== a.de && x.top + x.height / 2 < centro).length;
+    a.para = para;
+    setArrasto({ de: a.de, para, dy, altura: r.height });
+  }
+
+  function soltarArrasto() {
+    const a = arrastoRef.current;
+    arrastoRef.current = null;
+    setArrasto(null);
+    if (!a || a.para === a.de) return;
+    const nova = [...lista];
+    const [item] = nova.splice(a.de, 1);
+    nova.splice(a.para, 0, item);
+    setOrdemLocal(nova);
+    iniciar(async () => {
+      const r = await reordenarServicos(nova.map((s) => s.id));
+      if (r.erro) {
+        toast.error(r.erro);
+        setOrdemLocal(null); // volta à ordem do servidor
+      }
+    });
+  }
+
+  function estiloArrasto(i: number): CSSProperties | undefined {
+    if (!arrasto) return undefined;
+    const { de, para, dy, altura } = arrasto;
+    if (i === de) return { transform: `translateY(${dy}px)`, transition: "none", zIndex: 10, position: "relative" };
+    if (de < para && i > de && i <= para) return { transform: `translateY(-${altura}px)` };
+    if (de > para && i >= para && i < de) return { transform: `translateY(${altura}px)` };
+    return undefined;
   }
 
   const ativos = servicos.filter((s) => s.ativo).length;
@@ -100,32 +166,32 @@ export function ListaServicos({ servicos }: { servicos: Servico[] }) {
           </Button>
         </EstadoVazio>
       ) : (
-        <ul className="divide-y overflow-hidden rounded-xl border bg-card">
-          {servicos.map((s, i) => (
+        <ul ref={ulRef} className={cn("divide-y rounded-xl border bg-card", !arrasto && "overflow-hidden")}>
+          {lista.map((s, i) => (
             <li
               key={s.id}
-              className={cn("flex items-center gap-2 px-3 py-3 sm:px-4", !s.ativo && "bg-muted/40")}
+              style={estiloArrasto(i)}
+              className={cn(
+                "flex items-center gap-1 bg-card px-2 py-3 transition-transform sm:px-3",
+                !s.ativo && "bg-muted/40",
+                arrasto?.de === i && "rounded-xl shadow-xl ring-2 ring-primary/30",
+              )}
             >
-              <div className="flex flex-col">
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label="Mover para cima"
-                  disabled={pendente || i === 0}
-                  onClick={() => executar(() => moverServico(s.id, -1))}
-                >
-                  <ArrowUpIcon />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label="Mover para baixo"
-                  disabled={pendente || i === servicos.length - 1}
-                  onClick={() => executar(() => moverServico(s.id, 1))}
-                >
-                  <ArrowDownIcon />
-                </Button>
-              </div>
+              <button
+                type="button"
+                aria-label={`Arrastar ${s.nome} para mudar a ordem`}
+                disabled={pendente}
+                onPointerDown={(e) => iniciarArrasto(e, i)}
+                onPointerMove={moverArrasto}
+                onPointerUp={soltarArrasto}
+                onPointerCancel={soltarArrasto}
+                className={cn(
+                  "flex h-11 w-8 shrink-0 touch-none items-center justify-center rounded-md text-muted-foreground",
+                  "cursor-grab select-none hover:bg-muted hover:text-foreground active:cursor-grabbing disabled:opacity-50",
+                )}
+              >
+                <GripVerticalIcon className="size-5" />
+              </button>
 
               <button
                 type="button"
@@ -161,6 +227,15 @@ export function ListaServicos({ servicos }: { servicos: Servico[] }) {
                     {s.ativo ? "Desativar" : "Reativar"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled={i === 0} onClick={() => executar(() => moverServico(s.id, -1))}>
+                    <ArrowUpIcon />
+                    Mover para cima
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled={i === lista.length - 1} onClick={() => executar(() => moverServico(s.id, 1))}>
+                    <ArrowDownIcon />
+                    Mover para baixo
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem variant="destructive" onClick={() => setExcluindo(s)}>
                     <Trash2Icon />
                     Excluir
@@ -174,7 +249,7 @@ export function ListaServicos({ servicos }: { servicos: Servico[] }) {
 
       {servicos.length > 0 ? (
         <p className="text-xs text-muted-foreground">
-          Toque no serviço para editar. Use as setas para mudar a ordem em que aparecem.
+          Toque no serviço para editar. Para mudar a ordem, segure o ícone ⋮⋮ e arraste.
         </p>
       ) : null}
 

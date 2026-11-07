@@ -104,6 +104,23 @@ export async function moverServico(id: string, direcao: -1 | 1): Promise<EstadoF
   return { ok: true };
 }
 
+/** Salva a ordem completa (arrastar e soltar). `ids` precisa conter exatamente os serviços da profissional. */
+export async function reordenarServicos(ids: string[]): Promise<EstadoForm> {
+  const { usuario, supabase } = await sessao();
+  const { data: lista, error } = await supabase.from("servicos").select("id").eq("profissional_id", usuario.id);
+  if (error || !lista) return { erro: "Não foi possível reordenar." };
+
+  const meus = new Set(lista.map((s) => s.id));
+  const validos = ids.length === meus.size && ids.every((id) => meus.has(id)) && new Set(ids).size === ids.length;
+  if (!validos) return { erro: "A lista mudou. Recarregue a página e tente de novo." };
+
+  const resultados = await Promise.all(ids.map((id, idx) => supabase.from("servicos").update({ ordem: idx }).eq("id", id)));
+  if (resultados.some((r) => r.error)) return { erro: "Não foi possível salvar a nova ordem." };
+
+  revalidar();
+  return { ok: true };
+}
+
 /** Cria de uma vez os serviços sugeridos que ainda não existem (pelo nome). */
 export async function adicionarSugeridos(): Promise<EstadoForm> {
   const { usuario, supabase } = await sessao();

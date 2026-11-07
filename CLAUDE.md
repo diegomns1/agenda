@@ -67,8 +67,9 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Antes de mudanças estruturais (schema, pastas, libs novas), propor e esperar aprovação.
 - Migrações em `supabase/migrations/`, numeradas. Nunca editar migração já aplicada; criar nova.
   Ao criar tabela nova, atualizar `src/types/database.ts` à mão.
-- Toda tabela de dados da profissional tem `profissional_id` + RLS `auth.uid() = profissional_id`,
-  mais policy de admin via `public.is_admin()`.
+- Toda tabela de dados da profissional tem `profissional_id` + RLS `auth.uid() = profissional_id`.
+  **Sem** cláusula "ou admin" nessas tabelas (migração 0011): o admin só enxerga `profiles`. Com "ou admin", a conta
+  admin via os dados de todas as profissionais misturados na própria agenda.
 - Nunca usar a `service_role` key no cliente; só em rotas de API server-side.
 - Escrita via Server Actions em `features/<modulo>/actions.ts` (zod + `EstadoForm`), leitura em `queries.ts`.
 - Textos em pt-BR, simples e diretos. Mobile first (uso no celular). Inputs com `h-11 text-base`.

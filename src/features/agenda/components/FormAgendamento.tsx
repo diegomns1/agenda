@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { CalendarOffIcon, Loader2Icon, UserPlusIcon, UsersIcon } from "lucide-react";
+import { CalendarOffIcon, Loader2Icon, PlusIcon, SparklesIcon, UserPlusIcon, UsersIcon } from "lucide-react";
 import { consultarHorarios, salvarAgendamento } from "@/features/agenda/actions";
+import { EstadoVazio } from "@/components/layout/EstadoVazio";
 import { Campo } from "@/components/formulario/Campo";
 import { BotaoEnviar } from "@/components/formulario/BotaoEnviar";
 import { Aviso } from "@/components/formulario/Aviso";
@@ -80,15 +82,32 @@ export function FormAgendamento({ clientes, servicos, inicial, aoConcluir }: Pro
 
       {estado.erro ? <Aviso>{estado.erro}</Aviso> : null}
 
-      {tipo === "atendimento" ? (
-        <CamposAtendimento clientes={clientes} servicos={servicos} inicial={inicial} estado={estado} />
+      {tipo === "atendimento" && servicos.length === 0 ? (
+        <EstadoVazio
+          Icone={SparklesIcon}
+          titulo="Cadastre um serviço primeiro"
+          descricao="Para marcar um atendimento, a agenda precisa saber o que você oferece e quanto tempo leva."
+        >
+          <Button asChild>
+            <Link href="/servicos">
+              <PlusIcon />
+              Criar serviço
+            </Link>
+          </Button>
+        </EstadoVazio>
       ) : (
-        <CamposBloqueio inicial={inicial} estado={estado} />
-      )}
+        <>
+          {tipo === "atendimento" ? (
+            <CamposAtendimento clientes={clientes} servicos={servicos} inicial={inicial} estado={estado} />
+          ) : (
+            <CamposBloqueio inicial={inicial} estado={estado} />
+          )}
 
-      <BotaoEnviar textoCarregando="Salvando...">
-        {ag ? "Salvar alterações" : tipo === "atendimento" ? "Marcar atendimento" : "Bloquear horário"}
-      </BotaoEnviar>
+          <BotaoEnviar textoCarregando="Salvando...">
+            {ag ? "Salvar alterações" : tipo === "atendimento" ? "Marcar atendimento" : "Bloquear horário"}
+          </BotaoEnviar>
+        </>
+      )}
     </form>
   );
 }
@@ -183,6 +202,7 @@ function CamposAtendimento({
               name="nova_cliente_telefone"
               type="tel"
               inputMode="tel"
+              autoComplete="off"
               placeholder="WhatsApp (opcional)"
               value={telefoneNova}
               onChange={(e) => setTelefoneNova(mascararTelefone(e.target.value))}
@@ -212,26 +232,20 @@ function CamposAtendimento({
       {/* Serviço */}
       <div className="grid gap-1.5">
         <Label htmlFor="servico_id">Serviço</Label>
-        {servicos.length === 0 ? (
-          <p className="rounded-lg border border-dashed px-3 py-2 text-sm text-muted-foreground">
-            Cadastre pelo menos um serviço na aba Serviços antes de marcar.
-          </p>
-        ) : (
-          <select
-            id="servico_id"
-            name="servico_id"
-            value={servicoId}
-            onChange={(e) => aoTrocarServico(e.target.value)}
-            className={selectClass}
-          >
-            {servicos.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.nome} · {formatarDuracao(s.duracao_min)}
-                {s.valor > 0 ? ` · ${formatarMoeda(s.valor)}` : ""}
-              </option>
-            ))}
-          </select>
-        )}
+        <select
+          id="servico_id"
+          name="servico_id"
+          value={servicoId}
+          onChange={(e) => aoTrocarServico(e.target.value)}
+          className={selectClass}
+        >
+          {servicos.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.nome} · {formatarDuracao(s.duracao_min)}
+              {s.valor > 0 ? ` · ${formatarMoeda(s.valor)}` : ""}
+            </option>
+          ))}
+        </select>
         {estado.erros?.servico_id?.[0] ? <p className="text-sm text-destructive">{estado.erros.servico_id[0]}</p> : null}
       </div>
 

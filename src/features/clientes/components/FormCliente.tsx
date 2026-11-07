@@ -55,6 +55,7 @@ export function FormCliente({ cliente, aoConcluir }: Props) {
         nome="telefone"
         type="tel"
         inputMode="tel"
+        autoComplete="off"
         placeholder="(11) 99999-9999"
         value={telefone}
         onChange={(e) => setTelefone(mascararTelefone(e.target.value))}

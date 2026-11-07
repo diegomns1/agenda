@@ -76,7 +76,8 @@ export async function salvarAgendamento(_: EstadoForm, formData: FormData): Prom
   }
 
   // ---------------------------------------------------------- atendimento
-  const r = esquemaAtendimento.safeParse({ ...bruto, tipo: "atendimento" });
+  // servico_id pode nem vir no form (sem serviços cadastrados): garante mensagem em português
+  const r = esquemaAtendimento.safeParse({ ...bruto, tipo: "atendimento", servico_id: bruto.servico_id ?? "" });
   if (!r.success) return { erros: z.flattenError(r.error).fieldErrors, valores };
   const d = r.data;
 
