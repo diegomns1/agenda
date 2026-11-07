@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BellIcon, CalendarDaysIcon, CalendarPlusIcon, ChevronRightIcon, UserRoundPenIcon } from "lucide-react";
+import { BellIcon, CalendarDaysIcon, CalendarPlusIcon, ChevronRightIcon, ImagePlusIcon, UserRoundPenIcon } from "lucide-react";
 import { obterPerfil } from "@/lib/auth";
 import { contarLembretesPendentes } from "@/features/lembretes/queries";
 import { dataDe, formatarData, hojeISO, horaDe, rotuloRelativo } from "@/lib/datas";
@@ -12,7 +12,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export const metadata: Metadata = { title: "Hoje" };
 
-const PROXIMOS_MODULOS = ["Stories prontos para o Instagram", "Instalar como aplicativo"];
 
 export default async function PaginaHoje() {
   const perfil = await obterPerfil();
@@ -121,12 +120,17 @@ export default async function PaginaHoje() {
         </CardContent>
       </Card>
 
-      <Card size="sm">
-        <CardHeader>
-          <CardTitle>Em construção</CardTitle>
-          <CardDescription>Próximos módulos: {PROXIMOS_MODULOS.join(" · ")}.</CardDescription>
-        </CardHeader>
-      </Card>
+      <Link
+        href="/stories"
+        className="flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors hover:bg-muted/60"
+      >
+        <ImagePlusIcon className="size-5 shrink-0 text-primary" />
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">Criar story para o Instagram</p>
+          <p className="text-sm text-muted-foreground">Horários livres do dia, da semana, do mês ou sua tabela de serviços.</p>
+        </div>
+        <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+      </Link>
     </div>
   );
 }

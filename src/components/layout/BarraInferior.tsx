@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDaysIcon, HomeIcon, SparklesIcon, UserRoundIcon, UsersIcon, type LucideIcon } from "lucide-react";
+import { CalendarDaysIcon, HomeIcon, ImagePlusIcon, SparklesIcon, UserRoundIcon, UsersIcon, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Item = { href: string; rotulo: string; Icone: LucideIcon };
@@ -13,6 +13,7 @@ export const ITENS_NAVEGACAO: Item[] = [
   { href: "/agenda", rotulo: "Agenda", Icone: CalendarDaysIcon },
   { href: "/clientes", rotulo: "Clientes", Icone: UsersIcon },
   { href: "/servicos", rotulo: "Serviços", Icone: SparklesIcon },
+  { href: "/stories", rotulo: "Stories", Icone: ImagePlusIcon },
   { href: "/perfil", rotulo: "Perfil", Icone: UserRoundIcon },
 ];
 
@@ -33,7 +34,7 @@ export function BarraInferior() {
                 href={href}
                 aria-current={ativo ? "page" : undefined}
                 className={cn(
-                  "flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors",
+                  "flex h-14 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors sm:text-[11px]",
                   ativo ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
