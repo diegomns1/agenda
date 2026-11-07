@@ -26,7 +26,7 @@ export default async function PaginaHoje() {
     <div className="grid gap-5">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Olá, {primeiroNome(perfil?.nome ?? "")}!</h1>
-        <p className="text-sm text-muted-foreground capitalize">{formatarData(new Date(), "EEEE, dd 'de' MMMM")}</p>
+        <p className="text-sm text-muted-foreground first-letter:uppercase">{formatarData(new Date(), "EEEE, dd 'de' MMMM")}</p>
       </div>
 
       {perfilIncompleto ? (
