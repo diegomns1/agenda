@@ -39,7 +39,7 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 3. ✅ Serviços (nome, duração, valor, ativo/inativo, ordem, sugestões iniciais)
 4. ✅ Clientes (cadastro, WhatsApp com máscara, observações, busca; histórico e "agendar de novo" ligam no módulo 5)
 5. ✅ Agenda (dia/semana/mês; marcar, remarcar, concluir, faltou, cancelar, bloquear; EXCLUDE no banco; histórico da cliente)
-6. ⬜ Lembretes (push + wa.me + lista de pendentes)
+6. ✅ Lembretes (push 1 dia/1 h via pg_cron → /api/cron/lembretes; botão wa.me com modelo; lista de pendentes com check)
 7. ⬜ Gerador de stories 9:16
 8. ⬜ PWA instalável com aviso "Instale o app para receber lembretes"
 
@@ -68,7 +68,13 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Supabase Auth: Confirm email desligado; Redirect URLs cadastradas para localhost e produção.
 - Storage: bucket público `logos` (migração 0002), arquivo em `{uid}/logo.png|svg`; upload feito pelo navegador
   (`UploadLogo.tsx` redimensiona para 800px) e a URL pública é gravada em `profiles.logo_url` por Server Action.
-- Migrações aplicadas em produção: 0001 a 0005.
+- Migrações aplicadas em produção: 0001 a 0006. A 0007 (pg_cron) é rodada pelo Diego com os valores reais
+  (`supabase/0007_cron_lembretes.PREENCHIDO.local.sql`, git-ignored). Chaves VAPID/CRON_SECRET: `.env.local`
+  e `.env.vercel.local` (bloco para colar na Vercel). Nunca imprimir esses valores em comandos.
+- Push: `public/sw.js` (push + notificationclick), `components/pwa/RegistroSW.tsx`, `src/lib/push.ts` (web-push,
+  importar como `import * as webpush`), `features/lembretes/*`. Cron: `app/api/cron/lembretes/route.ts`
+  (Bearer CRON_SECRET, service_role; janela "≤" para 1 dia e 1 h; marca `lembrete_1d/1h_enviado_em`).
+- Ícones `/icons/icon-192.png` e `/icons/badge-72.png` referenciados pelo SW ainda não existem (módulo 8).
 - Agenda: `features/agenda/disponibilidade.ts` (horários livres, puro), `GradeHoraria.tsx` (eixo de horas +
   colunas; dia e semana), `VisaoMes.tsx`, `FormAgendamento.tsx` (atendimento/bloqueio; busca horários via
   Server Action `consultarHorarios`), `DetalheAgendamento.tsx` (status). Datas civis "AAAA-MM-DD" em SP:

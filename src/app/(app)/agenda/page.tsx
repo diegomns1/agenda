@@ -63,6 +63,7 @@ export default async function PaginaAgenda({ searchParams }: PageProps<"/agenda"
         servicos={servicos}
         expediente={perfil.expediente}
         intervaloMin={perfil.intervalo_grade_min}
+        modeloLembrete={perfil.modelo_lembrete}
         abrirInicial={abrirInicial}
       />
     </div>

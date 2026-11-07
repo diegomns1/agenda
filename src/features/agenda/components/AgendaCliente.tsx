@@ -34,6 +34,7 @@ type Props = {
   servicos: Servico[];
   expediente: Expediente;
   intervaloMin: number;
+  modeloLembrete: string;
   abrirInicial?: InicialForm | null; // vindo de ?novo=atendimento&cliente=...
 };
 
@@ -43,7 +44,7 @@ function diaEmSP(iso: string) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(iso));
 }
 
-export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, expediente, intervaloMin, abrirInicial }: Props) {
+export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, expediente, intervaloMin, modeloLembrete, abrirInicial }: Props) {
   const router = useRouter();
   const [form, setForm] = useState<InicialForm | null>(abrirInicial ?? null);
   const [selecionado, setSelecionado] = useState<Agendamento | null>(null);
@@ -217,6 +218,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
       <DetalheAgendamento
         agendamento={selecionado}
         clientes={clientes}
+        modeloLembrete={modeloLembrete}
         aoFechar={() => setSelecionado(null)}
         aoEditar={(a) => {
           setSelecionado(null);

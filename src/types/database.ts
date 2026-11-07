@@ -106,6 +106,22 @@ export type AgendamentoInsert = Pick<Agendamento, "profissional_id" | "tipo" | "
 
 export type AgendamentoUpdate = Partial<Omit<Agendamento, "id" | "profissional_id" | "created_at" | "updated_at">>;
 
+export type PushSubscriptionRow = {
+  id: string;
+  profissional_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  user_agent: string | null;
+  created_at: string;
+  ultimo_uso_em: string | null;
+};
+
+export type PushSubscriptionInsert = Pick<PushSubscriptionRow, "profissional_id" | "endpoint" | "p256dh" | "auth"> &
+  Partial<Pick<PushSubscriptionRow, "id" | "user_agent" | "ultimo_uso_em">>;
+
+export type PushSubscriptionUpdate = Partial<Omit<PushSubscriptionRow, "id" | "profissional_id" | "created_at">>;
+
 export type Database = {
   public: {
     Tables: {
@@ -131,6 +147,12 @@ export type Database = {
         Row: Agendamento;
         Insert: AgendamentoInsert;
         Update: AgendamentoUpdate;
+        Relationships: [];
+      };
+      push_subscriptions: {
+        Row: PushSubscriptionRow;
+        Insert: PushSubscriptionInsert;
+        Update: PushSubscriptionUpdate;
         Relationships: [];
       };
     };

@@ -1,0 +1,40 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { obterPerfil } from "@/lib/auth";
+import { contarInscricoesPush, listarLembretes } from "@/features/lembretes/queries";
+import { ListaLembretes } from "@/features/lembretes/components/ListaLembretes";
+import { AtivarNotificacoes } from "@/features/lembretes/components/AtivarNotificacoes";
+
+export const metadata: Metadata = { title: "Lembretes" };
+
+export default async function PaginaLembretes({ searchParams }: PageProps<"/lembretes">) {
+  const { agendamento } = await searchParams;
+  const perfil = await obterPerfil();
+  if (!perfil) redirect("/aguardando-aprovacao");
+
+  const [{ pendentes, avisados }, aparelhos] = await Promise.all([listarLembretes(), contarInscricoesPush()]);
+
+  return (
+    <div className="grid gap-5">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Lembretes</h1>
+        <p className="text-sm text-muted-foreground">
+          Atendimentos das próximas 48 horas. Toque em <strong>Lembrar cliente</strong> para abrir o WhatsApp com a mensagem pronta.{" "}
+          <Link href="/perfil#modelo_lembrete" className="underline underline-offset-4">
+            Editar mensagem
+          </Link>
+        </p>
+      </div>
+
+      <ListaLembretes
+        pendentes={pendentes}
+        avisados={avisados}
+        modelo={perfil.modelo_lembrete}
+        destaqueId={typeof agendamento === "string" ? agendamento : null}
+      />
+
+      <AtivarNotificacoes aparelhos={aparelhos} />
+    </div>
+  );
+}

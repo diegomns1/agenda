@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDaysIcon, CalendarPlusIcon, ChevronRightIcon, UserRoundPenIcon } from "lucide-react";
+import { BellIcon, CalendarDaysIcon, CalendarPlusIcon, ChevronRightIcon, UserRoundPenIcon } from "lucide-react";
 import { obterPerfil } from "@/lib/auth";
+import { contarLembretesPendentes } from "@/features/lembretes/queries";
 import { dataDe, formatarData, hojeISO, horaDe, rotuloRelativo } from "@/lib/datas";
 import { formatarMoeda } from "@/lib/moeda";
 import { primeiroNome } from "@/lib/texto";
@@ -11,12 +12,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export const metadata: Metadata = { title: "Hoje" };
 
-const PROXIMOS_MODULOS = ["Lembretes automáticos", "Stories prontos para o Instagram", "Instalar como aplicativo"];
+const PROXIMOS_MODULOS = ["Stories prontos para o Instagram", "Instalar como aplicativo"];
 
 export default async function PaginaHoje() {
   const perfil = await obterPerfil();
   const hoje = hojeISO();
-  const [deHoje, proximos] = await Promise.all([listarAgendamentosDias(hoje), listarProximosAtendimentos(5)]);
+  const [deHoje, proximos, lembretes] = await Promise.all([
+    listarAgendamentosDias(hoje),
+    listarProximosAtendimentos(5),
+    contarLembretesPendentes(),
+  ]);
 
   const atendimentosHoje = deHoje.filter((a) => a.tipo === "atendimento" && a.status !== "cancelado");
   const faturamentoHoje = atendimentosHoje.filter((a) => a.status !== "faltou").reduce((s, a) => s + (a.valor ?? 0), 0);
@@ -38,6 +43,22 @@ export default async function PaginaHoje() {
           <div className="min-w-0 flex-1">
             <p className="font-medium">Complete seu perfil</p>
             <p className="text-sm text-muted-foreground">Logo, nome do negócio, WhatsApp e horários.</p>
+          </div>
+          <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+        </Link>
+      ) : null}
+
+      {lembretes > 0 ? (
+        <Link
+          href="/lembretes"
+          className="flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950 dark:hover:bg-amber-900"
+        >
+          <BellIcon className="size-5 shrink-0 text-amber-700 dark:text-amber-300" />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">
+              {lembretes} cliente{lembretes === 1 ? "" : "s"} para lembrar
+            </p>
+            <p className="text-sm text-muted-foreground">Atendimentos nas próximas 48 horas ainda sem aviso.</p>
           </div>
           <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
         </Link>

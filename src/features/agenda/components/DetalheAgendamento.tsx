@@ -15,6 +15,7 @@ import {
   UserXIcon,
 } from "lucide-react";
 import { alterarStatusAgendamento, excluirAgendamento } from "@/features/agenda/actions";
+import { BotaoLembrarCliente } from "@/features/lembretes/components/BotaoLembrarCliente";
 import { STATUS_AGENDAMENTO } from "@/features/agenda/schema";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -39,11 +40,12 @@ import type { ClienteResumo } from "./FormAgendamento";
 type Props = {
   agendamento: Agendamento | null;
   clientes: ClienteResumo[];
+  modeloLembrete: string;
   aoFechar: () => void;
   aoEditar: (a: Agendamento) => void;
 };
 
-export function DetalheAgendamento({ agendamento: a, clientes, aoFechar, aoEditar }: Props) {
+export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, aoFechar, aoEditar }: Props) {
   const [confirmando, setConfirmando] = useState<"cancelar" | "excluir" | null>(null);
   const [pendente, iniciar] = useTransition();
 
@@ -102,7 +104,9 @@ export function DetalheAgendamento({ agendamento: a, clientes, aoFechar, aoEdita
               <div className="flex flex-wrap gap-2 pt-1">
                 {a.tipo === "atendimento" ? (
                   <>
-                    {cliente?.telefone ? (
+                    {a.status === "agendado" ? (
+                      <BotaoLembrarCliente agendamento={a} telefone={cliente?.telefone ?? null} modelo={modeloLembrete} tamanho="sm" />
+                    ) : cliente?.telefone ? (
                       <Button asChild variant="outline" size="sm">
                         <a href={linkWhatsApp(cliente.telefone)} target="_blank" rel="noopener noreferrer">
                           <MessageCircleIcon className="text-emerald-600" />
