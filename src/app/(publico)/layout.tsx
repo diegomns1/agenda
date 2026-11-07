@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
 
 export default function LayoutPublico({ children }: { children: React.ReactNode }) {
@@ -9,8 +10,16 @@ export default function LayoutPublico({ children }: { children: React.ReactNode 
       <div className="surgir surgir-atraso-1 w-full max-w-sm rounded-3xl bg-card/90 p-6 shadow-xl shadow-vinho/10 ring-1 ring-vinho/10 backdrop-blur">
         {children}
       </div>
-      <p className="surgir surgir-atraso-2 mt-6 text-xs text-muted-foreground">
+      <p className="surgir surgir-atraso-2 mt-6 text-center text-xs text-muted-foreground">
         Agenda para profissionais autônomas · vaguinha.app
+        <br />
+        <Link href="/termos" className="underline-offset-4 hover:underline">
+          Termos de Uso
+        </Link>
+        {" · "}
+        <Link href="/privacidade" className="underline-offset-4 hover:underline">
+          Privacidade
+        </Link>
       </p>
     </div>
   );

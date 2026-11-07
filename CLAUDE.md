@@ -123,6 +123,12 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Formulário com Switch/Checkbox do Radix que continua na tela após salvar (ex.: Perfil): enviar por `onSubmit` +
   `startTransition(() => acao(formData))` e usar o 3º retorno de `useActionState` no botão. Com `action={acao}` o
   React 19 reseta o form depois da ação e o Radix devolve o Switch ao valor inicial da página (bug visto em 07/11).
+- E-mails do app (etapa 4): `src/lib/email.ts` (Resend via fetch; sem `RESEND_API_KEY`/`EMAIL_REMETENTE` não envia e
+  não quebra nada), modelos em `features/emails/modelos.ts` (HTML em tabela, textos escapados). Disparos: cadastro
+  (`auth/actions.ts`), aprovação/recusa/suspensão (`admin/actions.ts`), vencimento em 3 dias (cron de lembretes,
+  marca `aviso_vencimento_para`). Termos/privacidade em `app/(legal)/*`; versão e contato em `src/lib/legal.ts`;
+  aceite gravado pelo trigger `handle_new_user` (migração 0012) a partir do metadata do signUp.
+  Modelos do Supabase Auth em pt-BR: `supabase/email-templates/` (colar no painel; não é código).
 - Funções puras compartilhadas entre servidor e cliente ficam em `src/lib/*` (nunca exportar de um arquivo "use client":
   o servidor não consegue chamá-las e a página quebra com erro 500 — já aconteceu duas vezes).
 - Padrão de lista + diálogo (criar/editar) + menu de opções + confirmação de exclusão: ver `features/servicos/components/ListaServicos.tsx`.

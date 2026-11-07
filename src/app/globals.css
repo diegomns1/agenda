@@ -260,3 +260,19 @@
   }
   .cartao-vivo { transition: none; }
 }
+
+/* Páginas de texto longo (termos, privacidade) */
+.prose-legal {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--foreground);
+}
+.prose-legal h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+.prose-legal h2 { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-top: 2rem; margin-bottom: 0.5rem; }
+.prose-legal p { margin-bottom: 0.85rem; }
+.prose-legal .lead { color: var(--muted-foreground); }
+.prose-legal ul { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.85rem; display: grid; gap: 0.35rem; }
+.prose-legal a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.prose-legal table { width: 100%; border-collapse: collapse; margin: 0.5rem 0 1rem; font-size: 0.9rem; }
+.prose-legal th, .prose-legal td { text-align: left; vertical-align: top; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); }
+.prose-legal th { font-weight: 600; color: var(--muted-foreground); }

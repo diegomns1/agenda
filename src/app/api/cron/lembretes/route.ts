@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { enviarPush, pushConfigurado } from "@/lib/push";
-import { formatarData, horaDe } from "@/lib/datas";
+import { emailConfigurado, enviarEmail } from "@/lib/email";
+import { emailVencimentoProximo } from "@/features/emails/modelos";
+import { diasEntre, formatarData, hojeISO, horaDe, somarDias } from "@/lib/datas";
 import { primeiroNome } from "@/lib/texto";
 import { temRecurso } from "@/lib/planos";
 
@@ -39,6 +41,13 @@ async function executar(request: NextRequest) {
   } catch (e) {
     return NextResponse.json({ erro: e instanceof Error ? e.message : "Service role não configurada" }, { status: 500 });
   }
+
+  // Aviso de vencimento por e-mail (barato: uma consulta pequena a cada execução)
+  const vencimentosAvisados = await avisarVencimentos(admin).catch((e) => {
+    console.error("[cron] vencimentos", e);
+    return 0;
+  });
+
   const agora = new Date();
   const em1h = new Date(agora.getTime() + 60 * 60_000);
   const em24h = new Date(agora.getTime() + 24 * 60 * 60_000);
@@ -73,7 +82,7 @@ async function executar(request: NextRequest) {
   }
 
   if (envios.length === 0) {
-    return NextResponse.json({ ok: true, enviados: 0, verificados: linhas.length });
+    return NextResponse.json({ ok: true, enviados: 0, verificados: linhas.length, vencimentosAvisados });
   }
 
   // Só profissionais cujo plano inclui lembretes
@@ -115,7 +124,37 @@ async function executar(request: NextRequest) {
   if (marcar1h.length) await admin.from("agendamentos").update({ lembrete_1h_enviado_em: marcadoEm }).in("id", marcar1h);
   if (mortos.size) await admin.from("push_subscriptions").delete().in("endpoint", [...mortos]);
 
-  return NextResponse.json({ ok: true, enviados, avisos: envios.length, verificados: linhas.length, inscricoesRemovidas: mortos.size });
+  return NextResponse.json({ ok: true, enviados, avisos: envios.length, verificados: linhas.length, inscricoesRemovidas: mortos.size, vencimentosAvisados });
+}
+
+/**
+ * Contas aprovadas com `ativa_ate` nos próximos 3 dias (ou hoje) recebem um e-mail, uma vez por
+ * data de validade (`aviso_vencimento_para`). Se o admin estender a validade, um novo aviso sai depois.
+ */
+async function avisarVencimentos(admin: ReturnType<typeof criarClienteAdmin>): Promise<number> {
+  if (!emailConfigurado()) return 0;
+  const hoje = hojeISO();
+  const limite = somarDias(hoje, 3);
+
+  const { data, error } = await admin
+    .from("profiles")
+    .select("id, nome, email, plano, ativa_ate, aviso_vencimento_para")
+    .eq("status", "aprovada")
+    .gte("ativa_ate", hoje)
+    .lte("ativa_ate", limite);
+  if (error || !data) return 0;
+
+  let enviados = 0;
+  for (const p of data) {
+    if (!p.email || !p.ativa_ate || p.aviso_vencimento_para === p.ativa_ate) continue;
+    const dias = diasEntre(hoje, p.ativa_ate).length - 1;
+    const r = await enviarEmail(emailVencimentoProximo(p.email, p.nome, p.plano, p.ativa_ate, dias));
+    if (r.enviado) {
+      await admin.from("profiles").update({ aviso_vencimento_para: p.ativa_ate }).eq("id", p.id);
+      enviados += 1;
+    }
+  }
+  return enviados;
 }
 
 export async function POST(request: NextRequest) {

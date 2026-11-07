@@ -43,6 +43,9 @@ export type Profile = {
   agendamento_online: boolean;
   confirmacao_online: "automatica" | "manual";
   antecedencia_min_horas: number;
+  termos_aceitos_em: string | null;
+  termos_versao: string | null;
+  aviso_vencimento_para: string | null; // "AAAA-MM-DD"
   created_at: string;
   updated_at: string;
 };

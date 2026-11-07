@@ -19,6 +19,10 @@ export const esquemaCadastro = z
     email,
     senha,
     confirmarSenha: z.string(),
+    aceite: z
+      .string()
+      .optional()
+      .refine((v) => v === "on", "Para continuar, aceite os Termos de Uso e a Política de Privacidade"),
   })
   .refine((d) => d.senha === d.confirmarSenha, {
     message: "As senhas não coincidem",

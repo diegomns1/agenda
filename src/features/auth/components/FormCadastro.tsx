@@ -74,6 +74,30 @@ export function FormCadastro() {
         required
       />
 
+      <div className="grid gap-1.5">
+        <label className="flex items-start gap-2.5 text-sm leading-snug">
+          <input
+            type="checkbox"
+            name="aceite"
+            defaultChecked={estado.valores?.aceite === "on"}
+            className="mt-0.5 size-4 shrink-0 accent-primary"
+            aria-invalid={estado.erros?.aceite ? true : undefined}
+          />
+          <span>
+            Li e aceito os{" "}
+            <Link href="/termos" target="_blank" className="font-medium text-primary underline underline-offset-4">
+              Termos de Uso
+            </Link>{" "}
+            e a{" "}
+            <Link href="/privacidade" target="_blank" className="font-medium text-primary underline underline-offset-4">
+              Política de Privacidade
+            </Link>
+            .
+          </span>
+        </label>
+        {estado.erros?.aceite?.[0] ? <p className="text-sm text-destructive">{estado.erros.aceite[0]}</p> : null}
+      </div>
+
       <BotaoEnviar textoCarregando="Criando conta...">Criar conta</BotaoEnviar>
 
       <p className="text-center text-sm text-muted-foreground">

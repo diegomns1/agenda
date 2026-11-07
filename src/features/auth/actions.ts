@@ -6,6 +6,9 @@ import { z } from "zod";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { normalizarTelefone } from "@/lib/telefone";
 import { URL_APP } from "@/lib/constantes";
+import { VERSAO_TERMOS } from "@/lib/legal";
+import { emailDoAdmin, enviarEmail } from "@/lib/email";
+import { emailCadastroRecebido, emailNovoCadastroAdmin } from "@/features/emails/modelos";
 import { valoresDoForm, type EstadoForm } from "@/components/formulario/tipos";
 import {
   esquemaCadastro,
@@ -62,10 +65,11 @@ export async function entrar(_: EstadoForm, formData: FormData): Promise<EstadoF
 }
 
 export async function cadastrar(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
-  const valores = valoresDoForm(formData, ["nome", "telefone", "email"]);
+  const valores = valoresDoForm(formData, ["nome", "telefone", "email", "aceite"]);
   const r = esquemaCadastro.safeParse(Object.fromEntries(formData));
   if (!r.success) return { erros: z.flattenError(r.error).fieldErrors, valores };
 
+  const telefone = normalizarTelefone(r.data.telefone);
   const supabase = await criarClienteServidor();
   const { data, error } = await supabase.auth.signUp({
     email: r.data.email,
@@ -74,11 +78,21 @@ export async function cadastrar(_: EstadoForm, formData: FormData): Promise<Esta
       emailRedirectTo: `${await urlBase()}/auth/callback`,
       data: {
         nome: r.data.nome,
-        telefone: normalizarTelefone(r.data.telefone),
+        telefone,
+        // gravados em profiles pelo trigger handle_new_user (migração 0012)
+        termos_aceitos_em: new Date().toISOString(),
+        termos_versao: VERSAO_TERMOS,
       },
     },
   });
   if (error) return { erro: traduzirErroAuth(error.message), valores };
+
+  // E-mails de aviso (não bloqueiam o cadastro se falharem ou não estiverem configurados)
+  const admin = emailDoAdmin();
+  await Promise.all([
+    enviarEmail(emailCadastroRecebido(r.data.email, r.data.nome)),
+    admin ? enviarEmail(emailNovoCadastroAdmin(admin, { nome: r.data.nome, email: r.data.email, telefone })) : Promise.resolve(),
+  ]);
 
   // Sem sessão = confirmação de e-mail ligada no Supabase
   if (!data.session) {
