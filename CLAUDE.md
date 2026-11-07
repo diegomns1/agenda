@@ -56,6 +56,18 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Textos em pt-BR, simples e diretos. Mobile first (uso no celular). Inputs com `h-11 text-base`.
 - Nomes em português: tabelas (`servicos`), pastas, funções (`listarContas`), componentes (`ListaContas`).
 
+## Infra em uso
+
+- Supabase: projeto `supabase-aureolin-car` (ref `bdiefcuoomhtspmktksz`), criado pela integração da Vercel.
+  Há um segundo projeto manual sem uso ("diegomns1's Project") que pode ser apagado.
+- GitHub: `diegomns1/agenda` (branch `main`). Vercel: projeto `agenda`, deploy automático a cada push.
+- Produção: https://agenda-murex-five.vercel.app
+- Na Vercel as variáveis vêm da integração com os nomes `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY`;
+  o `next.config.ts` mapeia para `NEXT_PUBLIC_*`. Novas variáveis (VAPID, CRON_SECRET) precisam ser
+  adicionadas à mão em Vercel → Settings → Environment Variables.
+- Supabase Auth: Confirm email desligado; Redirect URLs cadastradas para localhost e produção.
+- Nesta máquina, `git push` e SQL de concessão de admin são executados pelo Diego (permissão da sessão).
+
 ## Ambiente local
 
 - Código em `C:\claude\agenda-saas` (G: do Google Drive é lento para `node_modules`).
