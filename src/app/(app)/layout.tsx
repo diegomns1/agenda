@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { ehAdmin, obterPerfil, obterUsuario, situacaoDaConta } from "@/lib/auth";
 import { Cabecalho } from "@/components/layout/Cabecalho";
+import { BarraInferior } from "@/components/layout/BarraInferior";
 
 /** Área da profissional: exige conta aprovada e dentro da validade. */
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
@@ -11,8 +12,13 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
 
   return (
     <div className="flex flex-1 flex-col">
-      <Cabecalho titulo={perfil?.nome_negocio ?? perfil?.nome} admin={ehAdmin(usuario)} />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">{children}</main>
+      <Cabecalho
+        titulo={perfil?.nome_negocio ?? perfil?.nome}
+        logoUrl={perfil?.logo_url}
+        admin={ehAdmin(usuario)}
+      />
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-24">{children}</main>
+      <BarraInferior />
     </div>
   );
 }

@@ -35,7 +35,7 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 ## Módulos do MVP
 
 1. ✅ Login, cadastro e aprovação pelo admin
-2. ⬜ Perfil da profissional (nome, logo, cores, contato, expediente)
+2. ✅ Perfil da profissional (nome, logo, cores, contato, expediente, modelo de lembrete)
 3. ⬜ Serviços (nome, duração, valor)
 4. ⬜ Clientes (cadastro, telefone, observações, histórico, "agendar de novo")
 5. ⬜ Agenda (dia/semana/mês; marcar, remarcar, cancelar, bloquear; sem conflito)
@@ -66,6 +66,9 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   o `next.config.ts` mapeia para `NEXT_PUBLIC_*`. Novas variáveis (VAPID, CRON_SECRET) precisam ser
   adicionadas à mão em Vercel → Settings → Environment Variables.
 - Supabase Auth: Confirm email desligado; Redirect URLs cadastradas para localhost e produção.
+- Storage: bucket público `logos` (migração 0002), arquivo em `{uid}/logo.png|svg`; upload feito pelo navegador
+  (`UploadLogo.tsx` redimensiona para 800px) e a URL pública é gravada em `profiles.logo_url` por Server Action.
+- Migrações aplicadas em produção: 0001, 0002.
 - Nesta máquina, `git push` e SQL de concessão de admin são executados pelo Diego (permissão da sessão).
 
 ## Ambiente local
