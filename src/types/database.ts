@@ -45,6 +45,23 @@ export type Profile = {
 
 export type ProfileUpdate = Partial<Omit<Profile, "id" | "created_at" | "updated_at">>;
 
+export type Servico = {
+  id: string;
+  profissional_id: string;
+  nome: string;
+  duracao_min: number;
+  valor: number;
+  ativo: boolean;
+  ordem: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ServicoInsert = Pick<Servico, "profissional_id" | "nome" | "duracao_min"> &
+  Partial<Pick<Servico, "id" | "valor" | "ativo" | "ordem">>;
+
+export type ServicoUpdate = Partial<Omit<Servico, "id" | "profissional_id" | "created_at" | "updated_at">>;
+
 export type Database = {
   public: {
     Tables: {
@@ -52,6 +69,12 @@ export type Database = {
         Row: Profile;
         Insert: Pick<Profile, "id" | "nome"> & Partial<Profile>;
         Update: ProfileUpdate;
+        Relationships: [];
+      };
+      servicos: {
+        Row: Servico;
+        Insert: ServicoInsert;
+        Update: ServicoUpdate;
         Relationships: [];
       };
     };

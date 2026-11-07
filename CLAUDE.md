@@ -36,7 +36,7 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 
 1. ✅ Login, cadastro e aprovação pelo admin
 2. ✅ Perfil da profissional (nome, logo, cores, contato, expediente, modelo de lembrete)
-3. ⬜ Serviços (nome, duração, valor)
+3. ✅ Serviços (nome, duração, valor, ativo/inativo, ordem, sugestões iniciais)
 4. ⬜ Clientes (cadastro, telefone, observações, histórico, "agendar de novo")
 5. ⬜ Agenda (dia/semana/mês; marcar, remarcar, cancelar, bloquear; sem conflito)
 6. ⬜ Lembretes (push + wa.me + lista de pendentes)
@@ -68,7 +68,9 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Supabase Auth: Confirm email desligado; Redirect URLs cadastradas para localhost e produção.
 - Storage: bucket público `logos` (migração 0002), arquivo em `{uid}/logo.png|svg`; upload feito pelo navegador
   (`UploadLogo.tsx` redimensiona para 800px) e a URL pública é gravada em `profiles.logo_url` por Server Action.
-- Migrações aplicadas em produção: 0001, 0002.
+- Migrações aplicadas em produção: 0001, 0002, 0003.
+- Padrão de lista + diálogo (criar/editar) + menu de opções + confirmação de exclusão: ver `features/servicos/components/ListaServicos.tsx`.
+  Dinheiro: `src/lib/moeda.ts` (`interpretarMoeda` aceita "1.250,50", "45,5", "45.50").
 - Nesta máquina, `git push` e SQL de concessão de admin são executados pelo Diego (permissão da sessão).
 
 ## Ambiente local

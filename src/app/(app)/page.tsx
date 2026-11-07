@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 export const metadata: Metadata = { title: "Hoje" };
 
 const PROXIMOS_MODULOS = [
-  "Serviços e valores",
   "Clientes",
   "Agenda do dia, semana e mês",
   "Lembretes automáticos",
