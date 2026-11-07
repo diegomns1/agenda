@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { obterPerfil } from "@/lib/auth";
+import { URL_APP } from "@/lib/constantes";
+import { temRecurso } from "@/lib/planos";
 import { FormPerfil } from "@/features/perfil/components/FormPerfil";
 import { UploadLogo } from "@/features/perfil/components/UploadLogo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +30,7 @@ export default async function PaginaPerfil() {
         </CardContent>
       </Card>
 
-      <FormPerfil perfil={perfil} />
+      <FormPerfil perfil={perfil} urlBase={URL_APP} podeAgendamentoOnline={temRecurso(perfil.plano, "agendamento_online")} />
     </div>
   );
 }

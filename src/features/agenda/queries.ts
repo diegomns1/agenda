@@ -42,6 +42,21 @@ export async function listarHistoricoDaCliente(clienteId: string, limite = 50): 
   return data;
 }
 
+/** Pedidos feitos pelo link que ainda aguardam confirmação (futuros). */
+export async function listarSolicitacoesPendentes(): Promise<Agendamento[]> {
+  const supabase = await criarClienteServidor();
+  const { data, error } = await supabase
+    .from("agendamentos")
+    .select("*")
+    .eq("tipo", "atendimento")
+    .eq("status", "pendente")
+    .gte("fim", new Date().toISOString())
+    .order("inicio", { ascending: true })
+    .limit(20);
+  if (error) throw new Error(`Erro ao listar solicitações: ${error.message}`);
+  return data;
+}
+
 /** Próximos atendimentos a partir de agora (para a tela Hoje). */
 export async function listarProximosAtendimentos(limite = 5): Promise<Agendamento[]> {
   const supabase = await criarClienteServidor();

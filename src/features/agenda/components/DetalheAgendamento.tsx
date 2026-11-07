@@ -77,6 +77,7 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
                 </DialogTitle>
                 <DialogDescription>
                   {formatarData(a.inicio, "EEEE, dd/MM")} · {horaDe(a.inicio)} às {horaDe(a.fim)}
+                  {a.origem === "online" ? " · pedido pelo link" : ""}
                 </DialogDescription>
               </DialogHeader>
 
@@ -140,6 +141,18 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
               <div className="flex flex-wrap gap-2 border-t pt-3">
                 {a.tipo === "atendimento" ? (
                   <>
+                    {a.status === "pendente" ? (
+                      <>
+                        <Button size="sm" disabled={pendente} onClick={() => executar(() => alterarStatusAgendamento(a.id, "agendado"))}>
+                          <CheckIcon />
+                          Confirmar
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-destructive" disabled={pendente} onClick={() => setConfirmando("cancelar")}>
+                          <BanIcon />
+                          Recusar
+                        </Button>
+                      </>
+                    ) : null}
                     {a.status === "agendado" ? (
                       <>
                         <Button size="sm" disabled={pendente} onClick={() => executar(() => alterarStatusAgendamento(a.id, "concluido"))}>
@@ -177,10 +190,14 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
       <AlertDialog open={confirmando !== null} onOpenChange={(aberto) => !aberto && setConfirmando(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{confirmando === "cancelar" ? "Cancelar este atendimento?" : "Remover este bloqueio?"}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {confirmando === "cancelar" ? (a?.status === "pendente" ? "Recusar este pedido?" : "Cancelar este atendimento?") : "Remover este bloqueio?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmando === "cancelar"
-                ? "O horário volta a ficar livre. O registro continua no histórico da cliente como cancelado."
+                ? a?.status === "pendente"
+                  ? "O horário volta a ficar livre. Avise a cliente pelo WhatsApp, se puder."
+                  : "O horário volta a ficar livre. O registro continua no histórico da cliente como cancelado."
                 : "O período volta a ficar disponível para marcar atendimentos."}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -195,7 +212,7 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
                 executar(acao);
               }}
             >
-              {confirmando === "cancelar" ? "Cancelar atendimento" : "Remover"}
+              {confirmando === "cancelar" ? (a?.status === "pendente" ? "Recusar" : "Cancelar atendimento") : "Remover"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -151,7 +151,8 @@ export async function alterarStatusAgendamento(id: string, status: StatusAgendam
 
   revalidar(data?.cliente_id);
   const mensagens: Record<StatusAgendamento, string> = {
-    agendado: "Atendimento reaberto.",
+    pendente: "Marcado como aguardando confirmação.",
+    agendado: "Atendimento confirmado.",
     concluido: "Atendimento concluído.",
     faltou: "Marcado como falta.",
     cancelado: "Atendimento cancelado. O horário ficou livre.",

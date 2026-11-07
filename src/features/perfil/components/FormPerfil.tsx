@@ -15,6 +15,10 @@ import type { Profile } from "@/types/database";
 import { SeletorCores, type Cores } from "./SeletorCores";
 import { Expediente } from "./Expediente";
 import { PreviewMarca } from "./PreviewMarca";
+import { LinkAgendamento } from "./LinkAgendamento";
+import { Switch } from "@/components/ui/switch";
+import { LockIcon } from "lucide-react";
+import Link from "next/link";
 
 const EXEMPLO = { nome: "Maria", dia: "amanhã (sexta)", hora: "14:30", servico: "manicure" };
 
@@ -33,8 +37,28 @@ async function salvarComToast(estado: EstadoForm, formData: FormData) {
   return r;
 }
 
-export function FormPerfil({ perfil }: { perfil: Profile }) {
+type PropsForm = {
+  perfil: Profile;
+  /** Base do link público, ex.: https://painel.vaguinha.app */
+  urlBase: string;
+  /** O plano inclui agendamento pela cliente? */
+  podeAgendamentoOnline: boolean;
+};
+
+function slugDe(texto: string) {
+  return texto
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+}
+
+export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm) {
   const [estado, acao] = useActionState(salvarComToast, ESTADO_INICIAL);
+  const [slug, setSlug] = useState(perfil.slug ?? slugDe(perfil.nome_negocio || perfil.nome));
+  const [online, setOnline] = useState(perfil.agendamento_online);
   const [cores, setCores] = useState<Cores>({ primaria: perfil.cor_primaria, secundaria: perfil.cor_secundaria });
   const [nome, setNome] = useState(perfil.nome);
   const [nomeNegocio, setNomeNegocio] = useState(perfil.nome_negocio ?? "");
@@ -108,6 +132,92 @@ export function FormPerfil({ perfil }: { perfil: Profile }) {
           {estado.erros?.cor_primaria || estado.erros?.cor_secundaria ? (
             <p className="text-sm text-destructive">Cor inválida.</p>
           ) : null}
+        </CardContent>
+      </Card>
+
+      <Card id="agendamento-online">
+        <CardHeader>
+          <CardTitle>Agendamento pela cliente</CardTitle>
+          <CardDescription>
+            Um link para colocar na bio do Instagram: a cliente escolhe serviço, dia e horário livre.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          {!podeAgendamentoOnline ? (
+            <div className="flex items-start gap-3 rounded-xl border border-dashed px-3 py-3 text-sm">
+              <LockIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+              <p>
+                Disponível a partir do plano <strong>Profissional</strong>.{" "}
+                <Link href="/lembretes" className="underline underline-offset-4">
+                  Ver detalhes
+                </Link>
+              </p>
+            </div>
+          ) : null}
+
+          <div className="flex items-center justify-between rounded-lg border px-3 py-2.5">
+            <Label htmlFor="agendamento_online" className="font-medium">
+              Link ativo
+            </Label>
+            <Switch id="agendamento_online" name="agendamento_online" checked={online} onCheckedChange={setOnline} />
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label htmlFor="slug">Endereço do link</Label>
+            <div className="flex items-center overflow-hidden rounded-lg border border-input bg-background focus-within:ring-2 focus-within:ring-ring/40">
+              <span className="hidden shrink-0 pl-3 text-sm text-muted-foreground sm:inline">{urlBase.replace(/^https?:\/\//, "")}/p/</span>
+              <input
+                id="slug"
+                name="slug"
+                value={slug}
+                onChange={(e) => setSlug(slugDe(e.target.value.replace(/\s/g, "-")))}
+                className="h-11 min-w-0 flex-1 bg-transparent px-3 text-base outline-none"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+            {estado.erros?.slug?.[0] ? (
+              <p className="text-sm text-destructive">{estado.erros.slug[0]}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">Só letras minúsculas, números e hífen. Ex.: studio-ana-nails</p>
+            )}
+          </div>
+
+          {podeAgendamentoOnline && online && perfil.slug ? <LinkAgendamento url={`${urlBase}/p/${perfil.slug}`} /> : null}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-1.5">
+              <Label htmlFor="confirmacao_online">Confirmação</Label>
+              <select
+                id="confirmacao_online"
+                name="confirmacao_online"
+                defaultValue={perfil.confirmacao_online}
+                className="h-11 rounded-lg border border-input bg-background px-3 text-base"
+              >
+                <option value="manual">Eu confirmo cada pedido</option>
+                <option value="automatica">Confirmar automaticamente</option>
+              </select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="antecedencia_min_horas">Antecedência mínima</Label>
+              <select
+                id="antecedencia_min_horas"
+                name="antecedencia_min_horas"
+                defaultValue={perfil.antecedencia_min_horas}
+                className="h-11 rounded-lg border border-input bg-background px-3 text-base"
+              >
+                {[0, 1, 2, 3, 6, 12, 24, 48].map((h) => (
+                  <option key={h} value={h}>
+                    {h === 0 ? "Sem antecedência" : h === 1 ? "1 hora" : h < 24 ? `${h} horas` : h === 24 ? "1 dia" : "2 dias"}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Com &quot;Eu confirmo&quot;, o pedido entra na agenda como <strong>aguardando confirmação</strong> (o horário já fica reservado) e você
+            recebe uma notificação para confirmar ou recusar.
+          </p>
         </CardContent>
       </Card>
 

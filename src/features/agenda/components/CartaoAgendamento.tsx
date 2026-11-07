@@ -1,6 +1,6 @@
 "use client";
 
-import { BanIcon, LockIcon } from "lucide-react";
+import { BanIcon, HourglassIcon, LockIcon } from "lucide-react";
 import { horaDe } from "@/lib/datas";
 import { cn } from "@/lib/utils";
 import { primeiroNome } from "@/lib/texto";
@@ -16,6 +16,8 @@ type Props = {
 export function classesDoStatus(a: Agendamento) {
   if (a.tipo === "bloqueio") return "bg-muted text-muted-foreground border-border bg-[repeating-linear-gradient(135deg,transparent,transparent_6px,rgba(0,0,0,0.04)_6px,rgba(0,0,0,0.04)_12px)]";
   switch (a.status) {
+    case "pendente":
+      return "bg-amber-50 text-amber-900 border-amber-400 border-dashed dark:bg-amber-950 dark:text-amber-100";
     case "concluido":
       return "bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-100 dark:border-emerald-900";
     case "faltou":
@@ -29,7 +31,7 @@ export function classesDoStatus(a: Agendamento) {
 
 export function CartaoAgendamento({ agendamento: a, compacto, style, onClick }: Props) {
   const titulo = a.tipo === "bloqueio" ? a.titulo : compacto ? primeiroNome(a.cliente_nome ?? "") : a.cliente_nome;
-  const Icone = a.tipo === "bloqueio" ? LockIcon : a.status === "cancelado" ? BanIcon : null;
+  const Icone = a.tipo === "bloqueio" ? LockIcon : a.status === "cancelado" ? BanIcon : a.status === "pendente" ? HourglassIcon : null;
 
   return (
     <button

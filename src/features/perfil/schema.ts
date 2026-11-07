@@ -48,6 +48,14 @@ export const esquemaPerfil = z.object({
   cor_secundaria: hex,
   intervalo_grade_min: z.coerce.number().refine((n) => (INTERVALOS_GRADE as readonly number[]).includes(n), "Intervalo inválido"),
   modelo_lembrete: z.string().trim().min(10, "Mensagem muito curta").max(400, "Máximo de 400 caracteres"),
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9]([a-z0-9-]{1,38}[a-z0-9])$/, "Use de 3 a 40 letras minúsculas, números ou hífen"),
+  agendamento_online: z.string().optional().transform((v) => v === "on"),
+  confirmacao_online: z.enum(["automatica", "manual"]),
+  antecedencia_min_horas: z.coerce.number().int().min(0).max(72),
   expediente: z.object({
     "0": dia, "1": dia, "2": dia, "3": dia, "4": dia, "5": dia, "6": dia,
   }),

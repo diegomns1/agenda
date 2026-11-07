@@ -39,6 +39,10 @@ export type Profile = {
   expediente: Expediente;
   intervalo_grade_min: number;
   modelo_lembrete: string;
+  slug: string | null;
+  agendamento_online: boolean;
+  confirmacao_online: "automatica" | "manual";
+  antecedencia_min_horas: number;
   created_at: string;
   updated_at: string;
 };
@@ -78,7 +82,8 @@ export type ClienteInsert = Pick<Cliente, "profissional_id" | "nome"> &
 export type ClienteUpdate = Partial<Omit<Cliente, "id" | "profissional_id" | "created_at" | "updated_at">>;
 
 export type TipoAgendamento = "atendimento" | "bloqueio";
-export type StatusAgendamento = "agendado" | "concluido" | "cancelado" | "faltou";
+export type StatusAgendamento = "pendente" | "agendado" | "concluido" | "cancelado" | "faltou";
+export type OrigemAgendamento = "painel" | "online";
 
 export type Agendamento = {
   id: string;
@@ -93,6 +98,7 @@ export type Agendamento = {
   inicio: string; // ISO (timestamptz)
   fim: string;
   status: StatusAgendamento;
+  origem: OrigemAgendamento;
   observacoes: string | null;
   lembrete_1d_enviado_em: string | null;
   lembrete_1h_enviado_em: string | null;
@@ -161,6 +167,29 @@ export type Database = {
       is_admin: {
         Args: Record<string, never>;
         Returns: boolean;
+      };
+      perfil_publico: {
+        Args: { p_slug: string };
+        Returns: Json;
+      };
+      horarios_ocupados: {
+        Args: { p_slug: string; p_inicio: string; p_fim: string };
+        Returns: { inicio: string; fim: string }[];
+      };
+      criar_agendamento_online: {
+        Args: {
+          p_slug: string;
+          p_servico_id: string;
+          p_inicio: string;
+          p_nome: string;
+          p_telefone: string;
+          p_observacoes?: string | null;
+        };
+        Returns: Json;
+      };
+      gerar_slug: {
+        Args: { texto: string };
+        Returns: string | null;
       };
     };
     Enums: Record<string, never>;

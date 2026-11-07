@@ -38,6 +38,7 @@ export const esquemaBloqueio = z
   });
 
 export const STATUS_AGENDAMENTO = {
+  pendente: { rotulo: "Aguardando confirmação", cor: "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200" },
   agendado: { rotulo: "Agendado", cor: "bg-primary/15 text-primary border-primary/30" },
   concluido: { rotulo: "Concluído", cor: "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-200" },
   faltou: { rotulo: "Faltou", cor: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950 dark:text-amber-200" },

@@ -6,7 +6,8 @@ import { dataDe, formatarData, hojeISO, horaDe, rotuloRelativo } from "@/lib/dat
 import { formatarMoeda } from "@/lib/moeda";
 import { primeiroNome } from "@/lib/texto";
 import { PLANOS, temRecurso } from "@/lib/planos";
-import { listarAgendamentosDias, listarProximosAtendimentos } from "@/features/agenda/queries";
+import { listarAgendamentosDias, listarProximosAtendimentos, listarSolicitacoesPendentes } from "@/features/agenda/queries";
+import { SolicitacoesPendentes } from "@/features/agenda/components/SolicitacoesPendentes";
 import { contarLembretesPendentes } from "@/features/lembretes/queries";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,10 +18,11 @@ export default async function PaginaHoje() {
   const perfil = await obterPerfil();
   const hoje = hojeISO();
   const podeLembretes = temRecurso(perfil?.plano, "lembretes");
-  const [deHoje, proximos, lembretes] = await Promise.all([
+  const [deHoje, proximos, lembretes, solicitacoes] = await Promise.all([
     listarAgendamentosDias(hoje),
     listarProximosAtendimentos(5),
     podeLembretes ? contarLembretesPendentes() : Promise.resolve(0),
+    listarSolicitacoesPendentes(),
   ]);
 
   const atendimentosHoje = deHoje.filter((a) => a.tipo === "atendimento" && a.status !== "cancelado");
@@ -57,6 +59,8 @@ export default async function PaginaHoje() {
           </p>
         ) : null}
       </section>
+
+      <SolicitacoesPendentes solicitacoes={solicitacoes} />
 
       {perfilIncompleto ? (
         <Link

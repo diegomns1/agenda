@@ -11,6 +11,7 @@ import { esquemaPerfil, expedienteDoForm } from "./schema";
 const CAMPOS_TEXTO = [
   "nome", "nome_negocio", "telefone", "instagram",
   "cor_primaria", "cor_secundaria", "intervalo_grade_min", "modelo_lembrete",
+  "slug", "agendamento_online", "confirmacao_online", "antecedencia_min_horas",
 ];
 
 function revalidarPerfil() {
@@ -56,10 +57,17 @@ export async function salvarPerfil(_: EstadoForm, formData: FormData): Promise<E
       intervalo_grade_min: d.intervalo_grade_min,
       modelo_lembrete: d.modelo_lembrete,
       expediente: d.expediente,
+      slug: d.slug,
+      agendamento_online: d.agendamento_online,
+      confirmacao_online: d.confirmacao_online,
+      antecedencia_min_horas: d.antecedencia_min_horas,
     })
     .eq("id", usuario.id);
 
-  if (error) return { erro: `Não foi possível salvar: ${error.message}`, valores };
+  if (error) {
+    if (error.code === "23505") return { erro: "Esse endereço do link já está em uso. Escolha outro.", erros: { slug: ["Já em uso"] }, valores };
+    return { erro: `Não foi possível salvar: ${error.message}`, valores };
+  }
 
   revalidarPerfil();
   return { ok: true, mensagem: "Perfil salvo." };
