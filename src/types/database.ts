@@ -77,6 +77,35 @@ export type ClienteInsert = Pick<Cliente, "profissional_id" | "nome"> &
 
 export type ClienteUpdate = Partial<Omit<Cliente, "id" | "profissional_id" | "created_at" | "updated_at">>;
 
+export type TipoAgendamento = "atendimento" | "bloqueio";
+export type StatusAgendamento = "agendado" | "concluido" | "cancelado" | "faltou";
+
+export type Agendamento = {
+  id: string;
+  profissional_id: string;
+  tipo: TipoAgendamento;
+  cliente_id: string | null;
+  cliente_nome: string | null;
+  servico_id: string | null;
+  servico_nome: string | null;
+  valor: number | null;
+  titulo: string | null;
+  inicio: string; // ISO (timestamptz)
+  fim: string;
+  status: StatusAgendamento;
+  observacoes: string | null;
+  lembrete_1d_enviado_em: string | null;
+  lembrete_1h_enviado_em: string | null;
+  cliente_avisada_em: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AgendamentoInsert = Pick<Agendamento, "profissional_id" | "tipo" | "inicio" | "fim"> &
+  Partial<Omit<Agendamento, "profissional_id" | "tipo" | "inicio" | "fim" | "created_at" | "updated_at">>;
+
+export type AgendamentoUpdate = Partial<Omit<Agendamento, "id" | "profissional_id" | "created_at" | "updated_at">>;
+
 export type Database = {
   public: {
     Tables: {
@@ -96,6 +125,12 @@ export type Database = {
         Row: Cliente;
         Insert: ClienteInsert;
         Update: ClienteUpdate;
+        Relationships: [];
+      };
+      agendamentos: {
+        Row: Agendamento;
+        Insert: AgendamentoInsert;
+        Update: AgendamentoUpdate;
         Relationships: [];
       };
     };

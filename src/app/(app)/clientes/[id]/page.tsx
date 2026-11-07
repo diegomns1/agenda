@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeftIcon, CalendarIcon, MessageCircleIcon, StickyNoteIcon } from "lucide-react";
 import { listarHistoricoCliente, obterCliente } from "@/features/clientes/queries";
 import { AcoesCliente } from "@/features/clientes/components/AcoesCliente";
+import { HistoricoCliente } from "@/features/clientes/components/HistoricoCliente";
 import { iniciais } from "@/lib/texto";
-import { EstadoVazio } from "@/components/layout/EstadoVazio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatarData } from "@/lib/datas";
@@ -37,7 +37,7 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
         </div>
       </div>
 
-      <AcoesCliente cliente={cliente} />
+      <AcoesCliente cliente={cliente} ultimoServicoId={historico[0]?.servico_id ?? null} />
 
       <Card>
         <CardHeader>
@@ -84,13 +84,7 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
           <CalendarIcon className="size-4 text-primary" />
           Histórico de atendimentos
         </h2>
-        {historico.length === 0 ? (
-          <EstadoVazio
-            Icone={CalendarIcon}
-            titulo="Nenhum atendimento registrado"
-            descricao="Os atendimentos marcados na agenda vão aparecer aqui, do mais recente para o mais antigo."
-          />
-        ) : null}
+        <HistoricoCliente historico={historico} />
       </section>
     </div>
   );

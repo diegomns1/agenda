@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, SparklesIcon, UserRoundIcon, UsersIcon, type LucideIcon } from "lucide-react";
+import { CalendarDaysIcon, HomeIcon, SparklesIcon, UserRoundIcon, UsersIcon, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Item = { href: string; rotulo: string; Icone: LucideIcon };
@@ -10,6 +10,7 @@ type Item = { href: string; rotulo: string; Icone: LucideIcon };
 /** Itens entram aqui conforme os módulos ficam prontos. */
 export const ITENS_NAVEGACAO: Item[] = [
   { href: "/", rotulo: "Hoje", Icone: HomeIcon },
+  { href: "/agenda", rotulo: "Agenda", Icone: CalendarDaysIcon },
   { href: "/clientes", rotulo: "Clientes", Icone: UsersIcon },
   { href: "/servicos", rotulo: "Serviços", Icone: SparklesIcon },
   { href: "/perfil", rotulo: "Perfil", Icone: UserRoundIcon },

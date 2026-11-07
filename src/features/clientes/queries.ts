@@ -1,6 +1,7 @@
 import "server-only";
 import { criarClienteServidor } from "@/lib/supabase/server";
-import type { Cliente } from "@/types/database";
+import { listarHistoricoDaCliente } from "@/features/agenda/queries";
+import type { Agendamento, Cliente } from "@/types/database";
 
 /** Lista as clientes da profissional, com busca opcional por nome ou telefone. */
 export async function listarClientes(busca?: string): Promise<Cliente[]> {
@@ -36,11 +37,7 @@ export async function contarClientes(): Promise<number> {
   return count ?? 0;
 }
 
-/**
- * Histórico de atendimentos da cliente.
- * Passa a devolver dados no módulo 5 (tabela agendamentos). Por enquanto, lista vazia.
- */
-export async function listarHistoricoCliente(clienteId: string): Promise<[]> {
-  void clienteId; // usado no módulo 5
-  return [];
+/** Histórico de atendimentos da cliente (mais recente primeiro). */
+export async function listarHistoricoCliente(clienteId: string): Promise<Agendamento[]> {
+  return listarHistoricoDaCliente(clienteId);
 }

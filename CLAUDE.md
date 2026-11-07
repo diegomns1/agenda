@@ -38,7 +38,7 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 2. ✅ Perfil da profissional (nome, logo, cores, contato, expediente, modelo de lembrete)
 3. ✅ Serviços (nome, duração, valor, ativo/inativo, ordem, sugestões iniciais)
 4. ✅ Clientes (cadastro, WhatsApp com máscara, observações, busca; histórico e "agendar de novo" ligam no módulo 5)
-5. ⬜ Agenda (dia/semana/mês; marcar, remarcar, cancelar, bloquear; sem conflito)
+5. ✅ Agenda (dia/semana/mês; marcar, remarcar, concluir, faltou, cancelar, bloquear; EXCLUDE no banco; histórico da cliente)
 6. ⬜ Lembretes (push + wa.me + lista de pendentes)
 7. ⬜ Gerador de stories 9:16
 8. ⬜ PWA instalável com aviso "Instale o app para receber lembretes"
@@ -68,10 +68,16 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Supabase Auth: Confirm email desligado; Redirect URLs cadastradas para localhost e produção.
 - Storage: bucket público `logos` (migração 0002), arquivo em `{uid}/logo.png|svg`; upload feito pelo navegador
   (`UploadLogo.tsx` redimensiona para 800px) e a URL pública é gravada em `profiles.logo_url` por Server Action.
-- Migrações aplicadas em produção: 0001, 0002, 0003, 0004.
-- Pendências para o módulo 5: `listarHistoricoCliente()` em `features/clientes/queries.ts` devolve [] (implementar
-  com `agendamentos`); botão "Agendar de novo" em `AcoesCliente.tsx` está `disabled` (ligar em `/agenda/novo?cliente=`).
-- Funções puras compartilhadas entre servidor e cliente ficam em `src/lib/*` (nunca exportar de um arquivo "use client").
+- Migrações aplicadas em produção: 0001 a 0005.
+- Agenda: `features/agenda/disponibilidade.ts` (horários livres, puro), `GradeHoraria.tsx` (eixo de horas +
+  colunas; dia e semana), `VisaoMes.tsx`, `FormAgendamento.tsx` (atendimento/bloqueio; busca horários via
+  Server Action `consultarHorarios`), `DetalheAgendamento.tsx` (status). Datas civis "AAAA-MM-DD" em SP:
+  helpers em `src/lib/datas.ts` (`instanteEmSP`, `inicioDoDia`, `somarDias`, `diaDaSemana`...).
+- `agendamentos.servico_id` é `on delete restrict` (serviço usado vira inativo); `cliente_id` é `set null`
+  (histórico sobrevive via `cliente_nome`). Erro 23P01 = conflito de horário.
+- Abrir o formulário por URL: `/agenda?novo=atendimento&cliente=<id>&servico=<id>&data=AAAA-MM-DD`.
+- Funções puras compartilhadas entre servidor e cliente ficam em `src/lib/*` (nunca exportar de um arquivo "use client":
+  o servidor não consegue chamá-las e a página quebra com erro 500 — já aconteceu duas vezes).
 - Padrão de lista + diálogo (criar/editar) + menu de opções + confirmação de exclusão: ver `features/servicos/components/ListaServicos.tsx`.
   Dinheiro: `src/lib/moeda.ts` (`interpretarMoeda` aceita "1.250,50", "45,5", "45.50").
 - Nesta máquina, `git push` e SQL de concessão de admin são executados pelo Diego (permissão da sessão).

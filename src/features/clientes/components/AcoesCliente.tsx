@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { CalendarPlusIcon, PencilIcon, Trash2Icon } from "lucide-react";
@@ -19,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Cliente } from "@/types/database";
 
-export function AcoesCliente({ cliente }: { cliente: Cliente }) {
+export function AcoesCliente({ cliente, ultimoServicoId }: { cliente: Cliente; ultimoServicoId?: string | null }) {
   const [editando, setEditando] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
   const [pendente, iniciar] = useTransition();
@@ -33,10 +34,11 @@ export function AcoesCliente({ cliente }: { cliente: Cliente }) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {/* Habilitado no módulo 5 (agenda) */}
-      <Button disabled title="Disponível quando a agenda estiver pronta">
-        <CalendarPlusIcon />
-        Agendar de novo
+      <Button asChild>
+        <Link href={`/agenda?novo=atendimento&cliente=${cliente.id}${ultimoServicoId ? `&servico=${ultimoServicoId}` : ""}`}>
+          <CalendarPlusIcon />
+          {ultimoServicoId ? "Agendar de novo" : "Agendar"}
+        </Link>
       </Button>
       <Button variant="outline" onClick={() => setEditando(true)}>
         <PencilIcon />
