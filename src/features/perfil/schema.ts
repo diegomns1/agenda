@@ -70,6 +70,7 @@ export function expedienteDoForm(formData: FormData): Expediente {
 
 /** Paleta de pares sugeridos (primária, secundária). */
 export const PALETAS = [
+  { nome: "Vinho", primaria: "#702D50", secundaria: "#FCF6F1" },
   { nome: "Rosa", primaria: "#C2185B", secundaria: "#FCE4EC" },
   { nome: "Pink", primaria: "#E91E63", secundaria: "#FFF0F5" },
   { nome: "Lilás", primaria: "#7B1FA2", secundaria: "#F3E5F5" },

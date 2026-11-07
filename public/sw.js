@@ -1,7 +1,7 @@
 /* Service worker do app Agenda: notificações push + cache leve para abrir rápido e funcionar
    minimamente sem internet. */
 
-const VERSAO = "vaguinha-v3";
+const VERSAO = "vaguinha-v4";
 const CACHE_ESTATICO = `${VERSAO}-estatico`;
 const CACHE_PAGINAS = `${VERSAO}-paginas`;
 const PAGINA_OFFLINE = "/offline";

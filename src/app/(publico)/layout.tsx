@@ -1,16 +1,17 @@
-import { CalendarHeartIcon } from "lucide-react";
-import { NOME_APP } from "@/lib/constantes";
+import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
 
 export default function LayoutPublico({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-muted/40 px-4 py-10">
-      <div className="mb-6 flex items-center gap-2 text-primary">
-        <CalendarHeartIcon className="size-7" />
-        <span className="text-2xl font-semibold tracking-tight">{NOME_APP}</span>
+    <div className="fundo-aurora flex flex-1 flex-col items-center justify-center bg-background px-4 py-10">
+      <div className="surgir flutuar mb-8">
+        <LogoVaguinha variante="vertical" className="h-28 w-auto drop-shadow-sm" />
       </div>
-      <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-sm ring-1 ring-foreground/10">
+      <div className="surgir surgir-atraso-1 w-full max-w-sm rounded-3xl bg-card/90 p-6 shadow-xl shadow-vinho/10 ring-1 ring-vinho/10 backdrop-blur">
         {children}
       </div>
+      <p className="surgir surgir-atraso-2 mt-6 text-xs text-muted-foreground">
+        Agenda para profissionais autônomas · vaguinha.app
+      </p>
     </div>
   );
 }

@@ -1,59 +1,47 @@
-// Gera os ícones do PWA em public/icons a partir de um SVG desenhado em código.
+// Gera os ícones do PWA em public/icons a partir da marca oficial (public/marca).
 // Uso: node scripts/gerar-icones.mjs
 import sharp from "sharp";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 
-const COR = "#C2185B";
-const FUNDO = "#FCE4EC";
+const VINHO = "#702D50";
 
-/** Calendário com coração, no estilo do ícone do app. `margem` maior = versão maskable. */
-function svg(tamanho, { maskable = false, monocromatico = false } = {}) {
-  const m = maskable ? 0.18 : 0.1; // margem segura
-  const raio = maskable ? 0 : tamanho * 0.22;
-  const fundo = monocromatico ? "transparent" : COR;
-  const traco = monocromatico ? "#ffffff" : "#ffffff";
-  const s = tamanho * (1 - 2 * m);
-  const x = tamanho * m;
-  const y = tamanho * m;
-  // calendário ocupa a área s×s
-  const cw = s * 0.78;
-  const ch = s * 0.72;
-  const cx = x + (s - cw) / 2;
-  const cy = y + (s - ch) / 2 + s * 0.04;
-  const espessura = Math.max(2, s * 0.075);
-  const r = s * 0.12;
-  const coracao = `
-    M ${cx + cw / 2} ${cy + ch * 0.86}
-    C ${cx + cw * 0.22} ${cy + ch * 0.66}, ${cx + cw * 0.3} ${cy + ch * 0.42}, ${cx + cw * 0.5} ${cy + ch * 0.52}
-    C ${cx + cw * 0.7} ${cy + ch * 0.42}, ${cx + cw * 0.78} ${cy + ch * 0.66}, ${cx + cw / 2} ${cy + ch * 0.86} Z`;
+const iconeApp = await readFile("public/marca/icone-app.svg"); // quadrado vinho com o símbolo
+const simbolo = await readFile("public/marca/simbolo.svg", "utf8"); // só o símbolo (creme + rosa)
+
+/** Versão maskable: fundo vinho até a borda e símbolo menor (zona segura de 20%). */
+function svgMaskable(tamanho) {
+  const s = tamanho * 0.62;
+  const x = (tamanho - s) / 2;
+  const inner = simbolo.replace("<svg ", `<svg x="${x}" y="${x}" width="${s}" height="${s}" `);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${tamanho}" height="${tamanho}" viewBox="0 0 ${tamanho} ${tamanho}">
-  <rect width="${tamanho}" height="${tamanho}" rx="${raio}" fill="${fundo}"/>
-  <rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" rx="${r}" fill="none" stroke="${traco}" stroke-width="${espessura}"/>
-  <line x1="${cx}" y1="${cy + ch * 0.3}" x2="${cx + cw}" y2="${cy + ch * 0.3}" stroke="${traco}" stroke-width="${espessura}"/>
-  <line x1="${cx + cw * 0.28}" y1="${cy - s * 0.09}" x2="${cx + cw * 0.28}" y2="${cy + s * 0.06}" stroke="${traco}" stroke-width="${espessura}" stroke-linecap="round"/>
-  <line x1="${cx + cw * 0.72}" y1="${cy - s * 0.09}" x2="${cx + cw * 0.72}" y2="${cy + s * 0.06}" stroke="${traco}" stroke-width="${espessura}" stroke-linecap="round"/>
-  <path d="${coracao}" fill="${traco}"/>
+  <rect width="${tamanho}" height="${tamanho}" fill="${VINHO}"/>
+  ${inner}
+</svg>`;
+}
+
+/** Badge monocromático (Android mostra só a silhueta branca). */
+function svgBadge(tamanho) {
+  const s = tamanho * 0.9;
+  const x = (tamanho - s) / 2;
+  const branco = simbolo.replace(/fill="#[0-9A-Fa-f]{6}"/g, 'fill="#FFFFFF"');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${tamanho}" height="${tamanho}" viewBox="0 0 ${tamanho} ${tamanho}">
+  ${branco.replace("<svg ", `<svg x="${x}" y="${x}" width="${s}" height="${s}" `)}
 </svg>`;
 }
 
 await mkdir("public/icons", { recursive: true });
 
 const tarefas = [
-  ["icon-192.png", 192, {}],
-  ["icon-512.png", 512, {}],
-  ["icon-maskable-192.png", 192, { maskable: true }],
-  ["icon-maskable-512.png", 512, { maskable: true }],
-  ["apple-touch-icon.png", 180, {}],
-  ["badge-72.png", 72, { monocromatico: true, maskable: true }],
+  ["icon-192.png", () => sharp(iconeApp).resize(192, 192)],
+  ["icon-512.png", () => sharp(iconeApp).resize(512, 512)],
+  ["apple-touch-icon.png", () => sharp(iconeApp).resize(180, 180)],
+  ["favicon-32.png", () => sharp(iconeApp).resize(32, 32)],
+  ["icon-maskable-192.png", () => sharp(Buffer.from(svgMaskable(192)))],
+  ["icon-maskable-512.png", () => sharp(Buffer.from(svgMaskable(512)))],
+  ["badge-72.png", () => sharp(Buffer.from(svgBadge(72)))],
 ];
 
-for (const [nome, tamanho, opcoes] of tarefas) {
-  await sharp(Buffer.from(svg(tamanho, opcoes))).png().toFile(`public/icons/${nome}`);
+for (const [nome, fabrica] of tarefas) {
+  await fabrica().png().toFile(`public/icons/${nome}`);
   console.log("ok", nome);
 }
-
-await writeFile("public/icons/icon.svg", svg(512));
-// favicon simples (32px) para a aba do navegador
-await sharp(Buffer.from(svg(64))).resize(32, 32).png().toFile("public/icons/favicon-32.png");
-console.log("ok favicon-32.png, icon.svg");
-void FUNDO;

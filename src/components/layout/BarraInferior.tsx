@@ -28,7 +28,7 @@ export function BarraInferior({ bloqueados = {} }: Props) {
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
     >
       <ul className="mx-auto flex max-w-3xl items-stretch justify-around">
         {ITENS_NAVEGACAO.map(({ href, rotulo, Icone }) => {
@@ -40,14 +40,21 @@ export function BarraInferior({ bloqueados = {} }: Props) {
                 href={href}
                 aria-current={ativo ? "page" : undefined}
                 className={cn(
-                  "flex h-14 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors sm:text-[11px]",
+                  "group flex h-[60px] flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors sm:text-[11px]",
                   ativo ? "text-primary" : "text-muted-foreground hover:text-foreground",
                   bloqueado && !ativo && "opacity-70",
                 )}
               >
-                <span className="relative">
-                  <Icone className={cn("size-5", ativo && "fill-primary/15")} />
-                  {bloqueado ? <LockIcon className="absolute -top-1 -right-1.5 size-3 rounded-full bg-background text-muted-foreground" /> : null}
+                <span
+                  className={cn(
+                    "relative flex h-7 w-12 items-center justify-center rounded-2xl transition-all duration-300",
+                    ativo ? "bg-primary/12 scale-105" : "group-active:scale-95",
+                  )}
+                >
+                  <Icone className={cn("size-5 transition-transform duration-300", ativo && "-translate-y-px")} />
+                  {bloqueado ? (
+                    <LockIcon className="absolute -top-1 right-1 size-3 rounded-full bg-background text-muted-foreground" />
+                  ) : null}
                 </span>
                 {rotulo}
               </Link>

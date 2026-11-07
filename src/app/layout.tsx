@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Nunito } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { NOME_APP } from "@/lib/constantes";
 import "./globals.css";
 
-const fonteSans = Geist({
+// Nunito: arredondada e amigável, combina com o desenho do logotipo
+const fonteSans = Nunito({
   variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const fonteMono = Geist_Mono({
@@ -41,7 +43,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#C2185B",
+  themeColor: "#702D50",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

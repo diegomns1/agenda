@@ -20,6 +20,15 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Deploy: Vercel. Cron: `pg_cron` + `pg_net` no Supabase chamando `/api/cron/lembretes` com `CRON_SECRET`
   (o plano Hobby da Vercel só permite cron 1x/dia, insuficiente para lembrete de 1h)
 
+## Marca (07/11/2026)
+
+- Cores oficiais: vinho `#702D50`, rosa `#D799AF`, creme `#FCF6F1` (tokens em `globals.css`: `--vinho`, `--rosa`, `--creme`;
+  `--primary` = vinho, `--background` = creme). Fonte: Nunito (next/font). Logos em `public/marca/` (horizontal, vertical,
+  claras, símbolo); componente `components/marca/LogoVaguinha.tsx` troca para a versão clara no modo escuro.
+- Ícones do PWA são gerados da marca: `node scripts/gerar-icones.mjs`.
+- Efeitos reutilizáveis em `globals.css`: `.fundo-aurora`, `.gradiente-marca`, `.surgir` (+ `.surgir-atraso-N`),
+  `.cartao-vivo`, `.flutuar`, `.brilho`. Todos respeitam `prefers-reduced-motion`. `(app)/template.tsx` anima cada página.
+
 ## Planos (07/11/2026)
 
 - `teste` (grátis, tudo liberado), `essencial` R$ 19,90 (perfil, serviços, clientes, agenda),
