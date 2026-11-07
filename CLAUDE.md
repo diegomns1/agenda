@@ -99,6 +99,12 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Sessão: `obterUsuario()` usa `getClaims()` (JWT local). `obterPerfil()` é a única ida ao banco para dados da conta.
 - Stories (satori): só `display:flex` em quem tem vários filhos, estilos inline, sem emoji (fonte padrão), logo SVG não
   renderiza (cai na inicial). Temas em `features/stories/temas.ts`; dados em `dados.ts`; rota `app/api/stories/[tipo]/route.tsx`.
+  Modo manual (07/11): a tela pré-marca o que a agenda indica (Server Action `sugerirStory`) e a profissional ajusta;
+  a prévia é gerada por `POST /api/stories/[tipo]` com JSON `{tema, data, horarios|dias|servicos, foto}` (`selecao.ts`).
+  `GET` continua como modo automático. Foto do serviço vai como data URL JPEG (≤1080px) e não é salva.
+- Datas civis: `somarDias/somarMeses/diaDaSemana/diasEntre` são aritmética UTC pura. Nunca usar `toZonedTime + addDays`
+  para somar dias: em servidor UTC (Vercel) devolve o mesmo dia (bug de 07/11 que esvaziou a visão Dia e os stories).
+  Para testar como na Vercel: preview `agenda-dev-utc` (TZ=UTC) ou `cmd /c "set TZ=UTC&& node ..."`.
 - MVP (8 módulos) concluído em 07/11/2026. Próximos passos possíveis: cobrança (Asaas/Mercado Pago), agendamento
   público pela cliente (`/p/[slug]`), e-mail de boas-vindas/aprovação, site institucional em vaguinha.app.
 - Agenda: `features/agenda/disponibilidade.ts` (horários livres, puro), `GradeHoraria.tsx` (eixo de horas +

@@ -5,6 +5,7 @@ import { obterPerfil } from "@/lib/auth";
 import { hojeISO } from "@/lib/datas";
 import { temRecurso } from "@/lib/planos";
 import { GeradorStories } from "@/features/stories/components/GeradorStories";
+import { listarServicos } from "@/features/servicos/queries";
 import { BloqueioPlano } from "@/components/layout/BloqueioPlano";
 
 export const metadata: Metadata = { title: "Stories" };
@@ -30,6 +31,8 @@ export default async function PaginaStories() {
     );
   }
 
+  const servicos = await listarServicos({ somenteAtivos: true });
+
   return (
     <div className="grid gap-5">
       <div>
@@ -43,7 +46,14 @@ export default async function PaginaStories() {
           ) : null}
         </p>
       </div>
-      <GeradorStories hoje={hojeISO()} corPrimaria={perfil.cor_primaria} corSecundaria={perfil.cor_secundaria} />
+      <GeradorStories
+        hoje={hojeISO()}
+        corPrimaria={perfil.cor_primaria}
+        corSecundaria={perfil.cor_secundaria}
+        expediente={perfil.expediente}
+        intervaloMin={perfil.intervalo_grade_min}
+        servicos={servicos.map((s) => ({ id: s.id, nome: s.nome, valor: s.valor }))}
+      />
     </div>
   );
 }

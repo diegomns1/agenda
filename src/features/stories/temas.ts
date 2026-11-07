@@ -1,10 +1,10 @@
 export type TipoStory = "dia" | "semana" | "mes" | "servicos";
 
 export const TIPOS_STORY: { id: TipoStory; titulo: string; descricao: string }[] = [
-  { id: "dia", titulo: "Agenda do dia", descricao: "Horários livres de um dia" },
-  { id: "semana", titulo: "Agenda da semana", descricao: "Horários livres dos próximos 7 dias" },
-  { id: "mes", titulo: "Agenda do mês", descricao: "Dias com vaga e dias indisponíveis" },
-  { id: "servicos", titulo: "Serviços e valores", descricao: "Sua tabela de preços" },
+  { id: "dia", titulo: "Agenda do dia", descricao: "Marque os horários que quer divulgar" },
+  { id: "semana", titulo: "Agenda da semana", descricao: "Marque os dias com vaga" },
+  { id: "mes", titulo: "Agenda do mês", descricao: "Calendário com os dias disponíveis" },
+  { id: "servicos", titulo: "Serviços e valores", descricao: "Tabela ou destaque de um serviço com foto" },
 ];
 
 export type Tema = {
