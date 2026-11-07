@@ -31,6 +31,7 @@ export function FormCadastro() {
         nome="nome"
         autoComplete="name"
         placeholder="Como suas clientes te chamam"
+        defaultValue={estado.valores?.nome}
         erros={estado.erros?.nome}
         required
       />
@@ -41,6 +42,7 @@ export function FormCadastro() {
         autoComplete="tel"
         inputMode="tel"
         placeholder="(11) 99999-9999"
+        defaultValue={estado.valores?.telefone}
         erros={estado.erros?.telefone}
       />
       <Campo
@@ -50,6 +52,7 @@ export function FormCadastro() {
         autoComplete="email"
         inputMode="email"
         placeholder="voce@exemplo.com"
+        defaultValue={estado.valores?.email}
         erros={estado.erros?.email}
         required
       />

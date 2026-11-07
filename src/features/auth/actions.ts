@@ -6,7 +6,7 @@ import { z } from "zod";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { normalizarTelefone } from "@/lib/telefone";
 import { URL_APP } from "@/lib/constantes";
-import type { EstadoForm } from "@/components/formulario/tipos";
+import { valoresDoForm, type EstadoForm } from "@/components/formulario/tipos";
 import {
   esquemaCadastro,
   esquemaLogin,
@@ -47,22 +47,24 @@ function destinoSeguro(valor: FormDataEntryValue | null) {
 }
 
 export async function entrar(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
+  const valores = valoresDoForm(formData, ["email"]);
   const r = esquemaLogin.safeParse(Object.fromEntries(formData));
-  if (!r.success) return { erros: z.flattenError(r.error).fieldErrors };
+  if (!r.success) return { erros: z.flattenError(r.error).fieldErrors, valores };
 
   const supabase = await criarClienteServidor();
   const { error } = await supabase.auth.signInWithPassword({
     email: r.data.email,
     password: r.data.senha,
   });
-  if (error) return { erro: traduzirErroAuth(error.message) };
+  if (error) return { erro: traduzirErroAuth(error.message), valores };
 
   redirect(destinoSeguro(formData.get("proximo")));
 }
 
 export async function cadastrar(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
+  const valores = valoresDoForm(formData, ["nome", "telefone", "email"]);
   const r = esquemaCadastro.safeParse(Object.fromEntries(formData));
-  if (!r.success) return { erros: z.flattenError(r.error).fieldErrors };
+  if (!r.success) return { erros: z.flattenError(r.error).fieldErrors, valores };
 
   const supabase = await criarClienteServidor();
   const { data, error } = await supabase.auth.signUp({
@@ -76,7 +78,7 @@ export async function cadastrar(_: EstadoForm, formData: FormData): Promise<Esta
       },
     },
   });
-  if (error) return { erro: traduzirErroAuth(error.message) };
+  if (error) return { erro: traduzirErroAuth(error.message), valores };
 
   // Sem sessão = confirmação de e-mail ligada no Supabase
   if (!data.session) {
@@ -96,14 +98,15 @@ export async function sair() {
 }
 
 export async function recuperarSenha(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
+  const valores = valoresDoForm(formData, ["email"]);
   const r = esquemaRecuperarSenha.safeParse(Object.fromEntries(formData));
-  if (!r.success) return { erros: z.flattenError(r.error).fieldErrors };
+  if (!r.success) return { erros: z.flattenError(r.error).fieldErrors, valores };
 
   const supabase = await criarClienteServidor();
   const { error } = await supabase.auth.resetPasswordForEmail(r.data.email, {
     redirectTo: `${await urlBase()}/auth/callback?proximo=/redefinir-senha`,
   });
-  if (error) return { erro: traduzirErroAuth(error.message) };
+  if (error) return { erro: traduzirErroAuth(error.message), valores };
 
   return {
     ok: true,

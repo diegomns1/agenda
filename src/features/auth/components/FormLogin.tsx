@@ -25,6 +25,7 @@ export function FormLogin({ proximo, mensagem }: { proximo?: string; mensagem?: 
         autoComplete="email"
         inputMode="email"
         placeholder="voce@exemplo.com"
+        defaultValue={estado.valores?.email}
         erros={estado.erros?.email}
         required
       />

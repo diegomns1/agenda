@@ -1,0 +1,12 @@
+-- Dados de exemplo para desenvolvimento. Este arquivo não é executado automaticamente.
+--
+-- Contas de teste: e-mails e senhas ficam SOMENTE em .env.local (não versionado),
+-- em comentários no fim do arquivo.
+--
+-- Tornar um usuário admin (troque o e-mail):
+-- update auth.users
+--    set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'
+--  where email = 'seu@email.com';
+--
+-- Conferir quem é admin:
+-- select email, raw_app_meta_data ->> 'role' as role from auth.users;

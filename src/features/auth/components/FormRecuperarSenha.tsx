@@ -22,6 +22,7 @@ export function FormRecuperarSenha() {
         type="email"
         autoComplete="email"
         inputMode="email"
+        defaultValue={estado.valores?.email}
         erros={estado.erros?.email}
         required
       />
