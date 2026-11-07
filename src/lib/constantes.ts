@@ -23,5 +23,9 @@ export type Plano = keyof typeof PLANOS;
 export const MODELO_LEMBRETE_PADRAO =
   "Oi {nome}! Passando para lembrar do seu horário de {servico} {dia} às {hora}. Te espero! 💅";
 
+/** URL pública do app: NEXT_PUBLIC_APP_URL, ou o domínio de produção da Vercel, ou localhost. */
 export const URL_APP =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
