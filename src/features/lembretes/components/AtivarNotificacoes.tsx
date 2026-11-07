@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { BellIcon, BellOffIcon, BellRingIcon, Loader2Icon, SmartphoneIcon } from "lucide-react";
-import { enviarPushTeste, removerInscricaoPush, salvarInscricaoPush } from "@/features/lembretes/actions";
+import { enviarPushTeste, manterSoEsteAparelho, removerInscricaoPush, salvarInscricaoPush } from "@/features/lembretes/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -100,6 +100,20 @@ export function AtivarNotificacoes({ aparelhos }: { aparelhos: number }) {
     });
   }
 
+  function manterSoEste() {
+    iniciar(async () => {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        toast.error("Ative as notificações neste aparelho primeiro.");
+        return;
+      }
+      const r = await manterSoEsteAparelho(sub.endpoint);
+      if (r.ok) toast.success(r.mensagem);
+      else toast.error(r.erro ?? "Não foi possível remover.");
+    });
+  }
+
   const Icone = estado === "ativo" ? BellRingIcon : estado === "bloqueado" ? BellOffIcon : BellIcon;
 
   return (
@@ -152,6 +166,17 @@ export function AtivarNotificacoes({ aparelhos }: { aparelhos: number }) {
         <p className="text-xs text-muted-foreground">
           {aparelhos === 0 ? "Nenhum aparelho cadastrado ainda." : `${aparelhos} aparelho${aparelhos === 1 ? "" : "s"} com notificações ativas.`}
         </p>
+        {estado === "ativo" && aparelhos > 1 ? (
+          <div className="rounded-lg border border-dashed px-3 py-2 text-sm">
+            <p className="text-muted-foreground">
+              Recebendo o mesmo aviso duas vezes? Isso acontece quando as notificações foram ativadas em mais de um lugar
+              (ex.: no Chrome e no app instalado, ou em um endereço antigo do painel).
+            </p>
+            <Button variant="outline" size="sm" className="mt-2" onClick={manterSoEste} disabled={pendente}>
+              Manter só este aparelho
+            </Button>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

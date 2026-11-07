@@ -67,6 +67,25 @@ export async function removerInscricaoPush(endpoint: string): Promise<EstadoForm
   return { ok: true, mensagem: "Notificações desativadas neste aparelho." };
 }
 
+/**
+ * Remove as inscrições de todos os outros aparelhos/navegadores, mantendo só a atual.
+ * Útil quando a mesma pessoa ativou no Chrome e no app instalado (ou em um domínio antigo)
+ * e passou a receber cada aviso duas vezes.
+ */
+export async function manterSoEsteAparelho(endpointAtual: string): Promise<EstadoForm> {
+  const { usuario, supabase } = await sessao();
+  const { data, error } = await supabase
+    .from("push_subscriptions")
+    .delete()
+    .eq("profissional_id", usuario.id)
+    .neq("endpoint", endpointAtual)
+    .select("id");
+  if (error) return { erro: `Não foi possível remover: ${error.message}` };
+  revalidar();
+  const n = data?.length ?? 0;
+  return { ok: true, mensagem: n === 0 ? "Só este aparelho já estava cadastrado." : `${n} outro${n === 1 ? "" : "s"} aparelho${n === 1 ? "" : "s"} removido${n === 1 ? "" : "s"}. Agora só este recebe os avisos.` };
+}
+
 /** Envia uma notificação de teste para todos os aparelhos da profissional. */
 export async function enviarPushTeste(): Promise<EstadoForm> {
   if (!pushConfigurado()) return { erro: "Notificações não configuradas no servidor (chaves VAPID)." };

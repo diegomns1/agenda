@@ -7,6 +7,13 @@
       "runtimeArgs": ["run", "dev"],
       "cwd": "C:\\claude\\agenda-saas",
       "port": 3000
+    },
+    {
+      "name": "agenda-dev-utc",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set TZ=UTC&& npm run dev"],
+      "cwd": "C:\\claude\\agenda-saas",
+      "port": 3000
     }
   ]
 }

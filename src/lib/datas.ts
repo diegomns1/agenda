@@ -1,5 +1,5 @@
-import { addDays, addMonths, differenceInCalendarDays, isValid, parseISO } from "date-fns";
-import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
+import { isValid, parseISO } from "date-fns";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { ptBR } from "date-fns/locale";
 import { FUSO } from "@/lib/constantes";
 
@@ -68,19 +68,35 @@ export function fimDoDia(dia: DataISO): Date {
   return inicioDoDia(somarDias(dia, 1));
 }
 
+// Aritmética de datas civis feita em UTC puro (Date.UTC), sem depender do fuso do servidor.
+// A versão antiga usava toZonedTime + addDays e dava resultado errado quando o processo rodava
+// em UTC (Vercel): somarDias(d, 1) devolvia o mesmo dia — a visão Dia e os stories ficavam vazios.
+function partesDe(dia: DataISO) {
+  const [ano, mes, d] = dia.split("-").map(Number);
+  return { ano, mes, d };
+}
+
+function isoDeUTC(data: Date): DataISO {
+  return data.toISOString().slice(0, 10);
+}
+
 /** Soma dias a uma data civil. */
 export function somarDias(dia: DataISO, n: number): DataISO {
-  return formatInTimeZone(addDays(toZonedTime(inicioDoDia(dia), FUSO), n), FUSO, "yyyy-MM-dd");
+  const { ano, mes, d } = partesDe(dia);
+  return isoDeUTC(new Date(Date.UTC(ano, mes - 1, d + n)));
 }
 
+/** Soma meses a uma data civil (o dia é limitado ao último dia do mês de destino). */
 export function somarMeses(dia: DataISO, n: number): DataISO {
-  const zonada = toZonedTime(inicioDoDia(dia), FUSO);
-  return formatInTimeZone(addMonths(zonada, n), FUSO, "yyyy-MM-dd");
+  const { ano, mes, d } = partesDe(dia);
+  const ultimoDoDestino = new Date(Date.UTC(ano, mes - 1 + n + 1, 0)).getUTCDate();
+  return isoDeUTC(new Date(Date.UTC(ano, mes - 1 + n, Math.min(d, ultimoDoDestino))));
 }
 
-/** 0 = domingo ... 6 = sábado, no fuso de SP. */
+/** 0 = domingo ... 6 = sábado. */
 export function diaDaSemana(dia: DataISO): number {
-  return Number(formatInTimeZone(inicioDoDia(dia), FUSO, "i")) % 7;
+  const { ano, mes, d } = partesDe(dia);
+  return new Date(Date.UTC(ano, mes - 1, d)).getUTCDay();
 }
 
 /** Segunda-feira da semana que contém o dia. */
@@ -105,7 +121,9 @@ export function intervaloDoMes(data: DataISO) {
 
 /** Lista de dias "AAAA-MM-DD" de inicio (inclusive) a fim (inclusive). */
 export function diasEntre(inicio: DataISO, fim: DataISO): DataISO[] {
-  const n = differenceInCalendarDays(parseISO(fim), parseISO(inicio));
+  const a = partesDe(inicio);
+  const b = partesDe(fim);
+  const n = Math.round((Date.UTC(b.ano, b.mes - 1, b.d) - Date.UTC(a.ano, a.mes - 1, a.d)) / 86_400_000);
   return Array.from({ length: Math.max(0, n) + 1 }, (_, i) => somarDias(inicio, i));
 }
 

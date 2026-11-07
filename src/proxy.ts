@@ -8,7 +8,20 @@ function ehPublica(pathname: string) {
   return ROTAS_PUBLICAS.some((r) => pathname === r || pathname.startsWith(`${r}/`));
 }
 
+/** Endereços antigos do painel: tudo vai para o domínio oficial (evita sessão/notificações duplicadas). */
+const HOSTS_ANTIGOS = new Set(["agenda-murex-five.vercel.app", "agenda.digstudio.com.br"]);
+const HOST_OFICIAL = "painel.vaguinha.app";
+
 export async function proxy(request: NextRequest) {
+  const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "").split(":")[0];
+  if (HOSTS_ANTIGOS.has(host)) {
+    const url = request.nextUrl.clone();
+    url.protocol = "https:";
+    url.host = HOST_OFICIAL;
+    url.port = "";
+    return NextResponse.redirect(url, 308);
+  }
+
   const { response, claims } = await atualizarSessao(request);
   const { pathname } = request.nextUrl;
   const logada = Boolean(claims?.sub);
