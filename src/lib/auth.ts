@@ -1,15 +1,31 @@
 import "server-only";
 import { cache } from "react";
-import type { User } from "@supabase/supabase-js";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { contaVencida } from "@/lib/datas";
 import type { Profile } from "@/types/database";
 
-/** Usuária logada (ou null). Memoizado por request. */
-export const obterUsuario = cache(async (): Promise<User | null> => {
+/** Dados da sessão lidos do JWT (sem ida ao servidor de auth). */
+export type UsuarioSessao = {
+  id: string;
+  email: string | null;
+  app_metadata: { role?: string };
+};
+
+/**
+ * Usuária logada (ou null). Memoizado por request.
+ * Usa getClaims(): valida o token localmente, o que evita uma viagem de rede a cada página.
+ */
+export const obterUsuario = cache(async (): Promise<UsuarioSessao | null> => {
   const supabase = await criarClienteServidor();
-  const { data } = await supabase.auth.getUser();
-  return data.user ?? null;
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims?.sub) return null;
+  const meta = (claims.app_metadata ?? {}) as { role?: string };
+  return {
+    id: claims.sub,
+    email: typeof claims.email === "string" ? claims.email : null,
+    app_metadata: { role: meta.role },
+  };
 });
 
 /** Perfil da usuária logada (ou null). Memoizado por request. */
@@ -27,7 +43,7 @@ export const obterPerfil = cache(async (): Promise<Profile | null> => {
   return data ?? null;
 });
 
-export function ehAdmin(usuario: User | null | undefined) {
+export function ehAdmin(usuario: UsuarioSessao | null | undefined) {
   return usuario?.app_metadata?.role === "admin";
 }
 

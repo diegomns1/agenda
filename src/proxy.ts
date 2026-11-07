@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { atualizarSessao } from "@/lib/supabase/middleware";
 
 /** Rotas que não exigem login. */
-const ROTAS_PUBLICAS = ["/login", "/cadastro", "/recuperar-senha", "/auth/callback"];
+const ROTAS_PUBLICAS = ["/login", "/cadastro", "/recuperar-senha", "/auth/callback", "/offline"];
 
 function ehPublica(pathname: string) {
   return ROTAS_PUBLICAS.some((r) => pathname === r || pathname.startsWith(`${r}/`));
