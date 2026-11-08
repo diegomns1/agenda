@@ -3,7 +3,7 @@ import "server-only";
 /* Cliente mínimo da API do Asaas (https://docs.asaas.com), via fetch, sem biblioteca.
    Variáveis: ASAAS_API_KEY, ASAAS_AMBIENTE ("sandbox" | "producao"), ASAAS_WEBHOOK_TOKEN. */
 
-export type AsaasCliente = { id: string; name: string; email: string | null; cpfCnpj: string | null };
+export type AsaasCliente = { id: string; name: string; email: string | null; cpfCnpj: string | null; deleted?: boolean };
 
 export type AsaasAssinatura = {
   id: string;
@@ -97,7 +97,21 @@ function safeJson(texto: string): unknown {
 
 export async function buscarClientePorReferencia(externalReference: string) {
   const r = await chamar<Lista<AsaasCliente>>(`/customers?externalReference=${encodeURIComponent(externalReference)}&limit=1`);
-  return r.data[0] ?? null;
+  return r.data.find((c) => !c.deleted) ?? null;
+}
+
+/**
+ * O cliente guardado no perfil ainda existe neste Asaas? (Ao trocar Sandbox → produção, os ids antigos não valem.)
+ * Só "não existe" quando o Asaas diz isso (404/400); outros erros sobem normalmente.
+ */
+export async function clienteExiste(id: string): Promise<boolean> {
+  try {
+    const c = await chamar<AsaasCliente>(`/customers/${encodeURIComponent(id)}`);
+    return !c.deleted;
+  } catch (e) {
+    if (e instanceof ErroAsaas && (e.status === 404 || e.status === 400)) return false;
+    throw e;
+  }
 }
 
 export async function criarCliente(dados: {

@@ -12,6 +12,7 @@ import {
   atualizarCliente,
   buscarClientePorReferencia,
   cancelarAssinatura as cancelarNoAsaas,
+  clienteExiste,
   criarAssinatura,
   criarCliente,
   ErroAsaas,
@@ -91,8 +92,14 @@ export async function assinar(_: EstadoForm, formData: FormData): Promise<Result
   const referencia = `${perfil.id}:${plano}`;
 
   try {
-    // 1) cliente no Asaas (um por profissional)
+    // 1) cliente no Asaas (um por profissional). Se o id guardado não existe mais neste Asaas
+    //    (ex.: veio da Sandbox antes de ligar a produção), cria/reaproveita outro e esquece a assinatura antiga.
     let customerId = perfil.asaas_customer_id;
+    let subscriptionId = perfil.asaas_subscription_id;
+    if (customerId && !(await clienteExiste(customerId))) {
+      customerId = null;
+      subscriptionId = null;
+    }
     if (!customerId) {
       const existente = await buscarClientePorReferencia(perfil.id);
       const cliente =
@@ -105,12 +112,12 @@ export async function assinar(_: EstadoForm, formData: FormData): Promise<Result
           externalReference: perfil.id,
         }));
       customerId = cliente.id;
+      if (existente && existente.cpfCnpj !== cpfCnpj) await atualizarCliente(customerId, { cpfCnpj });
     } else if (perfil.cpf_cnpj !== cpfCnpj) {
       await atualizarCliente(customerId, { cpfCnpj });
     }
 
     // 2) assinatura: troca de valor se já existe uma ativa; senão cria
-    let subscriptionId = perfil.asaas_subscription_id;
     let pagamentos: AsaasPagamento[] = [];
     if (subscriptionId) {
       const atual = await obterAssinatura(subscriptionId).catch(() => null);
