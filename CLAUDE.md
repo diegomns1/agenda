@@ -52,6 +52,12 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   cobrindo atendimentos **e** bloqueios (mesma tabela `agendamentos`, coluna `tipo`).
 - /agenda abre no mês (estilo Google: "8h Nome"); dia/semana com rolagem própria (`GradeHoraria`, overscroll-contain).
   Feriados e datas comemorativas calculados em `src/lib/feriados.ts` (sem API).
+  Semana no celular (<640px) é `SemanaLista` (lista dia a dia com horários livres); a grade só aparece de sm para cima.
+- Cores/ícones de situação SÓ em `features/agenda/visual.ts` (mês, semana, dia, detalhe, histórico, legenda).
+- Celular primeiro: alvos de toque ≥44px (h-11 / size-11 no mobile), texto ≥11px, janelas (Dialog) viram gaveta
+  de baixo no mobile. `position: fixed` dentro de página precisa de `<Flutuante>` (portal no body: a animação
+  .surgir usa transform e prenderia o fixed). O tema (data-tema) é copiado para o body por `<AplicarTema>`.
+- Crítica de design (Impeccable) em `.impeccable/critique/`.
 - Importar do Google Agenda em /agenda/importar: .zip/.ics lido no navegador (`features/importar/ical.ts`, ical.js +
   fflate; testável com `node` direto, sem imports "@/"); a action insere em lotes e o EXCLUDE recusa conflitos.
 - Stories nunca mostram nome de cliente. 16 temas (grupos "sempre" e "datas") em `features/stories/temas.ts`; os com
