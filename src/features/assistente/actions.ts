@@ -16,6 +16,7 @@ import { fimDoDia, hojeISO, inicioDoDia, instanteEmSP } from "@/lib/datas";
 import { temRecurso } from "@/lib/planos";
 import { termosDoRamo, nomeDoRamo } from "@/lib/ramos";
 import { normalizarTelefone } from "@/lib/telefone";
+import { responderSemIA } from "./comandos";
 import { contextoDoDia, executarFerramenta, FERRAMENTAS, type Contexto } from "./ferramentas";
 import { esquemaMensagemChat, esquemaProposta, type MensagemChat, type Proposta, type RespostaAssistente } from "./tipos";
 
@@ -52,14 +53,22 @@ export async function conversarComAssistente(historico: MensagemChat[], mensagem
   const perfil = await obterPerfil();
   if (!perfil) return respostaErro("Sessão expirada. Entre de novo.");
   if (!temRecurso(perfil.plano, "assistente")) return respostaErro("O assistente faz parte do plano Premium.");
-  if (!assistenteConfigurado()) return respostaErro("O assistente ainda não foi ativado. Avise o suporte.");
-
   const texto = mensagem.trim().slice(0, 1500);
   if (!texto) return respostaErro("Escreva o que você precisa.");
   const hist = z.array(esquemaMensagemChat).max(40).safeParse(historico);
   if (!hist.success) return respostaErro("Conversa inválida. Recarregue a página.");
 
   const supabase = await criarClienteServidor();
+
+  // 1) Comandos prontos ("agenda de amanhã", "horários livres na sexta"...): sem IA, sem custo, não contam no limite.
+  const pronto = await responderSemIA({ supabase, perfil, propostas: [] }, texto).catch((e) => {
+    console.error("[assistente] comando pronto", e);
+    return null;
+  });
+  if (pronto) return { ok: true, texto: pronto, propostas: [], semIA: true };
+
+  // 2) O resto vai para a IA
+  if (!assistenteConfigurado()) return respostaErro("Esse pedido precisa da IA, que ainda não foi ativada. Use os atalhos ou avise o suporte.");
   const uso = await usoDeHoje(supabase, perfil.id);
   if (uso.mensagens >= LIMITE_DIARIO_ASSISTENTE) {
     return { ok: false, erro: `Você chegou ao limite de ${LIMITE_DIARIO_ASSISTENTE} mensagens de hoje. Amanhã libera de novo.`, restantesHoje: 0 };

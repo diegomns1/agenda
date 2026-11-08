@@ -51,11 +51,9 @@ export type RespostaAssistente = {
   propostas?: Proposta[];
   erro?: string;
   restantesHoje?: number;
+  /** true quando a resposta veio de um comando pronto (sem IA, sem custo) */
+  semIA?: boolean;
 };
 
-export const SUGESTOES_ASSISTENTE = [
-  "Quem eu atendo amanhã?",
-  "Quais horários estão livres na sexta?",
-  "Quanto eu faturei este mês?",
-  "Bloqueia minha tarde de quarta, vou ao médico",
-];
+/** Exemplos de pedidos que precisam da IA (mudanças), mostrados na conversa vazia. */
+export const SUGESTOES_ASSISTENTE = ["Muda a Bruna de hoje para sexta às 15h", "Bloqueia minha tarde de quarta, vou ao médico"];

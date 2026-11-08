@@ -63,6 +63,11 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   soltos no painel.
 - Movimento da agenda (GSAP) em `features/agenda/movimento.tsx`: links de período usam `LinkAgenda`; o salvo é
   destacado por `data-agendamento`; as actions de salvar devolvem `valores.id`. Ver seção Movimento do DESIGN.md.
+- Assistente (Premium): IA = claude-haiku-5-5 (`lib/anthropic.ts`). ANTES da IA, `features/assistente/comandos.ts`
+  responde sem custo os pedidos de consulta que `interpretar.ts` reconhece (agenda de um dia/semana, horários livres,
+  próximo cliente, quanto entrou). Pedido de mudança ou com nome de cliente vai sempre para a IA. "sim"/"não" para uma
+  proposta pendente é resolvido na tela. Voz: `useVoz.ts` (SpeechRecognition + speechSynthesis do navegador, grátis);
+  o botão de microfone some onde não há suporte (Firefox). Testar frases novas com um script tsx chamando `interpretar`.
 - Site público (`app/(site)/site`): ver seção "Site público" do DESIGN.md. E-mails têm `previa` (linha ao lado do
   assunto na caixa de entrada); o de conta aprovada leva direto para /servicos.
 - Importar do Google Agenda em /agenda/importar: .zip/.ics lido no navegador (`features/importar/ical.ts`, ical.js +

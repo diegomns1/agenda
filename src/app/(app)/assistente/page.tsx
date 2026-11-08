@@ -6,7 +6,6 @@ import { temRecurso } from "@/lib/planos";
 import { primeiroNome } from "@/lib/texto";
 import { ChatAssistente } from "@/features/assistente/components/ChatAssistente";
 import { BloqueioPlano } from "@/components/layout/BloqueioPlano";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Assistente" };
 
@@ -35,18 +34,9 @@ export default async function PaginaAssistente() {
     <div className="grid gap-4">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Assistente</h1>
-        <p className="text-sm text-muted-foreground">Escreva o que precisa na agenda. Eu consulto, preparo a mudança e você confirma.</p>
+        <p className="text-sm text-muted-foreground">Fale ou escreva o que precisa na agenda. Eu consulto, preparo a mudança e você confirma.</p>
       </div>
-      {assistenteConfigurado() ? (
-        <ChatAssistente nome={primeiroNome(perfil.nome)} />
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Assistente chegando</CardTitle>
-            <CardDescription>O assistente de IA está quase pronto. Em breve ele aparece aqui.</CardDescription>
-          </CardHeader>
-        </Card>
-      )}
+      <ChatAssistente nome={primeiroNome(perfil.nome)} iaAtiva={assistenteConfigurado()} />
     </div>
   );
 }
