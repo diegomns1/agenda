@@ -33,7 +33,7 @@ pm2 save >/dev/null
 
 # confere se respondeu
 sleep 4
-code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: painel.vaguinha.app' http://127.0.0.1:3020/login || true)
+code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: painel.vaguinha.app' 'http://[::1]:3020/login' || true)
 echo "teste local /login: HTTP $code"
 
 # guarda só as 3 versões mais novas

@@ -106,8 +106,15 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 
 - Supabase: projeto `supabase-aureolin-car` (ref `bdiefcuoomhtspmktksz`), criado pela integração da Vercel.
   Há um segundo projeto manual sem uso ("diegomns1's Project") que pode ser apagado.
-- GitHub: `diegomns1/agenda` (branch `main`). Vercel: projeto `agenda`, deploy automático a cada push.
-- Produção: https://agenda-murex-five.vercel.app
+- **PRODUÇÃO NA VPS desde 08/11/2026** (Hostinger 179.198.107.151, junto com outros sistemas do Diego). Tudo em
+  `deploy/vps/` (cópias em `/root/vaguinha/`): PM2 "vaguinha" (`next start -p 3020 -H localhost` → escuta em [::1];
+  com 127.0.0.1 o rewrite do site quebra com 500 EPROTO), nginx `sites-available/vaguinha` (painel + www + apex→www,
+  HTTPS do certbot "vaguinha"), publicação `atualizar.sh` (cada versão em `releases/`, troca o atalho `atual` só
+  depois do build; guarda 3), variáveis em `/root/vaguinha/config/env` (gravadas por `trazer-variaveis.ps1` no PC do
+  Diego; `$` vai como `\$` porque o Next expande). Tarefas (instaladas pelo Diego com `instalar-tarefas.sh`):
+  `verificar-atualizacao.sh` a cada 5 min publica push novo da main; `backup-banco.mjs` às 3h BRT (API do Supabase com
+  service role → `backups/AAAA-MM-DD.json.gz`, 14 dias). Um build usa a CPU toda por ~4 min.
+- GitHub: `diegomns1/agenda` (branch `main`). Vercel (projeto `agenda`) ficou como reserva até tirar os domínios de lá.
 - Na Vercel as variáveis vêm da integração com os nomes `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY`;
   o `next.config.ts` mapeia para `NEXT_PUBLIC_*`. Novas variáveis (VAPID, CRON_SECRET) precisam ser
   adicionadas à mão em Vercel → Settings → Environment Variables.
@@ -124,9 +131,9 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Domínios: painel em `painel.vaguinha.app`; site institucional no apex `vaguinha.app`, servido pelo MESMO projeto:
   `src/proxy.ts` reescreve `/` do apex para `app/(site)/site/page.tsx`, deixa passar `/termos`, `/privacidade` e `/site/*`
   e redireciona o resto (login, agenda...) para o painel. `www` e apex servem o site igualmente; o redirecionamento
-  entre eles é configurado na Vercel (hoje apex → www, 308). Nunca redirecionar www → apex no proxy (laço). `agenda.digstudio.com.br` e
+  entre eles é feito no nginx da VPS (apex → www, 301). Nunca redirecionar www → apex no proxy (laço). `agenda.digstudio.com.br` e
   `agenda-murex-five.vercel.app` redirecionam (308) para o painel. Textos do site ficam em listas no topo do page.tsx;
-  preços vêm de `src/lib/planos.ts`. Efeito de aparecer ao rolar: `components/site/Revelar.tsx` + `.revelar` no CSS.
+  preços vêm de `src/lib/planos.ts`. (O efeito de aparecer ao rolar foi removido na etapa 5.)
 - Sessão: `obterUsuario()` usa `getClaims()` (JWT local). `obterPerfil()` é a única ida ao banco para dados da conta.
 - Stories (satori): só `display:flex` em quem tem vários filhos, estilos inline, sem emoji (fonte padrão), logo SVG não
   renderiza (cai na inicial). Temas em `features/stories/temas.ts`; dados em `dados.ts`; rota `app/api/stories/[tipo]/route.tsx`.
