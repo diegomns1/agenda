@@ -225,8 +225,22 @@ export default function PaginaSite() {
               ))}
             </ul>
           </div>
-          <div className="mx-auto w-full max-w-sm">
-            <MockAssistente />
+          <div className="relative mx-auto w-full max-w-md pb-24 sm:pb-16">
+            <div className="overflow-hidden rounded-3xl bg-muted">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/site/cabeleireira.webp"
+                alt="Cabeleireira mandando um áudio pelo celular entre um atendimento e outro"
+                width={720}
+                height={900}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[4/5] h-auto w-full object-cover"
+              />
+            </div>
+            <div className="absolute right-0 bottom-0 left-6 sm:-right-6 sm:left-auto sm:w-80">
+              <MockAssistente />
+            </div>
           </div>
         </div>
       </section>

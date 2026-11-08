@@ -117,6 +117,9 @@ detector do Impeccable apontando "cream-palette".
 - Recursos mostram um pedaço da tela real (componentes `Fragmento*` em `site/page.tsx`), não ícone genérico.
 - Textos: sem slogan, sem pergunta como título, sem "solução/simples/poderoso"; nada inventado (clientes,
   números, depoimentos). A aprovação manual do cadastro é dita no site, no cadastro e nos e-mails.
+- Fotos de pessoas: só a da cabeleireira mandando áudio (`public/site/cabeleireira.webp`, gerada no Higgsfield, 720px
+  WebP ~35 KB) na parte do assistente. O Diego recusou uma faixa com 4 fotos de profissionais (08/11). Foto nova só
+  com aprovação dele, nunca apresentada como cliente real (sem nome nem depoimento).
 - Cadastro: nome, e-mail, senha primeiro; ramo/tratamento/WhatsApp depois; sem "confirmar senha" (tem o olho);
   sugestão para e-mail digitado errado (`features/auth/sugerir-email.ts`).
 
