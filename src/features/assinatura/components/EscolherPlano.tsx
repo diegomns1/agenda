@@ -54,8 +54,9 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
   }, ESTADO_INICIAL as Resultado);
 
   // nada mudou: mesmo plano e mesma forma da assinatura ativa
-  const mesmoPlano = temAssinatura && planoAssinado === plano && (formaAtual === null || formaAtual === forma);
-  const soTrocaForma = temAssinatura && planoAssinado === plano && formaAtual !== null && formaAtual !== forma;
+  // (assinatura antiga "a escolher" tem formaAtual null: pode trocar para Pix ou cartão)
+  const mesmoPlano = temAssinatura && planoAssinado === plano && formaAtual === forma;
+  const soTrocaForma = temAssinatura && planoAssinado === plano && formaAtual !== forma;
 
   return (
     <Card>
