@@ -4,7 +4,7 @@ import { ArrowRightIcon } from "lucide-react";
 import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
 import { Button } from "@/components/ui/button";
 import { ACAO_PRINCIPAL_SITE, URL_APP, URL_SITE } from "@/lib/constantes";
-import { EMAIL_CONTATO } from "@/lib/legal";
+import { EMAIL_CONTATO, EMPRESA } from "@/lib/legal";
 
 export const metadata: Metadata = {
   metadataBase: new URL(URL_SITE),
@@ -95,7 +95,9 @@ export default function LayoutSite({ children }: { children: React.ReactNode }) 
             </Link>
           </div>
         </div>
-        <p className="pb-8 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Vaguinha · vaguinha.app</p>
+        <p className="px-4 pb-8 text-center text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Vaguinha · {EMPRESA.razaoSocial} · CNPJ {EMPRESA.cnpj} · {EMPRESA.cidade}
+        </p>
       </footer>
     </div>
   );

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EMAIL_CONTATO, OPERADOR, VERSAO_TERMOS } from "@/lib/legal";
+import { EMAIL_CONTATO, EMPRESA, OPERADOR, VERSAO_TERMOS } from "@/lib/legal";
 import { PLANOS } from "@/lib/planos";
 import { formatarDataISO } from "@/lib/datas";
 
@@ -20,7 +20,7 @@ export default function PaginaTermos() {
       <h2>1. O que é o Vaguinha</h2>
       <p>
         O Vaguinha é uma agenda online para profissionais autônomos (manicures, barbeiros, cabeleireiros, tatuadores, personal trainers e
-        outras), operada por {OPERADOR} (&quot;nós&quot;). Com ele, a profissional organiza seus horários, cadastra clientes e
+        outras), operada por {OPERADOR}, com sede em {EMPRESA.endereco} (&quot;nós&quot;). Com ele, a profissional organiza seus horários, cadastra clientes e
         serviços, recebe lembretes, divulga horários livres e pode oferecer um link para os próprios clientes pedirem um horário.
       </p>
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EMAIL_CONTATO, OPERADOR, VERSAO_TERMOS } from "@/lib/legal";
+import { EMAIL_CONTATO, EMPRESA, OPERADOR, VERSAO_TERMOS } from "@/lib/legal";
 import { formatarDataISO } from "@/lib/datas";
 
 export const metadata: Metadata = { title: "Política de Privacidade" };
@@ -16,7 +16,7 @@ export default function PaginaPrivacidade() {
 
       <h2>1. Quem cuida dos dados</h2>
       <p>
-        O Vaguinha é operado por {OPERADOR}, no Brasil. Para assuntos de privacidade, fale com a gente em{" "}
+        O Vaguinha é operado por {OPERADOR}, com sede em {EMPRESA.endereco}. Para assuntos de privacidade, fale com a gente em{" "}
         <a href={`mailto:${EMAIL_CONTATO}`}>{EMAIL_CONTATO}</a>.
       </p>
 
