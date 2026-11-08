@@ -58,6 +58,9 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   de baixo no mobile. `position: fixed` dentro de página precisa de `<Flutuante>` (portal no body: a animação
   .surgir usa transform e prenderia o fixed). O tema (data-tema) é copiado para o body por `<AplicarTema>`.
 - Crítica de design (Impeccable) em `.impeccable/critique/`.
+- **Sistema de design: ler `DESIGN.md` antes de mexer em tela.** Tokens em `globals.css` (bg-concluido,
+  text-aviso-texto, text-mini, h-toque, shadow-media…). Nada de `bg-amber-*`, `text-[10px]`, `shadow-vinho/20`
+  soltos no painel.
 - Importar do Google Agenda em /agenda/importar: .zip/.ics lido no navegador (`features/importar/ical.ts`, ical.js +
   fflate; testável com `node` direto, sem imports "@/"); a action insere em lotes e o EXCLUDE recusa conflitos.
 - Stories nunca mostram nome de cliente. 16 temas (grupos "sempre" e "datas") em `features/stories/temas.ts`; os com
