@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LinkAgenda } from "@/features/agenda/movimento";
 import { diaDaSemana, diasEntre, formatarDataISO, hojeISO, horaDe, intervaloDoMes, type DataISO } from "@/lib/datas";
 import { datasEspeciais } from "@/lib/feriados";
 import { primeiroNome } from "@/lib/texto";
@@ -20,7 +20,7 @@ type Props = {
   expediente: Expediente;
 };
 
-type Item = { id: string; texto: string; completo: string; classes: string };
+type Item = { id: string; texto: string; completo: string; classes: string; agendamentoId?: string };
 
 /** "08:00" → "8h"; "13:30" → "13h30" (como no Google Agenda). */
 function horaCurta(iso: string) {
@@ -64,6 +64,7 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
         texto: comHora ? `${horaCurta(a.inicio)} ${nome}` : nome,
         completo: `${comHora ? `${horaDe(a.inicio)} ` : ""}${nomeCompleto} (${visual.rotulo.toLowerCase()})`,
         classes: visual.chip,
+        agendamentoId: d === dIni ? a.id : undefined,
       });
       porDia.set(d, lista);
     }
@@ -98,7 +99,7 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
             .filter(Boolean)
             .join(" · ");
           return (
-            <Link
+            <LinkAgenda
               key={d}
               href={`/agenda?visao=dia&data=${d}`}
               aria-label={rotulo}
@@ -123,6 +124,7 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
                 <span
                   key={it.id}
                   title={it.completo}
+                  data-agendamento={it.agendamentoId}
                   className={cn(
                     // corta a sobra sem reticências (cabe mais letra, como no Google Agenda); o nome inteiro fica no title
                     "block overflow-hidden rounded-chip px-[3px] py-px text-mini leading-tight font-semibold tracking-tight whitespace-nowrap sm:px-1",
@@ -133,7 +135,7 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
                 </span>
               ))}
               {resto > 0 ? <span className="px-1 text-mini font-semibold text-muted-foreground">+{resto} mais</span> : null}
-            </Link>
+            </LinkAgenda>
           );
         })}
       </div>

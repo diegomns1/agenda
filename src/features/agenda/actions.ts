@@ -66,13 +66,14 @@ export async function salvarAgendamento(_: EstadoForm, formData: FormData): Prom
       observacoes: d.observacoes,
     };
 
-    const { error } = id
-      ? await supabase.from("agendamentos").update(dados).eq("id", id)
-      : await supabase.from("agendamentos").insert({ ...dados, profissional_id: usuario.id });
+    const { data: salvo, error } = id
+      ? await supabase.from("agendamentos").update(dados).eq("id", id).select("id").single()
+      : await supabase.from("agendamentos").insert({ ...dados, profissional_id: usuario.id }).select("id").single();
     if (error) return { erro: traduzirErro(error.code, error.message), valores };
 
     revalidar();
-    return { ok: true, mensagem: id ? "Bloqueio atualizado." : "Horário bloqueado." };
+    // id volta para a tela destacar o bloqueio na agenda
+    return { ok: true, mensagem: id ? "Bloqueio atualizado." : "Horário bloqueado.", valores: { id: salvo.id } };
   }
 
   // ---------------------------------------------------------- atendimento
@@ -112,7 +113,7 @@ export async function salvarAgendamento(_: EstadoForm, formData: FormData): Prom
     clienteNome = nova.nome;
   } else if (clienteId) {
     const { data: cliente } = await supabase.from("clientes").select("nome").eq("id", clienteId).maybeSingle();
-    if (!cliente) return { erro: "Cliente não encontrada.", valores };
+    if (!cliente) return { erro: "Cadastro não encontrado.", valores };
     clienteNome = cliente.nome;
   }
 
@@ -131,13 +132,14 @@ export async function salvarAgendamento(_: EstadoForm, formData: FormData): Prom
     observacoes: d.observacoes,
   };
 
-  const { error } = id
-    ? await supabase.from("agendamentos").update(dados).eq("id", id)
-    : await supabase.from("agendamentos").insert({ ...dados, profissional_id: usuario.id });
+  const { data: salvo, error } = id
+    ? await supabase.from("agendamentos").update(dados).eq("id", id).select("id").single()
+    : await supabase.from("agendamentos").insert({ ...dados, profissional_id: usuario.id }).select("id").single();
   if (error) return { erro: traduzirErro(error.code, error.message), valores };
 
   revalidar(clienteId);
-  return { ok: true, mensagem: id ? "Atendimento remarcado." : "Atendimento marcado." };
+  // id volta para a tela destacar o atendimento na agenda
+  return { ok: true, mensagem: id ? "Atendimento remarcado." : "Atendimento marcado.", valores: { id: salvo.id } };
 }
 
 export async function alterarStatusAgendamento(id: string, status: StatusAgendamento): Promise<EstadoForm> {

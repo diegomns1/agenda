@@ -61,6 +61,8 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - **Sistema de design: ler `DESIGN.md` antes de mexer em tela.** Tokens em `globals.css` (bg-concluido,
   text-aviso-texto, text-mini, h-toque, shadow-media…). Nada de `bg-amber-*`, `text-[10px]`, `shadow-vinho/20`
   soltos no painel.
+- Movimento da agenda (GSAP) em `features/agenda/movimento.tsx`: links de período usam `LinkAgenda`; o salvo é
+  destacado por `data-agendamento`; as actions de salvar devolvem `valores.id`. Ver seção Movimento do DESIGN.md.
 - Importar do Google Agenda em /agenda/importar: .zip/.ics lido no navegador (`features/importar/ical.ts`, ical.js +
   fflate; testável com `node` direto, sem imports "@/"); a action insere em lotes e o EXCLUDE recusa conflitos.
 - Stories nunca mostram nome de cliente. 16 temas (grupos "sempre" e "datas") em `features/stories/temas.ts`; os com

@@ -36,7 +36,8 @@ type Props = {
   clientes: ClienteResumo[];
   servicos: Servico[];
   inicial?: InicialForm;
-  aoConcluir: () => void;
+  /** Recebe o id salvo (para a agenda destacar o atendimento/bloqueio). */
+  aoConcluir: (id?: string) => void;
 };
 
 const selectClass =
@@ -50,7 +51,7 @@ export function FormAgendamento({ clientes, servicos, inicial, aoConcluir }: Pro
     const r = await salvarAgendamento(prev, fd);
     if (r.ok) {
       if (r.mensagem) toast.success(r.mensagem);
-      aoConcluir();
+      aoConcluir(r.valores?.id);
     } else if (r.erro) {
       toast.error(r.erro);
     }

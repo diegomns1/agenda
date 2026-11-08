@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LinkAgenda } from "@/features/agenda/movimento";
 import { CalendarPlusIcon, ChevronLeftIcon, ChevronRightIcon, LockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatarDataISO, hojeISO, inicioDaSemana, somarDias, somarMeses, type DataISO } from "@/lib/datas";
@@ -40,7 +40,7 @@ export function BarraAgenda({ visao, data, aoMarcar, aoBloquear }: Props) {
       <div className="flex items-center justify-between gap-2">
         <nav aria-label="Como ver a agenda" className="flex rounded-xl bg-muted p-1 text-sm font-medium">
           {(["mes", "semana", "dia"] as const).map((v) => (
-            <Link
+            <LinkAgenda
               key={v}
               href={href(v, data)}
               aria-current={visao === v ? "page" : undefined}
@@ -50,7 +50,7 @@ export function BarraAgenda({ visao, data, aoMarcar, aoBloquear }: Props) {
               )}
             >
               {ROTULO_VISAO[v]}
-            </Link>
+            </LinkAgenda>
           ))}
         </nav>
         <div className="flex gap-2">
@@ -69,17 +69,17 @@ export function BarraAgenda({ visao, data, aoMarcar, aoBloquear }: Props) {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
           <Button asChild variant="ghost" size="icon" className="size-toque sm:size-8">
-            <Link href={href(visao, anterior)} aria-label={`${nomePeriodo === "semana" ? "Semana" : nomePeriodo === "mês" ? "Mês" : "Dia"} anterior`}>
+            <LinkAgenda href={href(visao, anterior)} aria-label={`${nomePeriodo === "semana" ? "Semana" : nomePeriodo === "mês" ? "Mês" : "Dia"} anterior`}>
               <ChevronLeftIcon />
-            </Link>
+            </LinkAgenda>
           </Button>
           <Button asChild variant="ghost" size="icon" className="size-toque sm:size-8">
-            <Link href={href(visao, proximo)} aria-label={`Próxim${nomePeriodo === "semana" ? "a semana" : nomePeriodo === "mês" ? "o mês" : "o dia"}`}>
+            <LinkAgenda href={href(visao, proximo)} aria-label={`Próxim${nomePeriodo === "semana" ? "a semana" : nomePeriodo === "mês" ? "o mês" : "o dia"}`}>
               <ChevronRightIcon />
-            </Link>
+            </LinkAgenda>
           </Button>
           <Button asChild variant={data === hoje ? "secondary" : "ghost"} className="h-toque sm:h-8">
-            <Link href={href(visao, hoje)}>Hoje</Link>
+            <LinkAgenda href={href(visao, hoje)}>Hoje</LinkAgenda>
           </Button>
         </div>
         <h2 className="truncate text-right text-sm font-semibold first-letter:uppercase sm:text-base">{rotuloDoPeriodo(visao, data)}</h2>

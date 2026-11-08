@@ -79,6 +79,22 @@ aguardando sempre âmbar tracejado, feriado sempre azul. "Agendado" é a cor do 
 - **Brilho** (`.brilho`) só nos momentos-chave: Entrar e Criar conta (`<BotaoEnviar brilho>`).
 - Movimento respeita `prefers-reduced-motion` (já desligado em `globals.css`).
 
+## Movimento (GSAP, só na agenda)
+
+Pouco, rápido e com função. Tudo em `src/features/agenda/movimento.tsx`, valores em `MOVIMENTO`
+(0,32s para trocar de período, deslocamento 28px, curva `power3.out`, alinhados a `--duracao-*`/`--curva-saida`).
+
+| Momento | O que acontece |
+|---|---|
+| Trocar de semana/dia/mês | o conteúdo desliza na direção da navegação (frente = vem da direita; trocar de visão = sobe um pouco) |
+| Período carregando | depois de 0,15s o conteúdo esmaece para 55% e ganha `aria-busy` (clique rápido não pisca) |
+| Atendimento ou bloqueio recém-salvo | rola até ele e dá um "pulo" (88%→100%) com um anel na cor `--ring` do tema |
+
+- Links que trocam o período usam **`LinkAgenda`** (não `Link`), senão a tela não sabe que está carregando.
+- Item que pode ser destacado precisa de `data-agendamento={id}` (cartão, chip do mês, lista da semana).
+- Quem pede "menos movimento" no celular não vê deslize, esmaecimento nem pulo: só a troca direta.
+- Não espalhar GSAP pelo resto do painel. Animação nova só se ajudar a entender o que mudou.
+
 ## Exceções (cor escrita direto, de propósito)
 
 Não usam variáveis CSS porque não rodam no navegador do painel:

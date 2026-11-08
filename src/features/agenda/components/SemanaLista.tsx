@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LinkAgenda } from "@/features/agenda/movimento";
 import { ChevronRightIcon, PlusIcon } from "lucide-react";
 import { formatarDataISO, minutosDoDia, minutosParaHora, type DataISO } from "@/lib/datas";
 import { datasDoDia } from "@/lib/feriados";
@@ -73,7 +73,7 @@ export function SemanaLista({ colunas, expediente, intervaloMin, hoje, agoraMin,
         const qtd = c.agendamentos.filter((a) => a.tipo === "atendimento" && a.status !== "cancelado").length;
         return (
           <li key={c.dia} className={cn("overflow-hidden rounded-xl border bg-card", ehHoje && "ring-1 ring-primary/40", passou && "opacity-75")}>
-            <Link
+            <LinkAgenda
               href={`/agenda?visao=dia&data=${c.dia}`}
               className="flex min-h-12 items-center gap-2 border-b px-3 py-2 transition-colors hover:bg-muted/50"
               aria-label={`Abrir ${formatarDataISO(c.dia, "EEEE, d 'de' MMMM")}`}
@@ -94,7 +94,7 @@ export function SemanaLista({ colunas, expediente, intervaloMin, hoje, agoraMin,
                 {qtd === 0 ? "" : qtd === 1 ? "1 atendimento" : `${qtd} atendimentos`}
               </span>
               <ChevronRightIcon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-            </Link>
+            </LinkAgenda>
 
             {!c.atende && linhas.length === 0 ? (
               <div className="flex items-center justify-between gap-2 px-3 py-2">

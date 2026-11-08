@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { CalendarOffIcon, PlusIcon, UploadIcon, XIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ import { CartaoAgendamento } from "./CartaoAgendamento";
 import { DetalheAgendamento } from "./DetalheAgendamento";
 import { LegendaAgenda } from "./LegendaAgenda";
 import { Flutuante } from "@/components/layout/Flutuante";
+import { destacarAgendamento, LinkAgenda, ProvedorNavegacaoAgenda, useMovimentoAgenda } from "@/features/agenda/movimento";
 import { SemanaLista } from "./SemanaLista";
 import { VISUAL_DATA } from "@/features/agenda/visual";
 import { FormAgendamento, type ClienteResumo, type InicialForm } from "./FormAgendamento";
@@ -67,6 +68,30 @@ function diaEmSP(iso: string) {
 
 export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, expediente, intervaloMin, modeloLembrete, abrirInicial }: Props) {
   const router = useRouter();
+
+  // Navegação entre períodos dentro de uma transição: "navegando" esmaece o conteúdo até o próximo chegar
+  const [navegando, iniciarNavegacao] = useTransition();
+  const navegar = useCallback((href: string) => iniciarNavegacao(() => router.push(href, { scroll: false })), [router]);
+  const conteudoRef = useRef<HTMLDivElement>(null);
+  useMovimentoAgenda(conteudoRef, visao, data, navegando);
+
+  // Depois de salvar, destaca o atendimento quando ele aparecer na agenda (os dados chegam do servidor logo depois)
+  const destacarRef = useRef<string | null>(null);
+  useEffect(() => {
+    const id = destacarRef.current;
+    if (!id) return;
+    const t = setTimeout(() => {
+      if (destacarAgendamento(id)) destacarRef.current = null;
+    }, 60);
+    // se não aparecer (marcado para outro período), desiste depois de um tempo
+    const desistir = setTimeout(() => {
+      if (destacarRef.current === id) destacarRef.current = null;
+    }, 6000);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(desistir);
+    };
+  }, [agendamentos]);
   const [form, setForm] = useState<InicialForm | null>(abrirInicial ?? null);
   const [selecionado, setSelecionado] = useState<Agendamento | null>(null);
   const [mostrarCancelados, setMostrarCancelados] = useState(false);
@@ -164,9 +189,12 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
 
   return (
     // pb-16 no celular: espaço para o botão flutuante "Marcar" não cobrir o fim da página
+    <ProvedorNavegacaoAgenda value={navegar}>
     <div className="grid gap-4 pb-16 sm:pb-0">
       <BarraAgenda visao={visao} data={data} aoMarcar={() => abrirNovo("atendimento")} aoBloquear={() => abrirNovo("bloqueio")} />
 
+      {/* conteúdo do período: desliza ao trocar e esmaece enquanto o próximo carrega (movimento.tsx) */}
+      <div ref={conteudoRef} aria-busy={navegando || undefined} className="grid gap-4">
       {visao === "mes" ? (
         <VisaoMes data={data} agendamentos={agendamentos} expediente={expediente} />
       ) : (
@@ -225,7 +253,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
             cabecalho={
               visao === "semana"
                 ? (c) => (
-                    <Link
+                    <LinkAgenda
                       href={`/agenda?visao=dia&data=${c.dia}`}
                       aria-label={`Abrir ${formatarDataISO(c.dia, "EEEE, d 'de' MMMM")}`}
                       aria-current={c.dia === hoje ? "date" : undefined}
@@ -246,7 +274,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
                           {datasDoDia(c.dia)[0].nome}
                         </span>
                       ) : null}
-                    </Link>
+                    </LinkAgenda>
                   )
                 : undefined
             }
@@ -281,6 +309,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
           ) : null}
         </>
       )}
+      </div>
 
       {!avisoImportarFechado ? (
         <div className="flex items-center gap-1 rounded-xl border border-dashed pl-3 text-sm text-muted-foreground">
@@ -332,7 +361,10 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
               clientes={clientes}
               servicos={servicos}
               inicial={form}
-              aoConcluir={() => setForm(null)}
+              aoConcluir={(id) => {
+                destacarRef.current = id ?? null;
+                setForm(null);
+              }}
             />
           ) : null}
         </DialogContent>
@@ -349,6 +381,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
         }}
       />
     </div>
+    </ProvedorNavegacaoAgenda>
   );
 }
 
