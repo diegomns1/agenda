@@ -42,16 +42,18 @@ export default async function PaginaAssinatura() {
             ) : perfil.asaas_subscription_id ? (
               <Badge>Assinatura ativa</Badge>
             ) : emTeste ? (
-              <Badge variant="secondary">Período de testes</Badge>
+              <Badge variant="secondary">Teste grátis</Badge>
             ) : null}
           </CardTitle>
           <CardDescription>
             {situacao === "vencida"
-              ? `Seu acesso venceu em ${formatarDataISO(perfil.ativa_ate!)}. Pague a mensalidade para voltar a usar a agenda.`
-              : perfil.ativa_ate
-                ? `Acesso liberado até ${formatarDataISO(perfil.ativa_ate)}${perfil.ativa_ate >= hoje ? "" : " (vencido)"}.`
-                : emTeste
-                  ? "Você está no período de testes gratuito: tudo liberado, sem data para acabar por enquanto."
+              ? emTeste
+                ? `Seu teste grátis terminou em ${formatarDataISO(perfil.ativa_ate!)}. Escolha um plano abaixo para continuar usando a agenda. Nada foi apagado.`
+                : `Seu acesso venceu em ${formatarDataISO(perfil.ativa_ate!)}. Pague a mensalidade para voltar a usar a agenda.`
+              : emTeste
+                ? `Teste grátis${perfil.ativa_ate ? ` até ${formatarDataISO(perfil.ativa_ate)}` : ""}, com os recursos do Essencial: agenda, clientes e serviços. Assine para continuar depois e liberar o link de agendamento, os lembretes e os stories.`
+                : perfil.ativa_ate
+                  ? `Acesso liberado até ${formatarDataISO(perfil.ativa_ate)}${perfil.ativa_ate >= hoje ? "" : " (vencido)"}.`
                   : "Sem data de término definida."}
           </CardDescription>
         </CardHeader>

@@ -31,7 +31,9 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 
 ## Planos (07/11/2026)
 
-- `teste` (grátis, tudo liberado), `essencial` R$ 19,90 (perfil, serviços, clientes, agenda),
+- `teste` (grátis por `DIAS_TESTE` = 3 dias, contados da aprovação, com os recursos do Essencial: `nivel` 1;
+  a validade é gravada em `alterarStatusConta` na primeira aprovação; migração 0014 tirou o teste do agendamento online),
+  `essencial` R$ 19,90 (perfil, serviços, clientes, agenda),
   `profissional` R$ 29,90 (+ agendamento pela cliente + lembretes), `premium` R$ 39,90 (+ stories).
 - Regra única em `src/lib/planos.ts` (`temRecurso(plano, recurso)`); telas travadas usam `components/layout/BloqueioPlano.tsx`.
   Rotas de API também checam (`/api/stories` → 403; cron só envia push para planos com lembretes).

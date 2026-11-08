@@ -41,7 +41,7 @@ export default async function PaginaPerfil() {
           <CardTitle>Assinatura</CardTitle>
           <CardDescription>
             Plano <strong>{PLANOS[perfil.plano].nome}</strong>
-            {perfil.ativa_ate ? ` · acesso até ${formatarDataISO(perfil.ativa_ate)}` : perfil.plano === "teste" ? " · período de testes" : ""}.
+            {perfil.ativa_ate ? ` · acesso até ${formatarDataISO(perfil.ativa_ate)}` : perfil.plano === "teste" ? " · teste grátis" : ""}.
           </CardDescription>
         </CardHeader>
         <CardContent>

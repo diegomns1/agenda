@@ -5,6 +5,8 @@ import { z } from "zod";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { ehAdmin, obterUsuario } from "@/lib/auth";
 import { PLANOS, STATUS_CONTA } from "@/lib/constantes";
+import { DIAS_TESTE } from "@/lib/planos";
+import { formatarDataISO, hojeISO, somarDias } from "@/lib/datas";
 import { enviarEmail } from "@/lib/email";
 import { emailContaAprovada, emailContaRecusada, emailContaSuspensa } from "@/features/emails/modelos";
 import type { EstadoForm } from "@/components/formulario/tipos";
@@ -28,15 +30,21 @@ export async function alterarStatusConta(_: EstadoForm, formData: FormData): Pro
 
   const { id, status, motivo } = r.data;
   const supabase = await criarClienteServidor();
-  const { data: antes } = await supabase.from("profiles").select("nome, email, status").eq("id", id).maybeSingle();
+  const { data: antes } = await supabase.from("profiles").select("nome, email, status, plano, ativa_ate").eq("id", id).maybeSingle();
 
   const motivoFinal = status === "recusada" || status === "suspensa" ? motivo || null : null;
+
+  // Primeira aprovação de uma conta em Teste sem validade: começa o teste grátis de DIAS_TESTE dias
+  const iniciaTeste = status === "aprovada" && antes?.status === "pendente" && antes.plano === "teste" && !antes.ativa_ate;
+  const fimDoTeste = iniciaTeste ? somarDias(hojeISO(), DIAS_TESTE) : null;
+
   const { error } = await supabase
     .from("profiles")
     .update({
       status,
       // motivo só faz sentido para recusa/suspensão; ao aprovar, limpa
       status_motivo: motivoFinal,
+      ...(fimDoTeste ? { ativa_ate: fimDoTeste } : {}),
     })
     .eq("id", id);
 
@@ -47,7 +55,7 @@ export async function alterarStatusConta(_: EstadoForm, formData: FormData): Pro
   if (antes?.email && antes.status !== status) {
     const email =
       status === "aprovada"
-        ? emailContaAprovada(antes.email, antes.nome, antes.status === "suspensa")
+        ? emailContaAprovada(antes.email, antes.nome, antes.status === "suspensa", fimDoTeste)
         : status === "recusada"
           ? emailContaRecusada(antes.email, antes.nome, motivoFinal)
           : status === "suspensa"
@@ -60,7 +68,8 @@ export async function alterarStatusConta(_: EstadoForm, formData: FormData): Pro
   }
 
   revalidarConta(id);
-  return { ok: true, mensagem: `Conta marcada como "${STATUS_CONTA[status].rotulo}".${aviso}` };
+  const teste = fimDoTeste ? ` Teste grátis até ${formatarDataISO(fimDoTeste)}.` : "";
+  return { ok: true, mensagem: `Conta marcada como "${STATUS_CONTA[status].rotulo}".${teste}${aviso}` };
 }
 
 export async function alterarPlanoConta(_: EstadoForm, formData: FormData): Promise<EstadoForm> {

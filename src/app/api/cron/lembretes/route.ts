@@ -148,6 +148,8 @@ async function avisarVencimentos(admin: ReturnType<typeof criarClienteAdmin>): P
   for (const p of data) {
     if (!p.email || !p.ativa_ate || p.aviso_vencimento_para === p.ativa_ate) continue;
     const dias = diasEntre(hoje, p.ativa_ate).length - 1;
+    // teste grátis (3 dias): avisa só na véspera, senão o e-mail sairia junto com o de aprovação
+    if (p.plano === "teste" && dias > 1) continue;
     const r = await enviarEmail(emailVencimentoProximo(p.email, p.nome, p.plano, p.ativa_ate, dias));
     if (r.enviado) {
       await admin.from("profiles").update({ aviso_vencimento_para: p.ativa_ate }).eq("id", p.id);

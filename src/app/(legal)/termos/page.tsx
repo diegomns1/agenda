@@ -33,8 +33,8 @@ export default function PaginaTermos() {
 
       <h2>3. Planos, preços e pagamento</h2>
       <p>
-        Durante a fase de testes o uso é gratuito. Depois, o Vaguinha é oferecido por assinatura mensal nos planos abaixo
-        (valores podem mudar com aviso prévio de pelo menos 30 dias):
+        Ao ser aprovada, a conta ganha um teste gratuito de 3 dias com os recursos do plano Essencial. Depois, o Vaguinha é
+        oferecido por assinatura mensal nos planos abaixo (valores podem mudar com aviso prévio de pelo menos 30 dias):
       </p>
       <ul>
         {planosPagos.map((p) => (

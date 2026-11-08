@@ -84,7 +84,7 @@ export function emailCadastroRecebido(para: string, nome: string): Email {
     saudacao: `Oi, ${primeiroNome(nome)}!`,
     paragrafos: [
       "Sua conta foi criada e está em análise. Fazemos uma conferência rápida antes de liberar o acesso, para manter o Vaguinha só com profissionais de verdade.",
-      "Assim que a conta for aprovada, você recebe outro e-mail com o link para entrar. Normalmente isso leva poucas horas.",
+      "Assim que a conta for aprovada, você recebe outro e-mail com o link para entrar e começa o seu teste grátis de 3 dias. Normalmente a aprovação leva poucas horas.",
     ],
     botao: { texto: "Ver situação da conta", url: `${URL_APP}/login` },
   });
@@ -105,8 +105,8 @@ export function emailNovoCadastroAdmin(para: string, dados: { nome: string; emai
   });
 }
 
-/** Conta aprovada (ou reativada depois de suspensa). */
-export function emailContaAprovada(para: string, nome: string, reativacao = false): Email {
+/** Conta aprovada (ou reativada depois de suspensa). `fimDoTeste`: data final do teste grátis, se começou agora. */
+export function emailContaAprovada(para: string, nome: string, reativacao = false, fimDoTeste: string | null = null): Email {
   return montar({
     para,
     assunto: reativacao ? `Sua conta no ${NOME_APP} foi reativada` : `Sua conta no ${NOME_APP} foi aprovada!`,
@@ -116,7 +116,12 @@ export function emailContaAprovada(para: string, nome: string, reativacao = fals
       ? ["Seu acesso ao Vaguinha está liberado de novo. Sua agenda, clientes e serviços continuam onde estavam."]
       : [
           "Seu acesso está liberado. Entre no painel, complete seu perfil (logo, cores e horários) e cadastre seus serviços: em poucos minutos sua agenda está pronta.",
-          "Dica: pelo celular, use “Adicionar à tela de início” para o Vaguinha virar um app e receber os lembretes.",
+          ...(fimDoTeste
+            ? [
+                `Seu teste grátis vai até ${formatarDataISO(fimDoTeste)}, com os recursos do plano Essencial: agenda, clientes e serviços. Para continuar depois disso, ou para liberar o link de agendamento, os lembretes e os stories, é só assinar um plano pela página Assinatura.`,
+              ]
+            : []),
+          "Dica: pelo celular, use “Adicionar à tela de início” para o Vaguinha virar um app.",
         ],
     botao: { texto: "Acessar o painel", url: `${URL_APP}/login` },
   });
@@ -155,6 +160,19 @@ export function emailContaSuspensa(para: string, nome: string, motivo: string | 
 /** Assinatura perto de vencer (enviado pelo cron, uma vez por data de validade). */
 export function emailVencimentoProximo(para: string, nome: string, plano: Plano, ativaAte: string, diasRestantes: number): Email {
   const quando = diasRestantes <= 0 ? "hoje" : diasRestantes === 1 ? "amanhã" : `em ${diasRestantes} dias`;
+  if (plano === "teste") {
+    return montar({
+      para,
+      assunto: `Seu teste grátis do ${NOME_APP} termina ${quando}`,
+      titulo: `Seu teste grátis termina ${quando}`,
+      saudacao: `Oi, ${primeiroNome(nome)}!`,
+      paragrafos: [
+        `O teste vale até ${formatarDataISO(ativaAte)}. Depois disso a agenda fica em espera até você assinar um plano. Nada é apagado: clientes, serviços e horários continuam lá.`,
+        "Os planos começam em R$ 19,90 por mês, com pagamento por Pix, boleto ou cartão e sem fidelidade. No Profissional você ganha o link para a cliente marcar sozinha e os lembretes; no Premium, os stories prontos para o Instagram.",
+      ],
+      botao: { texto: "Escolher meu plano", url: `${URL_APP}/assinatura` },
+    });
+  }
   return montar({
     para,
     assunto: `Sua assinatura do ${NOME_APP} vence ${quando}`,

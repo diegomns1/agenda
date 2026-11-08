@@ -5,11 +5,12 @@
 
 export const PLANOS = {
   teste: {
-    nome: "Teste gratuito",
+    nome: "Teste grátis",
     curto: "Teste",
     preco: 0,
-    descricao: "Tudo liberado durante o período de testes.",
-    nivel: 3,
+    descricao: "3 dias grátis com os recursos do Essencial.",
+    // mesmo nível do Essencial: agenda, clientes e serviços (sem lembretes, link e stories)
+    nivel: 1,
   },
   essencial: {
     nome: "Essencial",
@@ -35,6 +36,9 @@ export const PLANOS = {
 } as const;
 
 export type Plano = keyof typeof PLANOS;
+
+/** Duração do teste grátis, contada a partir da aprovação da conta pelo admin. */
+export const DIAS_TESTE = 3;
 
 export const RECURSOS = {
   lembretes: { nome: "Lembretes", planoMinimo: "profissional" as Plano },

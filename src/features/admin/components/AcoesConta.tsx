@@ -125,7 +125,8 @@ export function AcoesConta({ conta }: { conta: Profile }) {
           </BotaoEnviar>
         </form>
         <p className="text-xs text-muted-foreground">
-          Deixe &quot;Ativa até&quot; em branco para não ter data de término (fase de testes).
+          &quot;Ativa até&quot; em branco = sem data de término. Contas no plano Teste ganham 3 dias automaticamente quando você
+          aprova o cadastro.
         </p>
       </section>
 

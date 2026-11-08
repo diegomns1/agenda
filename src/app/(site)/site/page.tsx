@@ -59,7 +59,7 @@ const RECURSOS = [
 ];
 
 const PASSOS = [
-  { n: "1", titulo: "Crie sua conta", texto: "Leva um minuto. Nome, e-mail e senha. Grátis durante a fase de testes." },
+  { n: "1", titulo: "Crie sua conta", texto: "Leva um minuto. Nome, e-mail e senha. Você testa grátis por 3 dias." },
   { n: "2", titulo: "Monte sua agenda", texto: "Cadastre seus serviços, valores e horários de atendimento. Suba sua logo e escolha suas cores." },
   { n: "3", titulo: "Compartilhe e atenda", texto: "Cole seu link na bio, poste os stories e deixe os lembretes trabalharem por você." },
 ];
@@ -104,7 +104,7 @@ const DUVIDAS = [
   },
   {
     p: "Como funciona o pagamento?",
-    r: "Enquanto estamos na fase de testes, é grátis. Depois, é uma assinatura mensal simples, sem fidelidade. Você cancela quando quiser e seus dados continuam guardados.",
+    r: "Você testa grátis por 3 dias, com a agenda, as clientes e os serviços. Depois, é uma assinatura mensal simples por Pix, boleto ou cartão, sem fidelidade. Você cancela quando quiser e seus dados continuam guardados.",
   },
   {
     p: "Meus dados e os das minhas clientes estão seguros?",
@@ -121,7 +121,7 @@ export default function PaginaSite() {
           <div className="grid gap-6">
             <span className="surgir inline-flex w-fit items-center gap-2 rounded-full border border-vinho/15 bg-card/80 px-3 py-1 text-xs font-semibold text-vinho shadow-sm">
               <HeartIcon className="size-3.5 fill-rosa text-rosa" />
-              Grátis durante a fase de testes
+              Teste grátis por 3 dias
             </span>
             <h1 className="surgir surgir-atraso-1 text-4xl leading-[1.08] font-extrabold tracking-tight sm:text-5xl md:text-6xl">
               Sua agenda cheia, <span className="texto-gradiente">sem bagunça</span> no WhatsApp.
@@ -246,8 +246,8 @@ export default function PaginaSite() {
           <Revelar className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Planos simples, preço de um esmalte</h2>
             <p className="mt-3 text-muted-foreground">
-              Enquanto estivermos na fase de testes, <strong className="text-foreground">tudo é grátis</strong>. Depois, você escolhe o plano que faz
-              sentido para o seu momento.
+              Teste <strong className="text-foreground">grátis por 3 dias</strong> com a agenda, as clientes e os serviços. Depois, você escolhe o
+              plano que faz sentido para o seu momento.
             </p>
           </Revelar>
           <div className="mt-12 grid gap-5 lg:grid-cols-3">

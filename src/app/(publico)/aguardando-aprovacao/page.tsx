@@ -48,7 +48,14 @@ export default async function PaginaAguardandoAprovacao() {
 
   if (situacao === "aprovada") redirect("/");
 
-  const { titulo, texto, Icone } = TEXTOS[situacao];
+  const testeAcabou = situacao === "vencida" && perfil?.plano === "teste";
+  const { titulo, texto, Icone } = testeAcabou
+    ? {
+        titulo: "Seu teste grátis terminou",
+        texto: "Gostou? Escolha um plano para continuar usando a agenda. Suas clientes, serviços e horários continuam guardados.",
+        Icone: TEXTOS.vencida.Icone,
+      }
+    : TEXTOS[situacao];
   const suporte = process.env.NEXT_PUBLIC_SUPORTE_WHATSAPP;
   const motivo =
     (situacao === "recusada" || situacao === "suspensa") && perfil?.status_motivo
@@ -70,7 +77,7 @@ export default async function PaginaAguardandoAprovacao() {
         ) : null}
         {situacao === "vencida" && perfil?.ativa_ate ? (
           <p className="mt-3 text-sm text-muted-foreground">
-            Válida até {formatarDataISO(perfil.ativa_ate)}.
+            {testeAcabou ? "Teste válido até" : "Válida até"} {formatarDataISO(perfil.ativa_ate)}.
           </p>
         ) : null}
       </div>
@@ -82,7 +89,7 @@ export default async function PaginaAguardandoAprovacao() {
       <div className="grid gap-2">
         {situacao === "vencida" ? (
           <Button asChild size="lg" className="h-11">
-            <Link href="/assinatura">Renovar agora</Link>
+            <Link href="/assinatura">{testeAcabou ? "Escolher meu plano" : "Renovar agora"}</Link>
           </Button>
         ) : null}
         {suporte ? (
