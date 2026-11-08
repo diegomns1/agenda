@@ -35,7 +35,7 @@ export function BarraAgenda({ visao, data, aoMarcar, aoBloquear }: Props) {
     <div className="grid gap-3">
       <div className="flex items-center justify-between gap-2">
         <div className="grid grid-cols-3 rounded-lg bg-muted p-1 text-sm font-medium">
-          {(["dia", "semana", "mes"] as const).map((v) => (
+          {(["mes", "semana", "dia"] as const).map((v) => (
             <Link
               key={v}
               href={href(v, data)}

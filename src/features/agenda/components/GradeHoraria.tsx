@@ -21,7 +21,12 @@ type Props = {
   aoClicarSlot?: (dia: DataISO, hora: string) => void;
   aoSelecionar?: (a: Agendamento) => void;
   cabecalho?: (c: Coluna) => React.ReactNode;
+  /** Área que rola (para posicionar no horário atual ao abrir). */
+  refRolagem?: React.Ref<HTMLDivElement>;
 };
+
+/** Folga acima da primeira e abaixo da última hora, para os rótulos não ficarem cortados. */
+export const FOLGA_GRADE = 12;
 
 /** Grade com eixo de horas à esquerda e uma ou mais colunas (dia / semana). */
 export function GradeHoraria({
@@ -35,6 +40,7 @@ export function GradeHoraria({
   aoClicarSlot,
   aoSelecionar,
   cabecalho,
+  refRolagem,
 }: Props) {
   const total = fimMin - inicioMin;
   const altura = total * PX_POR_MIN;
@@ -50,7 +56,11 @@ export function GradeHoraria({
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border bg-card">
+    // A grade rola sozinha (altura da tela), sem arrastar o painel junto: overscroll-contain segura o gesto aqui
+    <div
+      ref={refRolagem}
+      className="h-[calc(100dvh-21rem)] min-h-72 overflow-auto overscroll-contain rounded-xl border bg-card [-webkit-overflow-scrolling:touch]"
+    >
       <div
         className="grid min-w-full"
         style={{ gridTemplateColumns: `3rem repeat(${colunas.length}, minmax(${compacto ? "5.5rem" : "0"}, 1fr))` }}
@@ -58,9 +68,9 @@ export function GradeHoraria({
         {/* Cabeçalhos */}
         {cabecalho ? (
           <>
-            <div className="sticky top-0 z-10 border-b bg-card" />
+            <div className="sticky top-0 left-0 z-30 border-b bg-card" />
             {colunas.map((c) => (
-              <div key={c.dia} className="sticky top-0 z-10 border-b border-l bg-card">
+              <div key={c.dia} className="sticky top-0 z-20 border-b border-l bg-card">
                 {cabecalho(c)}
               </div>
             ))}
@@ -68,7 +78,8 @@ export function GradeHoraria({
         ) : null}
 
         {/* Eixo das horas */}
-        <div className="relative" style={{ height: altura }}>
+        <div className="sticky left-0 z-[15] bg-card" style={{ height: altura + FOLGA_GRADE * 2, paddingTop: FOLGA_GRADE }}>
+          <div className="relative" style={{ height: altura }}>
           {linhas.map((t) => (
             <span
               key={t}
@@ -78,6 +89,7 @@ export function GradeHoraria({
               {minutosParaHora(t)}
             </span>
           ))}
+          </div>
         </div>
 
         {/* Colunas */}
@@ -94,7 +106,7 @@ export function GradeHoraria({
                 !c.atende && "bg-[repeating-linear-gradient(135deg,transparent,transparent_8px,color-mix(in_oklch,var(--muted),transparent_30%)_8px,color-mix(in_oklch,var(--muted),transparent_30%)_16px)]",
                 aoClicarSlot && "cursor-pointer",
               )}
-              style={{ height: altura }}
+              style={{ height: altura, marginTop: FOLGA_GRADE, marginBottom: FOLGA_GRADE }}
             >
               {linhas.map((t) => (
                 <Fragment key={t}>
@@ -106,7 +118,7 @@ export function GradeHoraria({
               ))}
 
               {ehHoje && agoraMin != null && agoraMin >= inicioMin && agoraMin <= fimMin ? (
-                <div className="pointer-events-none absolute inset-x-0 z-20 flex items-center" style={{ top: (agoraMin - inicioMin) * PX_POR_MIN }}>
+                <div className="pointer-events-none absolute inset-x-0 z-[12] flex items-center" style={{ top: (agoraMin - inicioMin) * PX_POR_MIN }}>
                   <span className="size-2 -translate-x-1 rounded-full bg-rose-500" />
                   <span className="h-px flex-1 bg-rose-500" />
                 </div>

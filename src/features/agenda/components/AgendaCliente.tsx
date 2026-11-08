@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarOffIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import type { Agendamento, Expediente, Servico } from "@/types/database";
 import { janelaDoDia } from "@/features/agenda/disponibilidade";
 import { BarraAgenda, type Visao } from "./BarraAgenda";
-import { GradeHoraria, type Coluna } from "./GradeHoraria";
+import { FOLGA_GRADE, GradeHoraria, PX_POR_MIN, type Coluna } from "./GradeHoraria";
 import { VisaoMes } from "./VisaoMes";
 import { CartaoAgendamento } from "./CartaoAgendamento";
 import { DetalheAgendamento } from "./DetalheAgendamento";
@@ -113,6 +113,25 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
 
   const diaAtendeHoje = visao === "dia" ? janelaDoDia(data, expediente) !== null : true;
 
+  // Ao abrir um dia/semana, a grade já começa no ponto útil: 1 h antes de agora (se inclui hoje)
+  // ou um pouco antes do primeiro atendimento; senão, no começo do expediente.
+  const rolagemRef = useRef<HTMLDivElement>(null);
+  const primeiroInicio = colunas
+    .flatMap((c) => c.agendamentos)
+    .reduce<number | null>((m, a) => {
+      const v = diaEmSP(a.inicio) < (colunas[0]?.dia ?? data) ? inicioMin : minutosDoDia(a.inicio);
+      return m === null || v < m ? v : m;
+    }, null);
+  const incluiHoje = dias.includes(hoje);
+  useEffect(() => {
+    const el = rolagemRef.current;
+    if (!el) return;
+    const alvo = incluiHoje ? minutosDoDia(new Date()) - 60 : primeiroInicio !== null ? primeiroInicio - 30 : inicioMin;
+    el.scrollTop = Math.max(0, (alvo - inicioMin) * PX_POR_MIN + FOLGA_GRADE - 8);
+    // só quando muda o período exibido (não a cada minuto/atualização)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visao, data]);
+
   return (
     <div className="grid gap-4">
       <BarraAgenda visao={visao} data={data} aoMarcar={() => abrirNovo("atendimento")} aoBloquear={() => abrirNovo("bloqueio")} />
@@ -136,6 +155,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
             agoraMin={agoraMin}
             diaDeHoje={hoje}
             compacto={visao === "semana"}
+            refRolagem={rolagemRef}
             aoClicarSlot={(dia, hora) => abrirNovo("atendimento", dia, hora)}
             aoSelecionar={setSelecionado}
             cabecalho={

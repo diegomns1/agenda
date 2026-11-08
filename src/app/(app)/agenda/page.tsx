@@ -17,7 +17,8 @@ function ehVisao(v: unknown): v is Visao {
 
 export default async function PaginaAgenda({ searchParams }: PageProps<"/agenda">) {
   const sp = await searchParams;
-  const visao: Visao = ehVisao(sp.visao) ? sp.visao : "dia";
+  // Abre no mês (visão geral, como no Google Agenda); dia e semana pelos botões ou tocando num dia
+  const visao: Visao = ehVisao(sp.visao) ? sp.visao : "mes";
   const data = ehDataISO(sp.data) ? sp.data : hojeISO();
 
   const perfil = await obterPerfil();
