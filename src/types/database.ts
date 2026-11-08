@@ -76,6 +76,27 @@ export type CobrancaInsert = Pick<Cobranca, "profissional_id" | "asaas_id" | "va
 
 export type CobrancaUpdate = Partial<Omit<Cobranca, "id" | "profissional_id" | "created_at">>;
 
+export type TipoEvento = "marcado" | "confirmado" | "recusado" | "remarcado" | "cancelado" | "excluido" | "faltou" | "concluido";
+
+/** Histórico gravado pelo trigger `registrar_evento_agendamento` (migração 0015). */
+export type AgendamentoEvento = {
+  id: string;
+  profissional_id: string;
+  agendamento_id: string | null;
+  tipo: TipoEvento;
+  origem: string | null;
+  cliente_id: string | null;
+  cliente_nome: string | null;
+  servico_nome: string | null;
+  valor: number | null;
+  inicio_anterior: string | null;
+  fim_anterior: string | null;
+  inicio: string | null;
+  fim: string | null;
+  vaga_dispensada_em: string | null;
+  created_at: string;
+};
+
 export type ProfileUpdate = Partial<Omit<Profile, "id" | "created_at" | "updated_at">>;
 
 export type Servico = {
@@ -194,6 +215,12 @@ export type Database = {
         Row: Cobranca;
         Insert: CobrancaInsert;
         Update: CobrancaUpdate;
+        Relationships: [];
+      };
+      agendamento_eventos: {
+        Row: AgendamentoEvento;
+        Insert: Pick<AgendamentoEvento, "profissional_id" | "tipo"> & Partial<AgendamentoEvento>;
+        Update: Partial<Pick<AgendamentoEvento, "vaga_dispensada_em">>;
         Relationships: [];
       };
     };

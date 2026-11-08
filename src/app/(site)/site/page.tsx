@@ -81,7 +81,13 @@ const PLANOS_SITE = [
     id: "premium" as const,
     destaque: false,
     para: "Para quem vive de Instagram",
-    itens: ["Tudo do Profissional", "Stories do dia, da semana e do mês", "Story de serviço com foto e valor", "Temas de Natal, Outubro Rosa e mais"],
+    itens: [
+      "Tudo do Profissional",
+      "Stories do dia, da semana e do mês",
+      "Story de serviço com foto e valor",
+      "Relatório do mês: quanto entrou, quem desmarcou e remarcou",
+      "Aviso de horário que vagou, pronto para divulgar",
+    ],
   },
 ];
 

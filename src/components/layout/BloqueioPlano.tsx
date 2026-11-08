@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LockIcon, SparklesIcon } from "lucide-react";
 import { formatarPreco, PLANOS, planoNecessario, type Plano, type Recurso } from "@/lib/planos";
 import { linkWhatsApp } from "@/lib/telefone";
+import { SUPORTE_WHATSAPP } from "@/lib/constantes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -18,7 +19,7 @@ type Props = {
 export function BloqueioPlano({ recurso, planoAtual, titulo, descricao, beneficios = [] }: Props) {
   const necessario = planoNecessario(recurso);
   const atual = PLANOS[planoAtual as Plano]?.nome ?? planoAtual;
-  const suporte = process.env.NEXT_PUBLIC_SUPORTE_WHATSAPP;
+  const suporte = SUPORTE_WHATSAPP;
   const mensagem = `Olá! Quero mudar meu plano do Vaguinha para o ${necessario.nome}.`;
 
   return (

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { BellIcon, ShieldCheckIcon } from "lucide-react";
-import { NOME_APP } from "@/lib/constantes";
+import { BellIcon, ChartColumnIcon, LifeBuoyIcon, ShieldCheckIcon } from "lucide-react";
+import { NOME_APP, SUPORTE_WHATSAPP } from "@/lib/constantes";
+import { linkWhatsApp } from "@/lib/telefone";
 import { BotaoSair } from "@/features/auth/components/BotaoSair";
 import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,16 @@ export function Cabecalho({ titulo, logoUrl, admin, lembretesPendentes = 0, most
           <span className="truncate text-[15px] font-bold tracking-tight text-foreground">{titulo || NOME_APP}</span>
         </Link>
         <div className="flex items-center gap-0.5">
+          <Button asChild variant="ghost" size="icon" aria-label="Relatórios">
+            <Link href="/relatorios">
+              <ChartColumnIcon />
+            </Link>
+          </Button>
+          <Button asChild variant="ghost" size="icon" aria-label="Falar com o suporte no WhatsApp">
+            <a href={linkWhatsApp(SUPORTE_WHATSAPP, `Olá! Uso o ${NOME_APP} e preciso de ajuda: `)} target="_blank" rel="noopener noreferrer">
+              <LifeBuoyIcon />
+            </a>
+          </Button>
           {mostrarSino ? (
             <Button asChild variant="ghost" size="icon" aria-label={`Lembretes${lembretesPendentes ? `: ${lembretesPendentes} pendentes` : ""}`}>
               <Link href="/lembretes" className="relative">

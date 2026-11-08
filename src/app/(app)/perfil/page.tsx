@@ -7,6 +7,7 @@ import { URL_APP } from "@/lib/constantes";
 import { formatarDataISO } from "@/lib/datas";
 import { PLANOS, temRecurso } from "@/lib/planos";
 import { Button } from "@/components/ui/button";
+import { FalarComSuporte } from "@/components/layout/FalarComSuporte";
 import { FormPerfil } from "@/features/perfil/components/FormPerfil";
 import { UploadLogo } from "@/features/perfil/components/UploadLogo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,6 +54,8 @@ export default async function PaginaPerfil() {
           </Button>
         </CardContent>
       </Card>
+
+      <FalarComSuporte nome={perfil.nome} email={perfil.email} />
     </div>
   );
 }

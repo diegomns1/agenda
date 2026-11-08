@@ -17,6 +17,10 @@ export { PLANOS, type Plano } from "@/lib/planos";
 export const MODELO_LEMBRETE_PADRAO =
   "Oi {nome}! Passando para lembrar do seu horário de {servico} {dia} às {hora}. Te espero! 💅";
 
+/** WhatsApp do suporte (só dígitos com 55). Variável NEXT_PUBLIC_SUPORTE_WHATSAPP na Vercel tem prioridade;
+ *  sem ela, usa o número pessoal do Diego (pedido dele em 07/11/2026: "por enquanto, meu número pessoal"). */
+export const SUPORTE_WHATSAPP = process.env.NEXT_PUBLIC_SUPORTE_WHATSAPP?.replace(/\D/g, "") || "5514982193655";
+
 /** Site institucional. Endereço principal com www (na Vercel, vaguinha.app redireciona para cá). Painel: URL_APP. */
 export const URL_SITE = "https://www.vaguinha.app";
 

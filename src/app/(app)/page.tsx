@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BellIcon, CalendarDaysIcon, CalendarPlusIcon, ChevronRightIcon, ImagePlusIcon, UserRoundPenIcon } from "lucide-react";
+import { BellIcon, CalendarDaysIcon, CalendarPlusIcon, ChartColumnIcon, ChevronRightIcon, ImagePlusIcon, LockIcon, UserRoundPenIcon } from "lucide-react";
+import { listarVagas } from "@/features/relatorios/vagas";
+import { resumoDoMes } from "@/features/relatorios/dados";
+import { VagasAbertas } from "@/features/relatorios/components/VagasAbertas";
 import { obterPerfil } from "@/lib/auth";
 import { dataDe, formatarData, hojeISO, horaDe, rotuloRelativo } from "@/lib/datas";
 import { formatarMoeda } from "@/lib/moeda";
@@ -18,11 +21,14 @@ export default async function PaginaHoje() {
   const perfil = await obterPerfil();
   const hoje = hojeISO();
   const podeLembretes = temRecurso(perfil?.plano, "lembretes");
-  const [deHoje, proximos, lembretes, solicitacoes] = await Promise.all([
+  const podeRelatorios = temRecurso(perfil?.plano, "relatorios");
+  const [deHoje, proximos, lembretes, solicitacoes, vagas, resumo] = await Promise.all([
     listarAgendamentosDias(hoje),
     listarProximosAtendimentos(5),
     podeLembretes ? contarLembretesPendentes() : Promise.resolve(0),
     listarSolicitacoesPendentes(),
+    podeRelatorios ? listarVagas() : Promise.resolve([]),
+    podeRelatorios ? resumoDoMes().catch(() => null) : Promise.resolve(null),
   ]);
 
   const atendimentosHoje = deHoje.filter((a) => a.tipo === "atendimento" && a.status !== "cancelado");
@@ -61,6 +67,8 @@ export default async function PaginaHoje() {
       </section>
 
       <SolicitacoesPendentes solicitacoes={solicitacoes} />
+
+      <VagasAbertas vagas={vagas} />
 
       {perfilIncompleto ? (
         <Link
@@ -137,6 +145,28 @@ export default async function PaginaHoje() {
           </div>
         </CardContent>
       </Card>
+
+      <Link
+        href="/relatorios"
+        className="cartao-vivo surgir surgir-atraso-3 flex items-center gap-3 rounded-2xl border bg-card px-4 py-3"
+      >
+        <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <ChartColumnIcon className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold">Relatório do mês</p>
+          <p className="text-sm text-muted-foreground">
+            {resumo
+              ? `${formatarMoeda(resumo.faturamento)} em ${resumo.atendimentos} atendimento${resumo.atendimentos === 1 ? "" : "s"} até agora${resumo.previsto > 0 ? ` · ${formatarMoeda(resumo.previsto)} ainda marcados` : ""}.`
+              : "Quanto entrou, quem desmarcou, quem remarcou e a comparação com o mês anterior."}
+          </p>
+        </div>
+        {podeRelatorios ? (
+          <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+        ) : (
+          <LockIcon className="size-4 shrink-0 text-muted-foreground" />
+        )}
+      </Link>
 
       <Link
         href="/stories"

@@ -5,6 +5,7 @@ import { ClockIcon, BanIcon, PauseCircleIcon, CalendarXIcon, AlertTriangleIcon }
 import { obterPerfil, situacaoDaConta, type SituacaoConta } from "@/lib/auth";
 import { formatarDataISO } from "@/lib/datas";
 import { linkWhatsApp } from "@/lib/telefone";
+import { SUPORTE_WHATSAPP } from "@/lib/constantes";
 import { BotaoSair } from "@/features/auth/components/BotaoSair";
 import { Button } from "@/components/ui/button";
 
@@ -56,7 +57,7 @@ export default async function PaginaAguardandoAprovacao() {
         Icone: TEXTOS.vencida.Icone,
       }
     : TEXTOS[situacao];
-  const suporte = process.env.NEXT_PUBLIC_SUPORTE_WHATSAPP;
+  const suporte = SUPORTE_WHATSAPP;
   const motivo =
     (situacao === "recusada" || situacao === "suspensa") && perfil?.status_motivo
       ? perfil.status_motivo

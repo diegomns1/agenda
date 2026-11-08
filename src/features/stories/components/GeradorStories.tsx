@@ -31,6 +31,8 @@ type Props = {
   expediente: Expediente;
   intervaloMin: number;
   servicos: ServicoResumo[];
+  tipoInicial?: TipoStory;
+  dataInicial?: DataISO;
 };
 
 const DIAS_CURTOS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
@@ -69,12 +71,12 @@ function Alternador({ ativo, onClick, children, className, disabled }: { ativo: 
   );
 }
 
-export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, intervaloMin, servicos }: Props) {
-  const [tipo, setTipo] = useState<TipoStory>("dia");
+export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, intervaloMin, servicos, tipoInicial, dataInicial }: Props) {
+  const [tipo, setTipo] = useState<TipoStory>(tipoInicial ?? "dia");
   const [temaId, setTemaId] = useState("neutro");
-  const [dia, setDia] = useState<DataISO>(hoje);
-  const [inicioSemana, setInicioSemana] = useState<DataISO>(hoje);
-  const [mes, setMes] = useState(hoje.slice(0, 7)); // "AAAA-MM"
+  const [dia, setDia] = useState<DataISO>(dataInicial ?? hoje);
+  const [inicioSemana, setInicioSemana] = useState<DataISO>(dataInicial ?? hoje);
+  const [mes, setMes] = useState((dataInicial ?? hoje).slice(0, 7)); // "AAAA-MM"
   const [horarios, setHorarios] = useState<string[]>([]);
   const [dias, setDias] = useState<DataISO[]>([]);
   const [servicosSel, setServicosSel] = useState<string[]>(servicos.map((s) => s.id));

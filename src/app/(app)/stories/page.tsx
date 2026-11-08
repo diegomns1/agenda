@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { obterPerfil } from "@/lib/auth";
-import { hojeISO } from "@/lib/datas";
+import { ehDataISO, hojeISO } from "@/lib/datas";
 import { temRecurso } from "@/lib/planos";
 import { GeradorStories } from "@/features/stories/components/GeradorStories";
 import { listarServicos } from "@/features/servicos/queries";
@@ -10,7 +10,8 @@ import { BloqueioPlano } from "@/components/layout/BloqueioPlano";
 
 export const metadata: Metadata = { title: "Stories" };
 
-export default async function PaginaStories() {
+export default async function PaginaStories({ searchParams }: PageProps<"/stories">) {
+  const sp = await searchParams;
   const perfil = await obterPerfil();
   if (!perfil) redirect("/aguardando-aprovacao");
 
@@ -53,6 +54,9 @@ export default async function PaginaStories() {
         expediente={perfil.expediente}
         intervaloMin={perfil.intervalo_grade_min}
         servicos={servicos.map((s) => ({ id: s.id, nome: s.nome, valor: s.valor }))}
+        // ex.: /stories?tipo=dia&data=2026-11-14 (botão "Divulgar" do aviso de horário que vagou)
+        tipoInicial={sp.tipo === "dia" || sp.tipo === "semana" || sp.tipo === "mes" || sp.tipo === "servicos" ? sp.tipo : undefined}
+        dataInicial={ehDataISO(sp.data) && sp.data >= hojeISO() ? sp.data : undefined}
       />
     </div>
   );
