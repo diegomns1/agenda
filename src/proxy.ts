@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { atualizarSessao } from "@/lib/supabase/middleware";
 
 /** Rotas que não exigem login. */
-const ROTAS_PUBLICAS = ["/login", "/cadastro", "/recuperar-senha", "/auth/callback", "/offline", "/p", "/termos", "/privacidade", "/site"];
+const ROTAS_PUBLICAS = ["/login", "/cadastro", "/recuperar-senha", "/auth/callback", "/auth/sair", "/offline", "/p", "/termos", "/privacidade", "/site"];
 // /assinatura exige login (tratado abaixo), mas não exige conta em dia: o layout (conta) cuida disso.
 
 /** Domínio do site institucional (apex). Serve a pasta app/(site)/site. */

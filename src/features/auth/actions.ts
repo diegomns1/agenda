@@ -111,11 +111,6 @@ export async function cadastrar(_: EstadoForm, formData: FormData): Promise<Esta
   redirect("/");
 }
 
-export async function sair() {
-  const supabase = await criarClienteServidor();
-  await supabase.auth.signOut();
-  redirect("/login");
-}
 
 export async function recuperarSenha(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
   const valores = valoresDoForm(formData, ["email"]);

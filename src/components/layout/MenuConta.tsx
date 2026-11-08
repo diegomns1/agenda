@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { BotMessageSquareIcon, ChartColumnIcon, LifeBuoyIcon, LogOutIcon, MenuIcon, ShieldCheckIcon } from "lucide-react";
-import { sair } from "@/features/auth/actions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,7 +25,7 @@ export function MenuConta({ admin, linkSuporte }: Props) {
 
   return (
     <>
-      <form ref={formSair} action={sair} className="hidden" />
+      <form ref={formSair} method="post" action="/auth/sair" className="hidden" />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="size-toque sm:size-toque" aria-label="Abrir menu">
