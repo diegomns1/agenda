@@ -18,6 +18,6 @@ Para cada aba, cole o **Subject** e o **Body** do arquivo correspondente:
 
 Variáveis disponíveis: `{{ .ConfirmationURL }}`, `{{ .Token }}`, `{{ .SiteURL }}`, `{{ .Email }}`, `{{ .NewEmail }}`.
 
-Remetente: por padrão sai de `noreply@mail.app.supabase.io`. Para sair de `@vaguinha.app`,
-configure **SMTP Settings** com o Resend (host `smtp.resend.com`, porta 465, usuário `resend`,
-senha = a API key) depois de verificar o domínio no Resend.
+Remetente: desde 08/11/2026 os e-mails saem de **Vaguinha <contato@vaguinha.app>** pelo SMTP do Resend
+(host `smtp.resend.com`, porta 465, usuário `resend`, senha = uma API key do Resend). Os 6 modelos acima já estão
+colados no Supabase. Respostas a `contato@` vão para a caixa na hadcloud, que encaminha para o Diego.
