@@ -128,7 +128,7 @@ const DUVIDAS = [
   },
   {
     p: "Como funciona o pagamento?",
-    r: "Você testa grátis por 3 dias, com a agenda, os clientes e os serviços. Depois, é uma assinatura mensal simples por Pix, boleto ou cartão, sem fidelidade. Você cancela quando quiser e seus dados continuam guardados.",
+    r: "Você testa grátis por 3 dias, com a agenda, os clientes e os serviços. Depois, é uma assinatura mensal simples por Pix ou cartão de crédito, sem fidelidade. Você cancela quando quiser e seus dados continuam guardados.",
   },
   {
     p: "Meus dados e os dos meus clientes estão seguros?",

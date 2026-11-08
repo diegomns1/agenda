@@ -15,6 +15,7 @@ import {
   criarAssinatura,
   criarCliente,
   ErroAsaas,
+  FORMAS_PAGAMENTO,
   linkDePagamento,
   listarPagamentosDaAssinatura,
   obterAssinatura,
@@ -32,6 +33,7 @@ function revalidar() {
 const esquemaAssinar = z.object({
   plano: z.string().refine(ehPlanoAssinavel, "Escolha um plano"),
   cpf_cnpj: z.string().trim().refine(cpfCnpjValido, "CPF ou CNPJ inválido"),
+  forma: z.enum(FORMAS_PAGAMENTO, "Escolha Pix ou cartão de crédito"),
 });
 
 type ResultadoAssinar = EstadoForm & { linkPagamento?: string };
@@ -113,7 +115,12 @@ export async function assinar(_: EstadoForm, formData: FormData): Promise<Result
     if (subscriptionId) {
       const atual = await obterAssinatura(subscriptionId).catch(() => null);
       if (atual && !atual.deleted && atual.status === "ACTIVE") {
-        await atualizarAssinatura(subscriptionId, { value: PLANOS[plano].preco, description: descricao, externalReference: referencia });
+        await atualizarAssinatura(subscriptionId, {
+          value: PLANOS[plano].preco,
+          description: descricao,
+          externalReference: referencia,
+          billingType: r.data.forma,
+        });
       } else {
         subscriptionId = null;
       }
@@ -125,6 +132,7 @@ export async function assinar(_: EstadoForm, formData: FormData): Promise<Result
         nextDueDate: hoje,
         description: descricao,
         externalReference: referencia,
+        billingType: r.data.forma,
       });
       subscriptionId = nova.id;
     }

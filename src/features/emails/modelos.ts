@@ -168,7 +168,7 @@ export function emailVencimentoProximo(para: string, nome: string, plano: Plano,
       saudacao: `Oi, ${primeiroNome(nome)}!`,
       paragrafos: [
         `O teste vale até ${formatarDataISO(ativaAte)}. Depois disso a agenda fica em espera até você assinar um plano. Nada é apagado: clientes, serviços e horários continuam lá.`,
-        `Os planos começam em ${formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês, com pagamento por Pix, boleto ou cartão e sem fidelidade. No Profissional você ganha o link de agendamento e os lembretes; no Premium, o assistente de IA e os stories prontos para o Instagram.`,
+        `Os planos começam em ${formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês, com pagamento por Pix ou cartão de crédito e sem fidelidade. No Profissional você ganha o link de agendamento e os lembretes; no Premium, o assistente de IA e os stories prontos para o Instagram.`,
       ],
       botao: { texto: "Escolher meu plano", url: `${URL_APP}/assinatura` },
     });
@@ -180,7 +180,7 @@ export function emailVencimentoProximo(para: string, nome: string, plano: Plano,
     saudacao: `Oi, ${primeiroNome(nome)}!`,
     paragrafos: [
       `Seu plano ${PLANOS[plano].nome} vale até ${formatarDataISO(ativaAte)}. Depois dessa data a agenda fica em espera até a renovação (nada é apagado).`,
-      "Para renovar, abra a página Assinatura no painel e pague a mensalidade por Pix, boleto ou cartão. Se preferir, responda este e-mail.",
+      "Para renovar, abra a página Assinatura no painel e pague a mensalidade por Pix ou cartão de crédito. Se preferir, responda este e-mail.",
     ],
     botao: { texto: "Renovar agora", url: `${URL_APP}/assinatura` },
     observacao: "Se você já renovou, pode ignorar este aviso.",

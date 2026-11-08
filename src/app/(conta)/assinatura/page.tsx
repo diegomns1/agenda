@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { obterPerfil, situacaoDaConta } from "@/lib/auth";
-import { asaasConfigurado, ambienteAsaas } from "@/lib/asaas";
+import { asaasConfigurado, ambienteAsaas, obterAssinatura } from "@/lib/asaas";
 import { formatarDataISO, hojeISO } from "@/lib/datas";
 import { PLANOS } from "@/lib/planos";
 import { listarCobrancas } from "@/features/assinatura/queries";
@@ -20,6 +20,9 @@ export default async function PaginaAssinatura() {
   const situacao = situacaoDaConta(perfil);
   const configurado = asaasConfigurado();
   const cobrancas = configurado ? await listarCobrancas() : [];
+  // forma de pagamento da assinatura atual (Pix ou cartão), para já vir marcada
+  const assinatura = configurado && perfil.asaas_subscription_id ? await obterAssinatura(perfil.asaas_subscription_id).catch(() => null) : null;
+  const formaAtual = assinatura?.billingType === "CREDIT_CARD" ? "CREDIT_CARD" : assinatura?.billingType === "PIX" ? "PIX" : null;
   const hoje = hojeISO();
   const emTeste = perfil.plano === "teste";
   const planoAtual = PLANOS[perfil.plano];
@@ -91,6 +94,7 @@ export default async function PaginaAssinatura() {
             planoAssinado={perfil.plano_assinado}
             cpfCnpj={perfil.cpf_cnpj}
             temAssinatura={Boolean(perfil.asaas_subscription_id)}
+            formaAtual={formaAtual}
           />
           <AcoesAssinatura temAssinatura={Boolean(perfil.asaas_subscription_id)} ativaAte={perfil.ativa_ate} />
           <HistoricoCobrancas cobrancas={cobrancas} />

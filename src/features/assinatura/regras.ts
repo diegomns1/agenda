@@ -96,8 +96,10 @@ export function formaDePagamento(forma: string | null | undefined) {
     case "BOLETO":
       return "Boleto";
     case "CREDIT_CARD":
-      return "Cartão";
+      return "Cartão de crédito";
+    case "DEBIT_CARD":
+      return "Cartão de débito";
     default:
-      return "Pix, boleto ou cartão";
+      return "A escolher";
   }
 }

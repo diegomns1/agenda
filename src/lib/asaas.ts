@@ -13,6 +13,7 @@ export type AsaasAssinatura = {
   status: "ACTIVE" | "INACTIVE" | "EXPIRED" | string;
   nextDueDate: string;
   externalReference: string | null;
+  billingType?: string;
   deleted?: boolean;
 };
 
@@ -118,20 +119,25 @@ export async function atualizarCliente(id: string, dados: Partial<{ name: string
 
 // ------------------------------------------------------------- assinaturas
 
+/**
+ * Formas aceitas na assinatura. A API do Asaas aceita uma forma só por assinatura (PIX, CREDIT_CARD, BOLETO ou
+ * UNDEFINED = a pessoa escolhe, mas aí o boleto sempre aparece). Débito não existe para assinatura.
+ * Decisão do Diego (08/11/2026): sem boleto → a profissional escolhe Pix ou cartão de crédito na Vaguinha.
+ */
+export const FORMAS_PAGAMENTO = ["PIX", "CREDIT_CARD"] as const;
+export type FormaPagamento = (typeof FORMAS_PAGAMENTO)[number];
+
 export async function criarAssinatura(dados: {
   customer: string;
   value: number;
   nextDueDate: string; // AAAA-MM-DD
   description: string;
   externalReference: string;
+  billingType: FormaPagamento;
 }) {
   return chamar<AsaasAssinatura>("/subscriptions", {
     method: "POST",
-    body: JSON.stringify({
-      ...dados,
-      billingType: "UNDEFINED", // a profissional escolhe Pix, boleto ou cartão na página de pagamento
-      cycle: "MONTHLY",
-    }),
+    body: JSON.stringify({ ...dados, cycle: "MONTHLY" }),
   });
 }
 
@@ -139,7 +145,10 @@ export async function obterAssinatura(id: string) {
   return chamar<AsaasAssinatura>(`/subscriptions/${id}`);
 }
 
-export async function atualizarAssinatura(id: string, dados: { value: number; description: string; externalReference: string }) {
+export async function atualizarAssinatura(
+  id: string,
+  dados: { value: number; description: string; externalReference: string; billingType?: FormaPagamento },
+) {
   return chamar<AsaasAssinatura>(`/subscriptions/${id}`, {
     method: "PUT",
     body: JSON.stringify({ ...dados, updatePendingPayments: true }),
