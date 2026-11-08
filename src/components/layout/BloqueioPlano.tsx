@@ -50,22 +50,20 @@ export function BloqueioPlano({ recurso, planoAtual, titulo, descricao, benefici
             </ul>
           ) : null}
           <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link href="/assinatura">Mudar para o {necessario.nome}</Link>
+            </Button>
             {suporte ? (
-              <Button asChild>
+              <Button asChild variant="outline">
                 <a href={linkWhatsApp(suporte, mensagem)} target="_blank" rel="noopener noreferrer">
-                  Quero mudar de plano
+                  Falar com o suporte
                 </a>
               </Button>
-            ) : (
-              <Button asChild>
-                <Link href="/perfil">Ver meu plano</Link>
-              </Button>
-            )}
+            ) : null}
             <Button asChild variant="ghost">
               <Link href="/">Voltar</Link>
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Em breve a troca de plano será feita aqui mesmo, pelo painel.</p>
         </CardContent>
       </Card>
     </div>

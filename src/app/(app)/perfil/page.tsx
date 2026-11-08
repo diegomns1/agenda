@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CreditCardIcon } from "lucide-react";
 import { obterPerfil } from "@/lib/auth";
 import { URL_APP } from "@/lib/constantes";
-import { temRecurso } from "@/lib/planos";
+import { formatarDataISO } from "@/lib/datas";
+import { PLANOS, temRecurso } from "@/lib/planos";
+import { Button } from "@/components/ui/button";
 import { FormPerfil } from "@/features/perfil/components/FormPerfil";
 import { UploadLogo } from "@/features/perfil/components/UploadLogo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +35,24 @@ export default async function PaginaPerfil() {
       </Card>
 
       <FormPerfil perfil={perfil} urlBase={URL_APP} podeAgendamentoOnline={temRecurso(perfil.plano, "agendamento_online")} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Assinatura</CardTitle>
+          <CardDescription>
+            Plano <strong>{PLANOS[perfil.plano].nome}</strong>
+            {perfil.ativa_ate ? ` · acesso até ${formatarDataISO(perfil.ativa_ate)}` : perfil.plano === "teste" ? " · período de testes" : ""}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link href="/assinatura">
+              <CreditCardIcon />
+              Ver plano e mensalidades
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

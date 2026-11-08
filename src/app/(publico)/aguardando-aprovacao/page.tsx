@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ClockIcon, BanIcon, PauseCircleIcon, CalendarXIcon, AlertTriangleIcon } from "lucide-react";
 import { obterPerfil, situacaoDaConta, type SituacaoConta } from "@/lib/auth";
@@ -79,8 +80,13 @@ export default async function PaginaAguardandoAprovacao() {
       ) : null}
 
       <div className="grid gap-2">
-        {suporte ? (
+        {situacao === "vencida" ? (
           <Button asChild size="lg" className="h-11">
+            <Link href="/assinatura">Renovar agora</Link>
+          </Button>
+        ) : null}
+        {suporte ? (
+          <Button asChild size="lg" variant={situacao === "vencida" ? "outline" : "default"} className="h-11">
             <a
               href={linkWhatsApp(suporte, `Olá! Sou ${perfil?.nome ?? ""} e preciso de ajuda com minha conta.`)}
               target="_blank"

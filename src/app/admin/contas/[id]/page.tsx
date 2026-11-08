@@ -6,6 +6,8 @@ import { obterConta } from "@/features/admin/queries";
 import { AcoesConta } from "@/features/admin/components/AcoesConta";
 import { BadgeStatus } from "@/features/admin/components/BadgeStatus";
 import { formatarData } from "@/lib/datas";
+import { PLANOS } from "@/lib/planos";
+import { formatarCpfCnpj } from "@/features/assinatura/regras";
 import { formatarTelefone, linkWhatsApp } from "@/lib/telefone";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -33,6 +35,10 @@ export default async function PaginaConta({ params }: PageProps<"/admin/contas/[
     ["Cadastro", formatarData(conta.created_at, "dd/MM/yyyy 'às' HH:mm")],
     ["Status alterado", conta.status_alterado_em ? formatarData(conta.status_alterado_em, "dd/MM/yyyy 'às' HH:mm") : "—"],
     ["Motivo", conta.status_motivo ?? "—"],
+    ["Plano assinado (Asaas)", conta.plano_assinado ? PLANOS[conta.plano_assinado].nome : "—"],
+    ["Assinatura Asaas", conta.asaas_subscription_id ?? "—"],
+    ["CPF/CNPJ", conta.cpf_cnpj ? formatarCpfCnpj(conta.cpf_cnpj) : "—"],
+    ["Termos aceitos", conta.termos_aceitos_em ? `${formatarData(conta.termos_aceitos_em, "dd/MM/yyyy 'às' HH:mm")} (v. ${conta.termos_versao ?? "?"})` : "—"],
   ];
 
   return (

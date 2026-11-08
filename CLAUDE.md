@@ -132,6 +132,13 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   marca `aviso_vencimento_para`). Termos/privacidade em `app/(legal)/*`; versão e contato em `src/lib/legal.ts`;
   aceite gravado pelo trigger `handle_new_user` (migração 0012) a partir do metadata do signUp.
   Modelos do Supabase Auth em pt-BR: `supabase/email-templates/` (colar no painel; não é código).
+- Cobrança (etapa 5, migração 0013): Asaas via fetch em `src/lib/asaas.ts` (sem `ASAAS_API_KEY` a página mostra
+  "em breve"). Fluxo em `features/assinatura/actions.ts`: cliente Asaas (1 por profissional, `externalReference` = uid)
+  → assinatura MONTHLY `billingType UNDEFINED` (`externalReference` = `uid:plano`) → abre `invoiceUrl`. Webhook
+  `app/api/webhooks/asaas/route.ts` (header `asaas-access-token` = `ASAAS_WEBHOOK_TOKEN`, service_role) espelha em
+  `cobrancas` e, uma vez por cobrança paga, aplica `plano` e `ativa_ate = novaValidade()` (1 mês + 3 dias). Página
+  `/assinatura` fica no grupo `(conta)`: exige login, não exige validade (é onde a vencida renova). Regras puras em
+  `features/assinatura/regras.ts` (CPF/CNPJ, status). Admin manual (plano + ativa_ate) continua valendo.
 - Funções puras compartilhadas entre servidor e cliente ficam em `src/lib/*` (nunca exportar de um arquivo "use client":
   o servidor não consegue chamá-las e a página quebra com erro 500 — já aconteceu duas vezes).
 - Padrão de lista + diálogo (criar/editar) + menu de opções + confirmação de exclusão: ver `features/servicos/components/ListaServicos.tsx`.

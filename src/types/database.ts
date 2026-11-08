@@ -46,9 +46,35 @@ export type Profile = {
   termos_aceitos_em: string | null;
   termos_versao: string | null;
   aviso_vencimento_para: string | null; // "AAAA-MM-DD"
+  asaas_customer_id: string | null;
+  asaas_subscription_id: string | null;
+  plano_assinado: "essencial" | "profissional" | "premium" | null;
+  cpf_cnpj: string | null;
   created_at: string;
   updated_at: string;
 };
+
+export type Cobranca = {
+  id: string;
+  profissional_id: string;
+  asaas_id: string;
+  assinatura_id: string | null;
+  plano: "essencial" | "profissional" | "premium" | null;
+  valor: number;
+  vencimento: string; // "AAAA-MM-DD"
+  status: string;
+  forma: string | null;
+  link: string | null;
+  pago_em: string | null;
+  liberou_acesso: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CobrancaInsert = Pick<Cobranca, "profissional_id" | "asaas_id" | "valor" | "vencimento" | "status"> &
+  Partial<Omit<Cobranca, "profissional_id" | "asaas_id" | "valor" | "vencimento" | "status">>;
+
+export type CobrancaUpdate = Partial<Omit<Cobranca, "id" | "profissional_id" | "created_at">>;
 
 export type ProfileUpdate = Partial<Omit<Profile, "id" | "created_at" | "updated_at">>;
 
@@ -162,6 +188,12 @@ export type Database = {
         Row: PushSubscriptionRow;
         Insert: PushSubscriptionInsert;
         Update: PushSubscriptionUpdate;
+        Relationships: [];
+      };
+      cobrancas: {
+        Row: Cobranca;
+        Insert: CobrancaInsert;
+        Update: CobrancaUpdate;
         Relationships: [];
       };
     };

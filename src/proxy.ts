@@ -3,6 +3,7 @@ import { atualizarSessao } from "@/lib/supabase/middleware";
 
 /** Rotas que não exigem login. */
 const ROTAS_PUBLICAS = ["/login", "/cadastro", "/recuperar-senha", "/auth/callback", "/offline", "/p", "/termos", "/privacidade", "/site"];
+// /assinatura exige login (tratado abaixo), mas não exige conta em dia: o layout (conta) cuida disso.
 
 /** Domínio do site institucional (apex). Serve a pasta app/(site)/site. */
 const HOST_SITE = "vaguinha.app";
@@ -93,6 +94,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Tudo, exceto arquivos estáticos, ícones, manifest, service worker e o cron
-    "/((?!_next/static|_next/image|favicon.ico|icons/|manifest.webmanifest|sw.js|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icons/|manifest.webmanifest|sw.js|api/cron|api/webhooks|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

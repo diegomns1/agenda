@@ -162,9 +162,9 @@ export function emailVencimentoProximo(para: string, nome: string, plano: Plano,
     saudacao: `Oi, ${primeiroNome(nome)}!`,
     paragrafos: [
       `Seu plano ${PLANOS[plano].nome} vale até ${formatarDataISO(ativaAte)}. Depois dessa data a agenda fica em espera até a renovação (nada é apagado).`,
-      "Para renovar, responda este e-mail ou fale com a gente pelo WhatsApp do suporte. Em breve a renovação vai poder ser feita direto no painel.",
+      "Para renovar, abra a página Assinatura no painel e pague a mensalidade por Pix, boleto ou cartão. Se preferir, responda este e-mail.",
     ],
-    botao: { texto: "Abrir o painel", url: `${URL_APP}/login` },
+    botao: { texto: "Renovar agora", url: `${URL_APP}/assinatura` },
     observacao: "Se você já renovou, pode ignorar este aviso.",
   });
 }
