@@ -19,7 +19,7 @@ export default async function PaginaClientes({ searchParams }: PageProps<"/clien
         <p className="text-sm text-muted-foreground">Quem você atende, com WhatsApp e observações.</p>
       </div>
 
-      {msg === "excluida" ? <Aviso tipo="sucesso">Cliente excluída.</Aviso> : null}
+      {msg === "excluida" ? <Aviso tipo="sucesso">Cadastro excluído.</Aviso> : null}
 
       {total > 0 || busca ? (
         <Suspense>

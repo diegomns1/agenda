@@ -109,7 +109,9 @@ export function FormCadastro() {
         {estado.erros?.aceite?.[0] ? <p className="text-sm text-destructive">{estado.erros.aceite[0]}</p> : null}
       </div>
 
-      <BotaoEnviar textoCarregando="Criando conta...">Criar conta</BotaoEnviar>
+      <BotaoEnviar textoCarregando="Criando conta..." brilho>
+        Criar conta
+      </BotaoEnviar>
 
       <p className="text-center text-sm text-muted-foreground">
         Já tem conta?{" "}

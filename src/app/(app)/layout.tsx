@@ -4,6 +4,7 @@ import { temRecurso } from "@/lib/planos";
 import { contarLembretesPendentes } from "@/features/lembretes/queries";
 import { Cabecalho } from "@/components/layout/Cabecalho";
 import { BarraInferior } from "@/components/layout/BarraInferior";
+import { AplicarTema } from "@/components/layout/AplicarTema";
 import { RegistroSW } from "@/components/pwa/RegistroSW";
 import { AvisoInstalar } from "@/components/pwa/AvisoInstalar";
 
@@ -21,6 +22,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
   return (
     // data-tema troca as cores do painel (globals.css); "rosa" é o padrão da marca
     <div data-tema={perfil.tema ?? "rosa"} className="flex flex-1 flex-col bg-background text-foreground">
+      <AplicarTema tema={perfil.tema ?? "rosa"} />
       <Cabecalho
         titulo={perfil.nome_negocio ?? perfil.nome}
         logoUrl={perfil.logo_url}

@@ -4,6 +4,7 @@ import { ArrowLeftIcon } from "lucide-react";
 import { obterPerfil, obterUsuario, situacaoDaConta } from "@/lib/auth";
 import { BotaoSair } from "@/features/auth/components/BotaoSair";
 import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
+import { AplicarTema } from "@/components/layout/AplicarTema";
 
 /**
  * Área da conta (assinatura): exige login e perfil, mas NÃO exige validade em dia —
@@ -18,6 +19,7 @@ export default async function LayoutConta({ children }: { children: React.ReactN
 
   return (
     <div data-tema={perfil.tema ?? "rosa"} className="flex flex-1 flex-col bg-background text-foreground">
+      <AplicarTema tema={perfil.tema ?? "rosa"} />
       <header className="sticky top-0 z-20 border-b border-border/70 bg-background/85 backdrop-blur-md">
         <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4">
           <Link href={aprovada ? "/" : "/aguardando-aprovacao"} className="inline-flex items-center gap-2 text-sm font-medium">

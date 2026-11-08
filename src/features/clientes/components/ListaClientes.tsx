@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ChevronRightIcon, MessageCircleIcon, PlusIcon, UsersIcon } from "lucide-react";
+import { ChevronRightIcon, PlusIcon, UsersIcon } from "lucide-react";
+import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
 import { FormCliente } from "./FormCliente";
 import { EstadoVazio } from "@/components/layout/EstadoVazio";
 import { Button } from "@/components/ui/button";
@@ -26,9 +27,9 @@ export function ListaClientes({ clientes, total, busca }: Props) {
             ? `${clientes.length} resultado${clientes.length === 1 ? "" : "s"} para "${busca}"`
             : total === 0
               ? "Nenhum cadastro ainda."
-              : `${total} cliente${total === 1 ? "" : "s"}.`}
+              : `${total} cliente${total === 1 ? "" : "s"}`}
         </p>
-        <Button onClick={() => setAberto(true)}>
+        <Button onClick={() => setAberto(true)} className="h-11 px-4 sm:h-9">
           <PlusIcon />
           Novo cadastro
         </Button>
@@ -37,7 +38,7 @@ export function ListaClientes({ clientes, total, busca }: Props) {
       {clientes.length === 0 ? (
         busca ? (
           <EstadoVazio Icone={UsersIcon} titulo="Ninguém com esse nome" descricao="Confira a grafia ou faça um novo cadastro.">
-            <Button onClick={() => setAberto(true)}>
+            <Button onClick={() => setAberto(true)} className="h-11 px-4">
               <PlusIcon />
               Cadastrar &quot;{busca}&quot;
             </Button>
@@ -48,9 +49,9 @@ export function ListaClientes({ clientes, total, busca }: Props) {
             titulo="Sua lista de clientes"
             descricao="Cadastre nome e WhatsApp. Depois, cada atendimento fica registrado no histórico."
           >
-            <Button onClick={() => setAberto(true)}>
+            <Button onClick={() => setAberto(true)} className="h-11 px-4">
               <PlusIcon />
-              Cadastrar a primeira
+              Fazer o primeiro cadastro
             </Button>
           </EstadoVazio>
         )
@@ -71,9 +72,9 @@ export function ListaClientes({ clientes, total, busca }: Props) {
                 <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
               </Link>
               {c.telefone ? (
-                <Button asChild variant="ghost" size="icon" aria-label={`Abrir WhatsApp de ${c.nome}`}>
+                <Button asChild variant="ghost" size="icon" className="size-11 text-emerald-700 dark:text-emerald-400" aria-label={`Abrir WhatsApp de ${c.nome}`}>
                   <a href={linkWhatsApp(c.telefone)} target="_blank" rel="noopener noreferrer">
-                    <MessageCircleIcon className="text-emerald-600" />
+                    <IconeWhatsApp className="size-5" />
                   </a>
                 </Button>
               ) : null}
@@ -90,6 +91,7 @@ export function ListaClientes({ clientes, total, busca }: Props) {
           </DialogHeader>
           {aberto ? (
             <FormCliente
+              nomeInicial={clientes.length === 0 ? busca : undefined}
               aoConcluir={(id) => {
                 setAberto(false);
                 if (id) router.push(`/clientes/${id}`);

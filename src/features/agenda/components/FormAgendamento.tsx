@@ -180,10 +180,10 @@ function CamposAtendimento({
             <button
               type="button"
               onClick={() => setNovaCliente((x) => !x)}
-              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              className="-my-2 inline-flex min-h-11 items-center gap-1 px-1 text-sm font-medium text-primary hover:underline"
             >
-              {novaCliente ? <UsersIcon className="size-3.5" /> : <UserPlusIcon className="size-3.5" />}
-              {novaCliente ? "Escolher da lista" : "Cadastrar nova"}
+              {novaCliente ? <UsersIcon className="size-4" /> : <UserPlusIcon className="size-4" />}
+              {novaCliente ? "Escolher da lista" : "Novo cadastro"}
             </button>
           ) : null}
         </div>

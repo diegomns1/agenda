@@ -13,6 +13,9 @@ type Props = {
   telefone: string | null;
   modelo: string;
   tamanho?: "sm" | "default";
+  /** Botão cheio (padrão, na lista de lembretes) ou contornado (no detalhe, onde a ação principal é outra). */
+  destaque?: boolean;
+  className?: string;
   aoConcluir?: () => void;
 };
 
@@ -20,7 +23,7 @@ type Props = {
  * Abre o WhatsApp da cliente com a mensagem pronta e marca o atendimento como "avisada".
  * Se não houver telefone, só permite marcar manualmente.
  */
-export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "default", aoConcluir }: Props) {
+export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "default", destaque = true, className, aoConcluir }: Props) {
   const [pendente, iniciar] = useTransition();
   const avisada = Boolean(agendamento.cliente_avisada_em);
 
@@ -36,7 +39,7 @@ export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "
 
   if (avisada) {
     return (
-      <Button variant="outline" size={tamanho} onClick={() => marcar(false)} disabled={pendente} title="Desmarcar">
+      <Button variant="outline" size={tamanho} className={className} onClick={() => marcar(false)} disabled={pendente} title="Desmarcar">
         <CheckIcon className="text-emerald-600" />
         Lembrete enviado
         <UndoIcon className="opacity-50" />
@@ -46,7 +49,7 @@ export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "
 
   if (!telefone) {
     return (
-      <Button variant="outline" size={tamanho} onClick={() => marcar(true)} disabled={pendente} title="Cliente sem WhatsApp cadastrado">
+      <Button variant="outline" size={tamanho} className={className} onClick={() => marcar(true)} disabled={pendente} title="Cliente sem WhatsApp cadastrado">
         <CheckIcon />
         Marcar lembrete como enviado
       </Button>
@@ -54,14 +57,14 @@ export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "
   }
 
   return (
-    <Button asChild size={tamanho} disabled={pendente}>
+    <Button asChild size={tamanho} variant={destaque ? "default" : "outline"} className={className} disabled={pendente}>
       <a
         href={linkLembrete(telefone, modelo, agendamento)}
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => marcar(true)}
       >
-        <MessageCircleIcon />
+        <MessageCircleIcon className={destaque ? undefined : "text-emerald-700 dark:text-emerald-400"} />
         Enviar lembrete
       </a>
     </Button>

@@ -40,7 +40,7 @@ export function BarraInferior({ bloqueados = {} }: Props) {
                 href={href}
                 aria-current={ativo ? "page" : undefined}
                 className={cn(
-                  "group flex h-[60px] flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors sm:text-[11px]",
+                  "group flex h-[60px] flex-col items-center justify-center gap-0.5 text-xs font-semibold tracking-tight transition-colors",
                   ativo ? "text-primary" : "text-muted-foreground hover:text-foreground",
                   bloqueado && !ativo && "opacity-70",
                 )}

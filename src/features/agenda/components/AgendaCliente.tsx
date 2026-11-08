@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarOffIcon, UploadIcon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { CalendarOffIcon, PlusIcon, UploadIcon, XIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,10 @@ import { FOLGA_GRADE, GradeHoraria, PX_POR_MIN, type Coluna } from "./GradeHorar
 import { VisaoMes } from "./VisaoMes";
 import { CartaoAgendamento } from "./CartaoAgendamento";
 import { DetalheAgendamento } from "./DetalheAgendamento";
+import { LegendaAgenda } from "./LegendaAgenda";
+import { Flutuante } from "@/components/layout/Flutuante";
+import { SemanaLista } from "./SemanaLista";
+import { VISUAL_DATA } from "@/features/agenda/visual";
 import { FormAgendamento, type ClienteResumo, type InicialForm } from "./FormAgendamento";
 
 type Props = {
@@ -41,6 +45,22 @@ type Props = {
 
 const DIA_SEMANA_CURTO = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
+// Aviso "Importar agenda" pode ser fechado; lembra neste aparelho.
+// useSyncExternalStore: no servidor o aviso aparece; no navegador lê o que ficou guardado, sem erro de hidratação.
+const CHAVE_AVISO_IMPORTAR = "vaguinha-aviso-importar-fechado";
+const ouvintesAviso = new Set<() => void>();
+function lerAvisoFechado() {
+  try {
+    return window.localStorage.getItem(CHAVE_AVISO_IMPORTAR) === "1";
+  } catch {
+    return false;
+  }
+}
+function assinarAviso(fn: () => void) {
+  ouvintesAviso.add(fn);
+  return () => ouvintesAviso.delete(fn);
+}
+
 function diaEmSP(iso: string) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(iso));
 }
@@ -52,6 +72,15 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
   const [mostrarCancelados, setMostrarCancelados] = useState(false);
   const [agoraMin, setAgoraMin] = useState<number | null>(null);
   const hoje = hojeISO();
+  const avisoImportarFechado = useSyncExternalStore(assinarAviso, lerAvisoFechado, () => false);
+  function fecharAvisoImportar() {
+    try {
+      window.localStorage.setItem(CHAVE_AVISO_IMPORTAR, "1");
+    } catch {
+      // sem armazenamento: some só nesta visita
+    }
+    ouvintesAviso.forEach((fn) => fn());
+  }
 
   useEffect(() => {
     const atualizar = () => setAgoraMin(minutosDoDia(new Date()));
@@ -134,7 +163,8 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
   }, [visao, data]);
 
   return (
-    <div className="grid gap-4">
+    // pb-16 no celular: espaço para o botão flutuante "Marcar" não cobrir o fim da página
+    <div className="grid gap-4 pb-16 sm:pb-0">
       <BarraAgenda visao={visao} data={data} aoMarcar={() => abrirNovo("atendimento")} aoBloquear={() => abrirNovo("bloqueio")} />
 
       {visao === "mes" ? (
@@ -144,7 +174,10 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
           {visao === "dia" && datasDoDia(data).length > 0 ? (
             <p className="flex flex-wrap items-center gap-1.5 text-sm">
               {datasDoDia(data).map((e) => (
-                <span key={e.nome} className="rounded-md bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white dark:bg-emerald-700">
+                <span
+                  key={e.nome}
+                  className={cn("rounded-full border px-2 py-0.5 text-xs font-semibold", e.feriado ? VISUAL_DATA.feriado.etiqueta : VISUAL_DATA.comemorativa.etiqueta)}
+                >
                   {e.feriado ? `Feriado: ${e.nome}` : e.nome}
                 </span>
               ))}
@@ -154,10 +187,30 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
           {visao === "dia" && !diaAtendeHoje ? (
             <p className="flex items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-sm text-muted-foreground">
               <CalendarOffIcon className="size-4" />
-              Você não atende {DIA_SEMANA_CURTO[new Date(`${data}T12:00:00`).getDay()]}. Ainda dá para marcar um encaixe tocando na grade.
+              Você não atende {DIA_SEMANA_CURTO[new Date(`${data}T12:00:00`).getDay()]}. Ainda dá para marcar um encaixe pela grade.
             </p>
           ) : null}
 
+          {/* Semana no celular: lista dia a dia (a grade de 7 colunas não cabe numa tela de telefone) */}
+          {visao === "semana" ? (
+            <div className="sm:hidden">
+              <SemanaLista
+                colunas={colunas}
+                expediente={expediente}
+                intervaloMin={intervaloMin}
+                hoje={hoje}
+                agoraMin={agoraMin}
+                aoSelecionar={setSelecionado}
+                aoMarcar={(dia, hora) => abrirNovo("atendimento", dia, hora)}
+              />
+            </div>
+          ) : null}
+
+          <p className={cn("text-xs text-muted-foreground", visao === "semana" && "hidden sm:block")}>
+            Toque num horário vazio e depois no <strong className="font-semibold text-foreground">+</strong> para marcar.
+          </p>
+
+          <div className={cn(visao === "semana" && "hidden sm:block")}>
           <GradeHoraria
             colunas={colunas}
             inicioMin={inicioMin}
@@ -174,14 +227,22 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
                 ? (c) => (
                     <Link
                       href={`/agenda?visao=dia&data=${c.dia}`}
+                      aria-label={`Abrir ${formatarDataISO(c.dia, "EEEE, d 'de' MMMM")}`}
+                      aria-current={c.dia === hoje ? "date" : undefined}
                       className={cn("flex flex-col items-center py-1.5 text-xs hover:bg-muted/60", c.dia === hoje && "text-primary")}
                     >
-                      <span className="uppercase">{formatarDataISO(c.dia, "EEEEEE")}</span>
-                      <span className={cn("text-base font-semibold", c.dia === hoje && "rounded-full bg-primary px-2 text-primary-foreground")}>
+                      <span>{formatarDataISO(c.dia, "EEEEEE").toLowerCase()}.</span>
+                      <span className={cn("text-base font-semibold tabular-nums", c.dia === hoje && "rounded-full bg-primary px-2 text-primary-foreground")}>
                         {Number(c.dia.slice(8, 10))}
                       </span>
                       {datasDoDia(c.dia)[0] ? (
-                        <span className="mt-0.5 max-w-full truncate rounded bg-emerald-600 px-1 text-[9px] leading-tight font-semibold text-white dark:bg-emerald-700">
+                        <span
+                          title={datasDoDia(c.dia)[0].nome}
+                          className={cn(
+                            "mt-0.5 max-w-full truncate rounded px-1 text-[11px] leading-tight font-semibold",
+                            datasDoDia(c.dia)[0].feriado ? VISUAL_DATA.feriado.chip : VISUAL_DATA.comemorativa.chip,
+                          )}
+                        >
                           {datasDoDia(c.dia)[0].nome}
                         </span>
                       ) : null}
@@ -190,20 +251,21 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
                 : undefined
             }
           />
+          </div>
 
           {visao === "dia" && colunas[0]?.agendamentos.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground">
-              Nada marcado {data === hoje ? "para hoje" : `em ${formatarDataISO(data)}`}. Toque num horário da grade para marcar.
-            </p>
+            <p className="text-center text-sm text-muted-foreground">Nada marcado {data === hoje ? "para hoje" : `em ${formatarDataISO(data)}`}.</p>
           ) : null}
 
+          <LegendaAgenda comDatas={false} />
+
           {cancelados.length > 0 ? (
-            <div className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm">
+            <div className="flex items-center justify-between gap-2 rounded-lg border px-3 py-1 text-sm">
               <span className="text-muted-foreground">
                 {cancelados.length} cancelado{cancelados.length === 1 ? "" : "s"} neste período
               </span>
-              <Button variant="ghost" size="sm" onClick={() => setMostrarCancelados((x) => !x)}>
-                {mostrarCancelados ? "Ocultar" : "Mostrar"}
+              <Button variant="ghost" className="h-11 sm:h-8" onClick={() => setMostrarCancelados((x) => !x)}>
+                {mostrarCancelados ? "Esconder da agenda" : "Mostrar na agenda"}
               </Button>
             </div>
           ) : null}
@@ -220,13 +282,30 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
         </>
       )}
 
-      <Link
-        href="/agenda/importar"
-        className="flex items-center justify-center gap-2 rounded-xl border border-dashed px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-      >
-        <UploadIcon className="size-4" />
-        Usa o Google Agenda? <span className="font-semibold text-primary">Importar agenda</span>
-      </Link>
+      {!avisoImportarFechado ? (
+        <div className="flex items-center gap-1 rounded-xl border border-dashed pl-3 text-sm text-muted-foreground">
+          <Link href="/agenda/importar" className="flex min-h-11 flex-1 items-center gap-2 transition-colors hover:text-foreground">
+            <UploadIcon className="size-4 shrink-0" />
+            <span>
+              Usa o Google Agenda? <span className="font-semibold text-primary">Importar agenda</span>
+            </span>
+          </Link>
+          <Button variant="ghost" size="icon" className="size-11" aria-label="Fechar aviso de importar agenda" onClick={fecharAvisoImportar}>
+            <XIcon />
+          </Button>
+        </div>
+      ) : null}
+
+      {/* Marcar ao alcance do polegar (no celular o botão do topo fica longe) */}
+      <Flutuante>
+        <Button
+          onClick={() => abrirNovo("atendimento")}
+          className="fixed right-4 bottom-[calc(72px+env(safe-area-inset-bottom))] z-30 h-14 gap-2 rounded-full px-5 text-base font-semibold shadow-lg shadow-primary/30 sm:hidden"
+        >
+          <PlusIcon className="size-5" />
+          Marcar
+        </Button>
+      </Flutuante>
 
       {/* Formulário: novo / editar / remarcar */}
       <Dialog open={form !== null} onOpenChange={(aberto) => !aberto && setForm(null)}>

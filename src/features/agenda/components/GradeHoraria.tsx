@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { PlusIcon } from "lucide-react";
 import { minutosDoDia, minutosParaHora, type DataISO } from "@/lib/datas";
 import { cn } from "@/lib/utils";
 import type { Agendamento } from "@/types/database";
@@ -47,12 +48,22 @@ export function GradeHoraria({
   const linhas: number[] = [];
   for (let t = inicioMin; t <= fimMin; t += 60) linhas.push(t);
 
+  // Toque em horário vazio: o 1º toque só marca o espaço ("+ 14:30"); o 2º, nele, abre o agendamento.
+  // Evita abrir "Marcar atendimento" sem querer ao rolar ou ao errar um cartão por pouco.
+  const [slot, setSlot] = useState<{ dia: DataISO; min: number } | null>(null);
+  useEffect(() => {
+    if (!slot) return;
+    const sair = (e: KeyboardEvent) => e.key === "Escape" && setSlot(null);
+    window.addEventListener("keydown", sair);
+    return () => window.removeEventListener("keydown", sair);
+  }, [slot]);
+
   function clicarFundo(e: React.MouseEvent<HTMLDivElement>, dia: DataISO) {
     if (!aoClicarSlot) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
     const minutos = inicioMin + Math.floor(y / PX_POR_MIN / passoMin) * passoMin;
-    aoClicarSlot(dia, minutosParaHora(Math.max(inicioMin, Math.min(minutos, fimMin - passoMin))));
+    setSlot({ dia, min: Math.max(inicioMin, Math.min(minutos, fimMin - passoMin)) });
   }
 
   return (
@@ -98,8 +109,6 @@ export function GradeHoraria({
           return (
             <div
               key={c.dia}
-              role={aoClicarSlot ? "button" : undefined}
-              tabIndex={-1}
               onClick={(e) => clicarFundo(e, c.dia)}
               className={cn(
                 "relative border-l",
@@ -122,6 +131,24 @@ export function GradeHoraria({
                   <span className="size-2 -translate-x-1 rounded-full bg-rose-500" />
                   <span className="h-px flex-1 bg-rose-500" />
                 </div>
+              ) : null}
+
+              {slot && slot.dia === c.dia && aoClicarSlot ? (
+                <button
+                  type="button"
+                  autoFocus
+                  aria-label={`Marcar atendimento às ${minutosParaHora(slot.min)}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    aoClicarSlot(c.dia, minutosParaHora(slot.min));
+                    setSlot(null);
+                  }}
+                  className="surgir absolute inset-x-0.5 z-[11] flex items-center gap-1 rounded-lg border-2 border-dashed border-primary bg-primary/10 px-1.5 text-xs font-semibold text-primary tabular-nums focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  style={{ top: (slot.min - inicioMin) * PX_POR_MIN, height: Math.max(44, passoMin * PX_POR_MIN - 2) }}
+                >
+                  <PlusIcon aria-hidden className="size-3.5 shrink-0" />
+                  {minutosParaHora(slot.min)}
+                </button>
               ) : null}
 
               {c.agendamentos.map((a) => {

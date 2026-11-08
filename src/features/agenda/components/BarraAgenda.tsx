@@ -15,6 +15,8 @@ type Props = {
   aoBloquear: () => void;
 };
 
+const ROTULO_VISAO: Record<Visao, string> = { mes: "Mês", semana: "Semana", dia: "Dia" };
+
 export function rotuloDoPeriodo(visao: Visao, data: DataISO) {
   if (visao === "dia") return formatarDataISO(data, "EEEE, dd 'de' MMMM");
   if (visao === "semana") {
@@ -25,35 +27,39 @@ export function rotuloDoPeriodo(visao: Visao, data: DataISO) {
   return formatarDataISO(data, "MMMM 'de' yyyy");
 }
 
+/** Controles da agenda. No celular tudo tem 44 px de altura (alcance do polegar); no computador, mais compacto. */
 export function BarraAgenda({ visao, data, aoMarcar, aoBloquear }: Props) {
   const hoje = hojeISO();
   const anterior = visao === "dia" ? somarDias(data, -1) : visao === "semana" ? somarDias(data, -7) : somarMeses(data, -1);
   const proximo = visao === "dia" ? somarDias(data, 1) : visao === "semana" ? somarDias(data, 7) : somarMeses(data, 1);
   const href = (v: Visao, d: DataISO) => `/agenda?visao=${v}&data=${d}`;
+  const nomePeriodo = visao === "dia" ? "dia" : visao === "semana" ? "semana" : "mês";
 
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-2">
       <div className="flex items-center justify-between gap-2">
-        <div className="grid grid-cols-3 rounded-lg bg-muted p-1 text-sm font-medium">
+        <nav aria-label="Como ver a agenda" className="flex rounded-xl bg-muted p-1 text-sm font-medium">
           {(["mes", "semana", "dia"] as const).map((v) => (
             <Link
               key={v}
               href={href(v, data)}
+              aria-current={visao === v ? "page" : undefined}
               className={cn(
-                "rounded-md px-3 py-1.5 text-center capitalize transition-colors",
-                visao === v ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground",
+                "flex min-h-11 items-center justify-center rounded-lg px-3 transition-colors sm:min-h-8",
+                visao === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {v === "mes" ? "Mês" : v}
+              {ROTULO_VISAO[v]}
             </Link>
           ))}
-        </div>
+        </nav>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={aoBloquear} aria-label="Bloquear horário">
+          <Button variant="outline" onClick={aoBloquear} className="h-11 sm:h-8">
             <LockIcon />
-            <span className="hidden sm:inline">Bloquear</span>
+            Bloquear
           </Button>
-          <Button size="sm" onClick={aoMarcar}>
+          {/* No celular, "Marcar" é o botão flutuante embaixo (alcance do polegar) */}
+          <Button onClick={aoMarcar} className="hidden sm:inline-flex">
             <CalendarPlusIcon />
             Marcar
           </Button>
@@ -62,17 +68,17 @@ export function BarraAgenda({ visao, data, aoMarcar, aoBloquear }: Props) {
 
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
-          <Button asChild variant="ghost" size="icon-sm" aria-label="Anterior">
-            <Link href={href(visao, anterior)}>
+          <Button asChild variant="ghost" size="icon" className="size-11 sm:size-8">
+            <Link href={href(visao, anterior)} aria-label={`${nomePeriodo === "semana" ? "Semana" : nomePeriodo === "mês" ? "Mês" : "Dia"} anterior`}>
               <ChevronLeftIcon />
             </Link>
           </Button>
-          <Button asChild variant="ghost" size="icon-sm" aria-label="Próximo">
-            <Link href={href(visao, proximo)}>
+          <Button asChild variant="ghost" size="icon" className="size-11 sm:size-8">
+            <Link href={href(visao, proximo)} aria-label={`Próxim${nomePeriodo === "semana" ? "a semana" : nomePeriodo === "mês" ? "o mês" : "o dia"}`}>
               <ChevronRightIcon />
             </Link>
           </Button>
-          <Button asChild variant={data === hoje ? "secondary" : "ghost"} size="sm">
+          <Button asChild variant={data === hoje ? "secondary" : "ghost"} className="h-11 sm:h-8">
             <Link href={href(visao, hoje)}>Hoje</Link>
           </Button>
         </div>

@@ -7,7 +7,6 @@ import {
   BanIcon,
   CalendarClockIcon,
   CheckIcon,
-  MessageCircleIcon,
   PencilIcon,
   RotateCcwIcon,
   Trash2Icon,
@@ -17,6 +16,8 @@ import {
 import { alterarStatusAgendamento, excluirAgendamento } from "@/features/agenda/actions";
 import { BotaoLembrarCliente } from "@/features/lembretes/components/BotaoLembrarCliente";
 import { STATUS_AGENDAMENTO } from "@/features/agenda/schema";
+import { VISUAL_STATUS } from "@/features/agenda/visual";
+import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -34,7 +35,7 @@ import { formatarMoeda } from "@/lib/moeda";
 import { linkWhatsApp } from "@/lib/telefone";
 import { cn } from "@/lib/utils";
 import type { EstadoForm } from "@/components/formulario/tipos";
-import type { Agendamento } from "@/types/database";
+import type { Agendamento, StatusAgendamento } from "@/types/database";
 import type { ClienteResumo } from "./FormAgendamento";
 
 type Props = {
@@ -49,18 +50,30 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
   const [confirmando, setConfirmando] = useState<"cancelar" | "excluir" | null>(null);
   const [pendente, iniciar] = useTransition();
 
-  function executar(fn: () => Promise<EstadoForm>, fechar = true) {
+  function executar(fn: () => Promise<EstadoForm>, desfazer?: () => Promise<EstadoForm>) {
     iniciar(async () => {
       const r = await fn();
       if (r.ok) {
-        if (r.mensagem) toast.success(r.mensagem);
-        if (fechar) aoFechar();
+        if (r.mensagem) {
+          // "Concluído"/"Faltou" são um toque só: a notificação traz "Desfazer" por alguns segundos
+          toast.success(r.mensagem, desfazer ? { duration: 7000, action: { label: "Desfazer", onClick: () => void desfazer().then((d) => d.ok && toast.success("Desfeito.")) } } : undefined);
+        }
+        aoFechar();
       } else if (r.erro) toast.error(r.erro);
     });
   }
 
+  function mudarStatus(id: string, novo: StatusAgendamento, anterior: StatusAgendamento) {
+    executar(
+      () => alterarStatusAgendamento(id, novo),
+      () => alterarStatusAgendamento(id, anterior),
+    );
+  }
+
   const cliente = a?.cliente_id ? clientes.find((c) => c.id === a.cliente_id) : undefined;
   const status = a ? STATUS_AGENDAMENTO[a.status] : null;
+  const IconeStatus = a && a.tipo === "atendimento" ? VISUAL_STATUS[a.status].Icone : null;
+  const botao = "h-11 sm:h-8";
 
   return (
     <>
@@ -69,10 +82,13 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
           {a ? (
             <>
               <DialogHeader>
-                <DialogTitle className="flex flex-wrap items-center gap-2">
+                <DialogTitle className="flex flex-wrap items-center gap-2 pr-10 text-lg">
                   {a.tipo === "bloqueio" ? a.titulo : a.cliente_nome}
                   {a.tipo === "atendimento" && status ? (
-                    <span className={cn("rounded-full border px-2 py-0.5 text-xs font-medium", status.cor)}>{status.rotulo}</span>
+                    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium", status.cor)}>
+                      {IconeStatus ? <IconeStatus aria-hidden className="size-3" /> : null}
+                      {status.rotulo}
+                    </span>
                   ) : null}
                 </DialogTitle>
                 <DialogDescription>
@@ -102,21 +118,29 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
                 <p className="text-sm whitespace-pre-wrap">{a.observacoes}</p>
               ) : null}
 
-              <div className="flex flex-wrap gap-2 pt-1">
+              {/* 1) contato e edição (contornados) */}
+              <div className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:flex-wrap">
                 {a.tipo === "atendimento" ? (
                   <>
                     {a.status === "agendado" ? (
-                      <BotaoLembrarCliente agendamento={a} telefone={cliente?.telefone ?? null} modelo={modeloLembrete} tamanho="sm" />
+                      <BotaoLembrarCliente
+                        agendamento={a}
+                        telefone={cliente?.telefone ?? null}
+                        modelo={modeloLembrete}
+                        tamanho="sm"
+                        destaque={false}
+                        className={cn(botao, "col-span-2")}
+                      />
                     ) : cliente?.telefone ? (
-                      <Button asChild variant="outline" size="sm">
+                      <Button asChild variant="outline" className={botao}>
                         <a href={linkWhatsApp(cliente.telefone)} target="_blank" rel="noopener noreferrer">
-                          <MessageCircleIcon className="text-emerald-600" />
+                          <IconeWhatsApp className="size-4 text-emerald-700 dark:text-emerald-400" />
                           WhatsApp
                         </a>
                       </Button>
                     ) : null}
                     {a.cliente_id ? (
-                      <Button asChild variant="outline" size="sm">
+                      <Button asChild variant="outline" className={botao}>
                         <Link href={`/clientes/${a.cliente_id}`}>
                           <UserRoundIcon />
                           Ficha
@@ -124,30 +148,31 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
                       </Button>
                     ) : null}
                     {a.status !== "cancelado" ? (
-                      <Button variant="outline" size="sm" onClick={() => aoEditar(a)}>
+                      <Button variant="outline" className={botao} onClick={() => aoEditar(a)}>
                         <CalendarClockIcon />
-                        Remarcar / editar
+                        Remarcar
                       </Button>
                     ) : null}
                   </>
                 ) : (
-                  <Button variant="outline" size="sm" onClick={() => aoEditar(a)}>
+                  <Button variant="outline" className={botao} onClick={() => aoEditar(a)}>
                     <PencilIcon />
                     Editar
                   </Button>
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2 border-t pt-3">
+              {/* 2) como foi: uma ação principal só; "Cancelar" fica separado, à direita */}
+              <div className="flex flex-wrap items-center gap-2 border-t pt-3">
                 {a.tipo === "atendimento" ? (
                   <>
                     {a.status === "pendente" ? (
                       <>
-                        <Button size="sm" disabled={pendente} onClick={() => executar(() => alterarStatusAgendamento(a.id, "agendado"))}>
+                        <Button className={cn(botao, "flex-1 sm:flex-none")} disabled={pendente} onClick={() => executar(() => alterarStatusAgendamento(a.id, "agendado"))}>
                           <CheckIcon />
-                          Confirmar
+                          Confirmar pedido
                         </Button>
-                        <Button size="sm" variant="ghost" className="text-destructive" disabled={pendente} onClick={() => setConfirmando("cancelar")}>
+                        <Button variant="ghost" className={cn(botao, "ml-auto text-destructive")} disabled={pendente} onClick={() => setConfirmando("cancelar")}>
                           <BanIcon />
                           Recusar
                         </Button>
@@ -155,28 +180,28 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
                     ) : null}
                     {a.status === "agendado" ? (
                       <>
-                        <Button size="sm" disabled={pendente} onClick={() => executar(() => alterarStatusAgendamento(a.id, "concluido"))}>
+                        <Button className={cn(botao, "flex-1 sm:flex-none")} disabled={pendente} onClick={() => mudarStatus(a.id, "concluido", a.status)}>
                           <CheckIcon />
                           Concluído
                         </Button>
-                        <Button size="sm" variant="secondary" disabled={pendente} onClick={() => executar(() => alterarStatusAgendamento(a.id, "faltou"))}>
+                        <Button variant="secondary" className={cn(botao, "flex-1 sm:flex-none")} disabled={pendente} onClick={() => mudarStatus(a.id, "faltou", a.status)}>
                           <UserXIcon />
                           Faltou
                         </Button>
-                        <Button size="sm" variant="ghost" className="text-destructive" disabled={pendente} onClick={() => setConfirmando("cancelar")}>
+                        <Button variant="ghost" className={cn(botao, "w-full text-destructive sm:ml-auto sm:w-auto")} disabled={pendente} onClick={() => setConfirmando("cancelar")}>
                           <BanIcon />
-                          Cancelar
+                          Cancelar atendimento
                         </Button>
                       </>
-                    ) : (
-                      <Button size="sm" variant="outline" disabled={pendente} onClick={() => executar(() => alterarStatusAgendamento(a.id, "agendado"))}>
+                    ) : a.status !== "pendente" ? (
+                      <Button variant="outline" className={botao} disabled={pendente} onClick={() => mudarStatus(a.id, "agendado", a.status)}>
                         <RotateCcwIcon />
                         Voltar para agendado
                       </Button>
-                    )}
+                    ) : null}
                   </>
                 ) : (
-                  <Button size="sm" variant="ghost" className="text-destructive" disabled={pendente} onClick={() => setConfirmando("excluir")}>
+                  <Button variant="ghost" className={cn(botao, "text-destructive")} disabled={pendente} onClick={() => setConfirmando("excluir")}>
                     <Trash2Icon />
                     Remover bloqueio
                   </Button>

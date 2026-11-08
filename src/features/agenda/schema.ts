@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { VISUAL_STATUS } from "./visual";
 
 const data = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida");
 const hora = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora inválida");
@@ -37,10 +38,11 @@ export const esquemaBloqueio = z
     path: ["hora_fim"],
   });
 
+/** Rótulo + cor da etiqueta de cada situação. As cores vêm de `visual.ts` (mesma tabela em todo o painel). */
 export const STATUS_AGENDAMENTO = {
-  pendente: { rotulo: "Aguardando confirmação", cor: "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200" },
-  agendado: { rotulo: "Agendado", cor: "bg-primary/15 text-primary border-primary/30" },
-  concluido: { rotulo: "Concluído", cor: "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-200" },
-  faltou: { rotulo: "Faltou", cor: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950 dark:text-amber-200" },
-  cancelado: { rotulo: "Cancelado", cor: "bg-muted text-muted-foreground border-border line-through" },
+  pendente: { rotulo: VISUAL_STATUS.pendente.rotulo, cor: VISUAL_STATUS.pendente.etiqueta },
+  agendado: { rotulo: VISUAL_STATUS.agendado.rotulo, cor: VISUAL_STATUS.agendado.etiqueta },
+  concluido: { rotulo: VISUAL_STATUS.concluido.rotulo, cor: VISUAL_STATUS.concluido.etiqueta },
+  faltou: { rotulo: VISUAL_STATUS.faltou.rotulo, cor: VISUAL_STATUS.faltou.etiqueta },
+  cancelado: { rotulo: VISUAL_STATUS.cancelado.rotulo, cor: VISUAL_STATUS.cancelado.etiqueta },
 } as const;

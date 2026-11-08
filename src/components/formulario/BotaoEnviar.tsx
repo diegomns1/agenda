@@ -9,12 +9,15 @@ import type * as React from "react";
 type Props = React.ComponentProps<typeof Button> & {
   carregando?: boolean;
   textoCarregando?: string;
+  /** Brilho que atravessa o botão ao carregar. Só nos momentos-chave (entrar, criar conta); em todo botão perde o efeito. */
+  brilho?: boolean;
 };
 
 export function BotaoEnviar({
   children,
   carregando,
   textoCarregando = "Aguarde...",
+  brilho = false,
   className,
   disabled,
   ...props
@@ -26,7 +29,7 @@ export function BotaoEnviar({
     <Button
       type="submit"
       size="lg"
-      className={cn("brilho h-11 w-full rounded-xl text-base font-semibold shadow-md shadow-vinho/20", className)}
+      className={cn("h-11 w-full rounded-xl text-base font-semibold shadow-md shadow-vinho/20", brilho && "brilho", className)}
       disabled={disabled || ocupado}
       {...props}
     >

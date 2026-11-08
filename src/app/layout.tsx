@@ -44,6 +44,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: "#702D50",
+  // Android: o teclado encolhe a página, então a janela que sobe de baixo fica acima dele (não escondida)
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

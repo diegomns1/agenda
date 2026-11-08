@@ -142,6 +142,12 @@
   ::selection {
     background: color-mix(in oklch, var(--rosa), transparent 50%);
   }
+  /* partes que o navegador desenha também seguem o tema (cursor de texto, marcações, barras de rolagem) */
+  :root {
+    accent-color: var(--primary);
+    caret-color: var(--primary);
+    scrollbar-color: color-mix(in oklch, var(--primary), transparent 70%) transparent;
+  }
 }
 
 /* ------------------------------------------------------------------ */

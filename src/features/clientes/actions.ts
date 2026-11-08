@@ -59,6 +59,20 @@ export async function salvarCliente(_: EstadoForm, formData: FormData): Promise<
   return { ok: true, mensagem: "Cadastro salvo.", valores: { id: data.id } };
 }
 
+/**
+ * Já existe cadastro com este WhatsApp? Usado ao sair do campo, para avisar antes de salvar.
+ * `ignorarId`: o próprio cadastro em edição.
+ */
+export async function clienteComTelefone(telefone: string, ignorarId?: string | null): Promise<{ id: string; nome: string } | null> {
+  const numero = normalizarTelefone(telefone);
+  if (!numero) return null;
+  const { supabase } = await sessao();
+  let consulta = supabase.from("clientes").select("id, nome").eq("telefone", numero).limit(1);
+  if (ignorarId) consulta = consulta.neq("id", ignorarId);
+  const { data } = await consulta.maybeSingle();
+  return data ?? null;
+}
+
 export async function excluirCliente(id: string): Promise<EstadoForm> {
   const { supabase } = await sessao();
   const { error } = await supabase.from("clientes").delete().eq("id", id);

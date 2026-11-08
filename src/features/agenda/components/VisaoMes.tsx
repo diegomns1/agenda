@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { diaDaSemana, diasEntre, hojeISO, horaDe, intervaloDoMes, type DataISO } from "@/lib/datas";
+import { diaDaSemana, diasEntre, formatarDataISO, hojeISO, horaDe, intervaloDoMes, type DataISO } from "@/lib/datas";
 import { datasEspeciais } from "@/lib/feriados";
 import { primeiroNome } from "@/lib/texto";
 import { cn } from "@/lib/utils";
 import type { Agendamento, Expediente } from "@/types/database";
 import { janelaDoDia } from "@/features/agenda/disponibilidade";
+import { VISUAL_DATA, visualDe } from "@/features/agenda/visual";
+import { LegendaAgenda } from "./LegendaAgenda";
 
-const DIAS = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"];
+const DIAS = ["seg.", "ter.", "qua.", "qui.", "sex.", "sáb.", "dom."];
 /** Quantos itens cabem em cada dia antes do "+N". */
 const MAX_POR_DIA = 4;
 
@@ -18,7 +20,7 @@ type Props = {
   expediente: Expediente;
 };
 
-type Item = { id: string; texto: string; tipo: "atendimento" | "bloqueio" | "data"; status: Agendamento["status"]; inicio: string };
+type Item = { id: string; texto: string; completo: string; classes: string };
 
 /** "08:00" → "8h"; "13:30" → "13h30" (como no Google Agenda). */
 function horaCurta(iso: string) {
@@ -37,32 +39,42 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
   const hoje = hojeISO();
 
   const porDia = new Map<DataISO, Item[]>();
-  // feriados e datas comemorativas primeiro (verde, como no Google Agenda)
+  const nomesDatas = new Map<DataISO, string[]>();
+  // feriados e datas comemorativas primeiro (azul: cheio = feriado, contorno = data do comércio)
   const anos = [...new Set(dias.map((d) => Number(d.slice(0, 4))))];
   for (const e of anos.flatMap((a) => datasEspeciais(a))) {
     if (e.data < inicio || e.data > fim) continue;
-    porDia.set(e.data, [...(porDia.get(e.data) ?? []), { id: `data-${e.data}-${e.nome}`, texto: e.nome, tipo: "data", status: "agendado", inicio: e.data }]);
+    const v = e.feriado ? VISUAL_DATA.feriado : VISUAL_DATA.comemorativa;
+    porDia.set(e.data, [...(porDia.get(e.data) ?? []), { id: `data-${e.data}-${e.nome}`, texto: e.nome, completo: `${v.rotulo}: ${e.nome}`, classes: v.chip }]);
+    nomesDatas.set(e.data, [...(nomesDatas.get(e.data) ?? []), e.nome]);
   }
   for (const a of [...agendamentos].sort((x, y) => x.inicio.localeCompare(y.inicio))) {
     if (a.status === "cancelado") continue;
     const dIni = diaEmSP(new Date(a.inicio));
     const dFimExcl = diaEmSP(new Date(new Date(a.fim).getTime() - 1));
+    const visual = visualDe(a);
     for (const d of diasEntre(dIni, dFimExcl)) {
       // bloqueio de vários dias: nos dias do meio não tem hora
       const comHora = d === dIni && (a.tipo === "atendimento" || dIni === dFimExcl);
       const nome = a.tipo === "bloqueio" ? (a.titulo ?? "Bloqueado") : primeiroNome(a.cliente_nome ?? "");
+      const nomeCompleto = a.tipo === "bloqueio" ? (a.titulo ?? "Bloqueado") : (a.cliente_nome ?? "");
       const lista = porDia.get(d) ?? [];
-      lista.push({ id: `${a.id}-${d}`, texto: comHora ? `${horaCurta(a.inicio)} ${nome}` : nome, tipo: a.tipo, status: a.status, inicio: a.inicio });
+      lista.push({
+        id: `${a.id}-${d}`,
+        texto: comHora ? `${horaCurta(a.inicio)} ${nome}` : nome,
+        completo: `${comHora ? `${horaDe(a.inicio)} ` : ""}${nomeCompleto} (${visual.rotulo.toLowerCase()})`,
+        classes: visual.chip,
+      });
       porDia.set(d, lista);
     }
   }
 
   return (
     <div className="overflow-hidden rounded-xl border bg-card">
-      <div className="grid grid-cols-7 border-b text-center text-[11px] font-medium text-muted-foreground">
+      <div aria-hidden className="grid grid-cols-7 border-b text-center text-xs font-medium text-muted-foreground">
         {DIAS.map((d) => (
           <div key={d} className="py-2">
-            {d}.
+            {d}
           </div>
         ))}
       </div>
@@ -75,13 +87,24 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
           const dow = diaDaSemana(d);
           const visiveis = itens.length > MAX_POR_DIA ? itens.slice(0, MAX_POR_DIA - 1) : itens;
           const resto = itens.length - visiveis.length;
+          const qtd = itens.length - (nomesDatas.get(d)?.length ?? 0);
+          const rotulo = [
+            formatarDataISO(d, "EEEE, d 'de' MMMM"),
+            ehHoje ? "hoje" : null,
+            nomesDatas.get(d)?.join(", ") ?? null,
+            qtd === 0 ? "nada marcado" : qtd === 1 ? "1 na agenda" : `${qtd} na agenda`,
+            !atende ? "você não atende" : null,
+          ]
+            .filter(Boolean)
+            .join(" · ");
           return (
             <Link
               key={d}
               href={`/agenda?visao=dia&data=${d}`}
-              aria-label={`${Number(d.slice(8, 10))}: ${itens.length} na agenda`}
+              aria-label={rotulo}
+              aria-current={ehHoje ? "date" : undefined}
               className={cn(
-                "flex min-h-24 min-w-0 flex-col gap-0.5 border-b px-px pt-1 pb-1.5 transition-colors hover:bg-muted/60 sm:min-h-28 sm:px-1",
+                "flex min-h-24 min-w-0 flex-col gap-0.5 border-b px-px pt-1 pb-1.5 transition-colors hover:bg-muted/60 focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:min-h-28 sm:px-1",
                 i % 7 !== 0 && "border-l",
                 foraDoMes && "opacity-45",
                 !atende && !foraDoMes && "bg-muted/40",
@@ -90,7 +113,7 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
             >
               <span
                 className={cn(
-                  "mx-auto mb-0.5 inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold",
+                  "mx-auto mb-0.5 inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
                   ehHoje && "bg-primary text-primary-foreground",
                 )}
               >
@@ -99,32 +122,25 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
               {visiveis.map((it) => (
                 <span
                   key={it.id}
+                  title={it.completo}
                   className={cn(
-                    // corta a sobra sem reticências (cabe mais letra, como no Google Agenda)
-                    "block overflow-hidden rounded-[3px] px-[3px] py-px text-[10px] leading-tight font-semibold tracking-tight whitespace-nowrap sm:px-1 sm:text-[11px]",
-                    it.tipo === "data"
-                      ? "bg-emerald-600 text-white dark:bg-emerald-700"
-                      : it.tipo === "bloqueio"
-                        ? "bg-muted text-muted-foreground"
-                      : it.status === "pendente"
-                        ? "border border-dashed border-amber-400 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100"
-                        : it.status === "concluido"
-                          ? "bg-primary/10 text-primary/80"
-                          : "bg-primary text-primary-foreground",
+                    // corta a sobra sem reticências (cabe mais letra, como no Google Agenda); o nome inteiro fica no title
+                    "block overflow-hidden rounded-[3px] px-[3px] py-px text-[11px] leading-tight font-semibold tracking-tight whitespace-nowrap sm:px-1",
+                    it.classes,
                   )}
                 >
                   {it.texto}
                 </span>
               ))}
-              {resto > 0 ? <span className="px-1 text-[10px] font-semibold text-muted-foreground">+{resto} mais</span> : null}
+              {resto > 0 ? <span className="px-1 text-[11px] font-semibold text-muted-foreground">+{resto} mais</span> : null}
             </Link>
           );
         })}
       </div>
-      <p className="border-t px-3 py-2 text-xs text-muted-foreground">
-        Toque num dia para ver os horários. Verde = feriado ou data comemorativa. Cinza = bloqueio ou dia em que você não atende. Tracejado = pedido
-        aguardando.
-      </p>
+      <div className="grid gap-2 border-t px-3 py-2.5">
+        <LegendaAgenda />
+        <p className="text-xs text-muted-foreground">Toque num dia para ver os horários. Fundo cinza: dia em que você não atende.</p>
+      </div>
     </div>
   );
 }
