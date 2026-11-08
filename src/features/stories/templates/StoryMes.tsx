@@ -1,6 +1,6 @@
 import type { DadosMes, Marca } from "@/features/stories/dados";
 import type { Tema } from "@/features/stories/temas";
-import { Base, paletaDe } from "./Base";
+import { Base, paletaDe, rgba } from "./Base";
 
 const DIAS = ["S", "T", "Q", "Q", "S", "S", "D"];
 
@@ -10,11 +10,14 @@ export function StoryMes({ tema, marca, dados }: { tema: Tema; marca: Marca; dad
   for (let i = 0; i < 42; i += 7) semanas.push(dados.celulas.slice(i, i + 7));
   // remove semanas totalmente fora do mês
   const visiveis = semanas.filter((s) => s.some(Boolean));
-  const tam = 118;
+  const comImagem = Boolean(tema.imagemUrl);
+  // Com papel de parede, o calendário vai num quadro translúcido (letras e legenda não somem no desenho)
+  const tam = comImagem ? 104 : 118;
+  const quadro = comImagem ? { background: rgba(paleta.fundo[0], 0.86), borderRadius: 44, padding: "28px 26px" } : {};
 
   return (
     <Base tema={tema} marca={marca} paleta={paleta} titulo="Agenda do mês" subtitulo={dados.rotuloMes}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", alignSelf: "center", ...quadro }}>
         <div style={{ display: "flex", gap: 14, marginBottom: 14 }}>
           {DIAS.map((d, i) => (
             <div key={i} style={{ display: "flex", width: tam, justifyContent: "center", fontSize: 30, fontWeight: 700, opacity: 0.6 }}>
@@ -50,7 +53,7 @@ export function StoryMes({ tema, marca, dados }: { tema: Tema; marca: Marca; dad
           ))}
         </div>
 
-        <div style={{ display: "flex", gap: 40, marginTop: 50, fontSize: 28 }}>
+        <div style={{ display: "flex", gap: 40, marginTop: comImagem ? 28 : 50, fontSize: 28 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ display: "flex", width: 34, height: 34, borderRadius: 10, background: paleta.primaria }} />
             <div style={{ display: "flex" }}>com vaga</div>

@@ -14,8 +14,6 @@ export type Tema = {
   grupo: "sempre" | "datas";
   /** Época, para o seletor (ex.: "dezembro"). */
   quando?: string;
-  /** Texto curto na faixa do topo (sem emoji: a fonte da imagem não tem emojis). */
-  faixa: string | null;
   /** Se definidas, substituem as cores da profissional. */
   primaria?: string;
   secundaria?: string;
@@ -33,9 +31,13 @@ export type Tema = {
   decoracao: string;
   /** Tem papel de parede em public/stories/temas/<id>.jpg (miniatura em <id>-mini.jpg). */
   imagem?: boolean;
-  /** Preenchido na hora de gerar a imagem: URL absoluta do papel de parede. */
+  /** Fundo enviado pela própria profissional (vem no pedido, guardado só no aparelho dela). */
+  personalizado?: boolean;
+  /** Preenchido na hora de gerar a imagem: papel de parede como data URL. */
   imagemUrl?: string;
 };
+
+export const ID_MEU_FUNDO = "meu-fundo";
 
 export const TEMAS: Tema[] = [
   // ------------------------------------------------------------ o ano todo
@@ -43,16 +45,24 @@ export const TEMAS: Tema[] = [
     id: "neutro",
     nome: "Minhas cores",
     grupo: "sempre",
-    faixa: null,
     fundo: ["#FFFFFF", "#F6F6F8"],
     texto: "#1F1F23",
     decoracao: "rgba(0,0,0,0.05)",
   },
   {
+    // Cores da profissional sobre a imagem que ela subir; painel branco translúcido para ler bem em qualquer foto.
+    id: ID_MEU_FUNDO,
+    nome: "Meu fundo",
+    grupo: "sempre",
+    fundo: ["#FFFFFF", "#F6F6F8"],
+    texto: "#1F1F23",
+    decoracao: "rgba(0,0,0,0.05)",
+    personalizado: true,
+  },
+  {
     id: "floral",
     nome: "Floral delicado",
     grupo: "sempre",
-    faixa: null,
     primaria: "#8C5E4A",
     secundaria: "#F5EEE6",
     fundo: ["#FBF7F2", "#F5EEE6"],
@@ -64,7 +74,6 @@ export const TEMAS: Tema[] = [
     id: "marmore",
     nome: "Mármore e dourado",
     grupo: "sempre",
-    faixa: null,
     primaria: "#8A6A12",
     secundaria: "#F0EEE9",
     fundo: ["#FAFAF8", "#F0EEE9"],
@@ -77,7 +86,6 @@ export const TEMAS: Tema[] = [
     nome: "Verão tropical",
     grupo: "sempre",
     quando: "dezembro a março",
-    faixa: "Verão",
     primaria: "#00796B",
     secundaria: "#FFEFD6",
     fundo: ["#FFF8EC", "#FFEFD6"],
@@ -91,7 +99,6 @@ export const TEMAS: Tema[] = [
     nome: "Carnaval",
     grupo: "datas",
     quando: "fevereiro",
-    faixa: "Carnaval",
     primaria: "#FF4081",
     secundaria: "#4A148C",
     fundo: ["#3A0F78", "#4A148C"],
@@ -104,7 +111,6 @@ export const TEMAS: Tema[] = [
     nome: "Dia da Mulher",
     grupo: "datas",
     quando: "8 de março",
-    faixa: "Feliz Dia da Mulher",
     primaria: "#7B1FA2",
     secundaria: "#F3E5F5",
     fundo: ["#F7EEF9", "#F3E5F5"],
@@ -117,7 +123,6 @@ export const TEMAS: Tema[] = [
     nome: "Páscoa",
     grupo: "datas",
     quando: "março ou abril",
-    faixa: "Feliz Páscoa",
     primaria: "#7E57C2",
     secundaria: "#FFF1DA",
     fundo: ["#FFF8EC", "#FFF1DA"],
@@ -130,7 +135,6 @@ export const TEMAS: Tema[] = [
     nome: "Dia das Mães",
     grupo: "datas",
     quando: "maio",
-    faixa: "Feliz Dia das Mães",
     primaria: "#B4545E",
     secundaria: "#FBE3DA",
     fundo: ["#FDF3EF", "#FBE3DA"],
@@ -143,7 +147,6 @@ export const TEMAS: Tema[] = [
     nome: "Dia dos Namorados",
     grupo: "datas",
     quando: "12 de junho",
-    faixa: "Dia dos Namorados",
     primaria: "#C2185B",
     secundaria: "#FFE1E8",
     fundo: ["#FFF3F5", "#FFE1E8"],
@@ -156,7 +159,6 @@ export const TEMAS: Tema[] = [
     nome: "Festa Junina",
     grupo: "datas",
     quando: "junho",
-    faixa: "Arraiá",
     primaria: "#D84315",
     secundaria: "#FFEFD9",
     fundo: ["#FFF7EC", "#FFEFD9"],
@@ -169,7 +171,6 @@ export const TEMAS: Tema[] = [
     nome: "Dia dos Pais",
     grupo: "datas",
     quando: "agosto",
-    faixa: "Feliz Dia dos Pais",
     primaria: "#1F3A5F",
     secundaria: "#E9EDF3",
     fundo: ["#F4F6F9", "#E9EDF3"],
@@ -182,7 +183,6 @@ export const TEMAS: Tema[] = [
     nome: "Outubro Rosa",
     grupo: "datas",
     quando: "outubro",
-    faixa: "Outubro Rosa",
     primaria: "#E91E63",
     secundaria: "#FFF0F5",
     fundo: ["#FFF0F5", "#FFE4EE"],
@@ -195,7 +195,6 @@ export const TEMAS: Tema[] = [
     nome: "Novembro Azul",
     grupo: "datas",
     quando: "novembro",
-    faixa: "Novembro Azul",
     primaria: "#1565C0",
     secundaria: "#E3F2FD",
     fundo: ["#F1F7FE", "#E3F2FD"],
@@ -208,7 +207,6 @@ export const TEMAS: Tema[] = [
     nome: "Black Friday",
     grupo: "datas",
     quando: "fim de novembro",
-    faixa: "Black Friday",
     primaria: "#FFE600",
     sobrePrimaria: "#111111",
     primariaClara: true,
@@ -223,7 +221,6 @@ export const TEMAS: Tema[] = [
     nome: "Natal",
     grupo: "datas",
     quando: "dezembro",
-    faixa: "Boas Festas",
     titulo: "#F2C14E",
     primaria: "#B3261E",
     secundaria: "#FDECEC",
@@ -237,7 +234,6 @@ export const TEMAS: Tema[] = [
     nome: "Ano Novo",
     grupo: "datas",
     quando: "fim de dezembro",
-    faixa: "Feliz Ano Novo",
     primaria: "#C9A227",
     sobrePrimaria: "#101014",
     primariaClara: true,

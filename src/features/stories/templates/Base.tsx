@@ -9,7 +9,7 @@ import { ALTURA_STORY, LARGURA_STORY, type Tema } from "@/features/stories/temas
 export type Paleta = {
   primaria: string;
   secundaria: string;
-  /** Cor do texto sobre a primária (chips, faixa, botão do rodapé). */
+  /** Cor do texto sobre a primária (chips e botão do rodapé). */
   sobrePrimaria: string;
   /** Cor do título principal. */
   titulo: string;
@@ -44,6 +44,9 @@ export function rgba(hex: string, alfa: number) {
   const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h.slice(0, 6), 16);
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alfa})`;
 }
+
+/** Tamanho do círculo da logo. */
+const LOGO = 250;
 
 type PropsBase = {
   tema: Tema;
@@ -88,37 +91,17 @@ export function Base({ tema, marca, paleta, titulo, subtitulo, rodape, children 
         </>
       )}
 
-      {/* faixa do tema */}
-      {tema.faixa ? (
-        <div style={{ display: "flex", justifyContent: "center", paddingTop: comImagem ? 150 : 70 }}>
-          <div
-            style={{
-              display: "flex",
-              padding: "16px 44px",
-              borderRadius: 999,
-              background: paleta.primaria,
-              color: paleta.sobrePrimaria,
-              fontSize: 34,
-              fontWeight: 700,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-            }}
-          >
-            {tema.faixa}
-          </div>
-        </div>
-      ) : (
-        <div style={{ display: "flex", height: comImagem ? 150 : 70 }} />
-      )}
+      {/* espaço do topo (área da foto de perfil do Instagram) */}
+      <div style={{ display: "flex", height: comImagem ? 170 : 110 }} />
 
       {/* cabeçalho (logo, nome, título) */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: comImagem ? 30 : 0, ...painel }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: comImagem ? 0 : 50 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", ...painel }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           <div
             style={{
-              width: comImagem ? 170 : 200,
-              height: comImagem ? 170 : 200,
-              borderRadius: 100,
+              width: LOGO,
+              height: LOGO,
+              borderRadius: LOGO / 2,
               background: "#FFFFFF",
               display: "flex",
               alignItems: "center",
@@ -129,9 +112,9 @@ export function Base({ tema, marca, paleta, titulo, subtitulo, rodape, children 
           >
             {marca.logoUrl && !logoEhSvg ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={marca.logoUrl} width={comImagem ? 154 : 184} height={comImagem ? 154 : 184} alt="" style={{ objectFit: "contain" }} />
+              <img src={marca.logoUrl} width={LOGO - 16} height={LOGO - 16} alt="" style={{ objectFit: "contain" }} />
             ) : (
-              <div style={{ display: "flex", fontSize: 90, fontWeight: 800, color: paleta.primaria }}>{inicial}</div>
+              <div style={{ display: "flex", fontSize: 120, fontWeight: 800, color: paleta.primaria }}>{inicial}</div>
             )}
           </div>
           <div style={{ display: "flex", fontSize: 56, fontWeight: 800, marginTop: 24, textAlign: "center", padding: comImagem ? 0 : "0 80px" }}>{marca.nome}</div>
@@ -164,19 +147,40 @@ export function Base({ tema, marca, paleta, titulo, subtitulo, rodape, children 
         >
           {rodape ?? "Chame no WhatsApp para agendar"}
         </div>
-        <div style={{ display: "flex", fontSize: 24, opacity: comImagem ? 0.7 : 0.45, marginTop: 20 }}>vaguinha.app</div>
+        <div style={{ display: "flex", marginTop: 18 }}>
+          <Legivel paleta={paleta} comImagem={comImagem} style={{ fontSize: 24, opacity: comImagem ? 0.85 : 0.45 }}>
+            vaguinha.app
+          </Legivel>
+        </div>
       </div>
     </div>
   );
 }
 
-/** Pílula de horário. */
-export function Chip({ texto, paleta, grande = false }: { texto: string; paleta: Paleta; grande?: boolean }) {
+/** Texto solto sobre o fundo: com papel de parede ganha uma pílula translúcida para não sumir no desenho. */
+export function Legivel({ paleta, comImagem, style, children }: { paleta: Paleta; comImagem: boolean; style?: React.CSSProperties; children: React.ReactNode }) {
   return (
     <div
       style={{
         display: "flex",
-        padding: grande ? "18px 34px" : "10px 22px",
+        ...(comImagem ? { background: rgba(paleta.fundo[0], 0.82), padding: "8px 24px", borderRadius: 999 } : {}),
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Pílula de horário. Com `largura`, todas ficam do mesmo tamanho (grade alinhada). */
+export function Chip({ texto, paleta, grande = false, largura }: { texto: string; paleta: Paleta; grande?: boolean; largura?: number }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        width: largura,
+        padding: grande ? "16px 0" : "10px 22px",
         borderRadius: 999,
         background: paleta.primaria,
         color: paleta.sobrePrimaria,

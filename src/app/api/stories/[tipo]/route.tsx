@@ -59,7 +59,8 @@ async function gerar(perfil: Profile, tipo: TipoStory, sel: SelecaoStory, baixar
   const base = obterTema(sel.tema);
   // papel de parede: baixado do próprio site (public/stories/temas) e embutido como data URL
   // (o satori recusa baixar de localhost; assim funciona igual no computador e na Vercel)
-  const fundo = base.imagem ? await papelDeParede(origem, base.id) : null;
+  // "Meu fundo": a imagem vem pronta no pedido (sem ela, o story sai nas cores da profissional)
+  const fundo = base.personalizado ? (sel.fundo ?? null) : base.imagem ? await papelDeParede(origem, base.id) : null;
   const tema = fundo ? { ...base, imagemUrl: fundo } : base;
   const marca = marcaDoPerfil(perfil);
 

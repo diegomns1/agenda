@@ -9,14 +9,14 @@ export function StorySemana({ tema, marca, dados }: { tema: Tema; marca: Marca; 
 
   return (
     <Base tema={tema} marca={marca} paleta={paleta} titulo="Agenda da semana" subtitulo={subtitulo}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {dados.dias.map((d) => (
           <div
             key={d.dia}
             style={{
               display: "flex",
               alignItems: "center",
-              padding: "20px 30px",
+              padding: "16px 30px",
               borderRadius: 26,
               background: d.disponivel ? "rgba(255,255,255,0.86)" : "rgba(255,255,255,0.55)",
               opacity: d.disponivel ? 1 : 0.8,

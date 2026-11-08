@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { sugerirStory } from "@/features/stories/actions";
 import { gradeDoDia, gradeGenerica } from "@/features/stories/selecao";
-import { caminhoFundo, obterTema, TEMAS, TIPOS_STORY, type Tema, type TipoStory } from "@/features/stories/temas";
+import { caminhoFundo, ID_MEU_FUNDO, obterTema, TEMAS, TIPOS_STORY, type Tema, type TipoStory } from "@/features/stories/temas";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -54,8 +54,58 @@ async function reduzirFoto(arquivo: File): Promise<string> {
   return canvas.toDataURL("image/jpeg", 0.85);
 }
 
-/** Miniatura de um tema: o papel de parede, ou as cores (tema "Minhas cores"). */
-function MiniaturaTema({ tema, corPrimaria, corSecundaria, className }: { tema: Tema; corPrimaria: string; corSecundaria: string; className?: string }) {
+const CHAVE_MEU_FUNDO = "vaguinha-stories-meu-fundo";
+
+/** Recorta a imagem no formato do story (9:16, pelo centro) e devolve um JPEG 1080x1920. */
+async function recortarFundo(arquivo: File): Promise<string> {
+  const bitmap = await createImageBitmap(arquivo);
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1920;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Não foi possível processar a imagem.");
+  const escala = Math.max(canvas.width / bitmap.width, canvas.height / bitmap.height);
+  const w = bitmap.width * escala;
+  const h = bitmap.height * escala;
+  ctx.drawImage(bitmap, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+  bitmap.close();
+  return canvas.toDataURL("image/jpeg", 0.82);
+}
+
+/** Lê o fundo guardado neste aparelho (pode não existir ou o navegador bloquear). */
+function lerMeuFundo(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(CHAVE_MEU_FUNDO);
+  } catch {
+    return null;
+  }
+}
+
+/** Miniatura de um tema: o papel de parede, o fundo da profissional, ou as cores (tema "Minhas cores"). */
+function MiniaturaTema({
+  tema,
+  corPrimaria,
+  corSecundaria,
+  meuFundo,
+  className,
+}: {
+  tema: Tema;
+  corPrimaria: string;
+  corSecundaria: string;
+  meuFundo?: string | null;
+  className?: string;
+}) {
+  if (tema.personalizado) {
+    return meuFundo ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={meuFundo} alt="" className={cn("aspect-[9/16] w-full rounded-lg object-cover ring-1 ring-black/10", className)} />
+    ) : (
+      <span className={cn("flex aspect-[9/16] w-full items-center justify-center rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 text-primary", className)}>
+        <ImagePlusIcon className="size-1/3" />
+      </span>
+    );
+  }
   if (tema.imagem) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -72,7 +122,23 @@ function MiniaturaTema({ tema, corPrimaria, corSecundaria, className }: { tema: 
   );
 }
 
-function SeletorTema({ temaId, aoEscolher, corPrimaria, corSecundaria }: { temaId: string; aoEscolher: (id: string) => void; corPrimaria: string; corSecundaria: string }) {
+function SeletorTema({
+  temaId,
+  aoEscolher,
+  corPrimaria,
+  corSecundaria,
+  meuFundo,
+  aoPedirFundo,
+  aoRemoverFundo,
+}: {
+  temaId: string;
+  aoEscolher: (id: string) => void;
+  corPrimaria: string;
+  corSecundaria: string;
+  meuFundo: string | null;
+  aoPedirFundo: () => void;
+  aoRemoverFundo: () => void;
+}) {
   const [aberto, setAberto] = useState(false);
   const atual = obterTema(temaId);
   const grupos: { titulo: string; temas: Tema[] }[] = [
@@ -89,13 +155,35 @@ function SeletorTema({ temaId, aoEscolher, corPrimaria, corSecundaria }: { temaI
         onClick={() => setAberto((a) => !a)}
         className="flex items-center gap-3 rounded-xl border bg-background p-2 pr-3 text-left transition-colors hover:bg-muted/50"
       >
-        <MiniaturaTema tema={atual} corPrimaria={corPrimaria} corSecundaria={corSecundaria} className="w-9 shrink-0" />
+        <MiniaturaTema tema={atual} corPrimaria={corPrimaria} corSecundaria={corSecundaria} meuFundo={meuFundo} className="w-9 shrink-0" />
         <span className="min-w-0 flex-1">
           <span className="block text-xs text-muted-foreground">Selecionar tema</span>
           <span className="block truncate font-medium">{atual.nome}</span>
         </span>
         <ChevronDownIcon className={cn("size-4 shrink-0 text-muted-foreground transition-transform", aberto && "rotate-180")} />
       </button>
+
+      {atual.personalizado && !aberto ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed p-2.5">
+          <p className="min-w-0 flex-1 text-xs text-muted-foreground">
+            {meuFundo
+              ? "Seu fundo fica guardado só neste aparelho. Imagens em pé (formato de story) ficam melhores."
+              : "Escolha uma imagem sua para usar de fundo. Imagens em pé (formato de story) ficam melhores."}
+          </p>
+          <div className="flex gap-1">
+            <Button type="button" variant="outline" size="sm" onClick={aoPedirFundo}>
+              <ImagePlusIcon />
+              {meuFundo ? "Trocar imagem" : "Escolher imagem"}
+            </Button>
+            {meuFundo ? (
+              <Button type="button" variant="ghost" size="sm" onClick={aoRemoverFundo}>
+                <XIcon />
+                Remover
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       {aberto ? (
         <div className="surgir grid gap-4 rounded-xl border bg-card p-3">
@@ -109,14 +197,17 @@ function SeletorTema({ temaId, aoEscolher, corPrimaria, corSecundaria }: { temaI
                     type="button"
                     aria-pressed={temaId === t.id}
                     onClick={() => {
-                      aoEscolher(t.id);
+                      // "Meu fundo" sem imagem ainda: abre a galeria; o tema é escolhido quando a imagem chegar
+                      if (t.personalizado && !meuFundo) aoPedirFundo();
+                      else aoEscolher(t.id);
                       setAberto(false);
                     }}
                     className={cn("grid gap-1 rounded-xl p-1 text-left transition-colors hover:bg-muted", temaId === t.id && "bg-primary/10 ring-2 ring-primary")}
                   >
-                    <MiniaturaTema tema={t} corPrimaria={corPrimaria} corSecundaria={corSecundaria} />
+                    <MiniaturaTema tema={t} corPrimaria={corPrimaria} corSecundaria={corSecundaria} meuFundo={meuFundo} />
                     <span className="truncate text-[11px] leading-tight font-medium">{t.nome}</span>
                     {t.quando ? <span className="truncate text-[10px] leading-tight text-muted-foreground">{t.quando}</span> : null}
+                    {t.personalizado ? <span className="truncate text-[10px] leading-tight text-muted-foreground">{meuFundo ? "sua imagem" : "subir imagem"}</span> : null}
                   </button>
                 ))}
               </div>
@@ -156,9 +247,12 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
   const [dias, setDias] = useState<DataISO[]>([]);
   const [servicosSel, setServicosSel] = useState<string[]>(servicos.map((s) => s.id));
   const [foto, setFoto] = useState<string | null>(null);
+  // Fundo próprio: lido do aparelho já no início (não muda o que aparece antes de abrir a caixa de temas)
+  const [meuFundo, setMeuFundo] = useState<string | null>(lerMeuFundo);
   const [versao, setVersao] = useState(0);
   const [ocupado, setOcupado] = useState<"baixar" | "compartilhar" | null>(null);
   const inputFotoRef = useRef<HTMLInputElement>(null);
+  const inputFundoRef = useRef<HTMLInputElement>(null);
 
   const dataBase: DataISO = tipo === "dia" ? dia : tipo === "semana" ? inicioSemana : tipo === "mes" ? `${mes}-01` : hoje;
 
@@ -190,12 +284,13 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
       JSON.stringify({
         tema: temaId,
         data: dataBase,
+        ...(temaId === ID_MEU_FUNDO ? { fundo: meuFundo } : {}),
         ...(tipo === "dia" ? { horarios } : {}),
         ...(tipo === "semana" || tipo === "mes" ? { dias } : {}),
         ...(tipo === "servicos" ? { servicos: servicosSel, foto: servicosSel.length === 1 ? foto : null } : {}),
         v: versao,
       }),
-    [tipo, temaId, dataBase, horarios, dias, servicosSel, foto, versao],
+    [tipo, temaId, dataBase, horarios, dias, servicosSel, foto, meuFundo, versao],
   );
   const chavePrevia = `${tipo}|${corpo}`;
   const [previa, setPrevia] = useState<{ chave: string; url: string; blob: Blob } | null>(null);
@@ -291,6 +386,37 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
     }
   }
 
+  async function aoEscolherFundo(e: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = e.target.files?.[0];
+    e.target.value = "";
+    if (!arquivo) return;
+    if (!arquivo.type.startsWith("image/")) {
+      toast.error("Escolha uma imagem (JPG, PNG ou WEBP).");
+      return;
+    }
+    try {
+      const imagem = await recortarFundo(arquivo);
+      setMeuFundo(imagem);
+      setTemaId(ID_MEU_FUNDO);
+      try {
+        window.localStorage.setItem(CHAVE_MEU_FUNDO, imagem);
+      } catch {
+        toast.info("Não deu para guardar o fundo neste aparelho: ele vale só até sair desta tela.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível usar essa imagem.");
+    }
+  }
+
+  function removerFundo() {
+    setMeuFundo(null);
+    try {
+      window.localStorage.removeItem(CHAVE_MEU_FUNDO);
+    } catch {
+      // sem acesso ao armazenamento: nada a apagar
+    }
+  }
+
   function alternar<T>(lista: T[], item: T) {
     return lista.includes(item) ? lista.filter((x) => x !== item) : [...lista, item];
   }
@@ -330,7 +456,16 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
         </section>
 
         {/* Tema: caixinha que abre e fecha */}
-        <SeletorTema temaId={temaId} aoEscolher={setTemaId} corPrimaria={corPrimaria} corSecundaria={corSecundaria} />
+        <input ref={inputFundoRef} type="file" accept="image/*" className="hidden" onChange={aoEscolherFundo} />
+        <SeletorTema
+          temaId={temaId}
+          aoEscolher={setTemaId}
+          corPrimaria={corPrimaria}
+          corSecundaria={corSecundaria}
+          meuFundo={meuFundo}
+          aoPedirFundo={() => inputFundoRef.current?.click()}
+          aoRemoverFundo={removerFundo}
+        />
 
         {/* ---------------- Dia ---------------- */}
         {tipo === "dia" ? (

@@ -20,6 +20,8 @@ export const esquemaSelecaoStory = z.object({
   servicos: z.array(z.uuid()).max(40).optional(),
   /** Foto do serviço (data URL JPEG/PNG já reduzida no navegador), só quando há um serviço. */
   foto: z.string().startsWith("data:image/").max(2_500_000).nullable().optional(),
+  /** Tema "Meu fundo": imagem da profissional (data URL JPEG 1080x1920 já recortada no navegador). */
+  fundo: z.string().startsWith("data:image/").max(3_000_000).nullable().optional(),
 });
 
 export type SelecaoStory = z.infer<typeof esquemaSelecaoStory>;
