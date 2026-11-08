@@ -51,7 +51,7 @@ export async function proxy(request: NextRequest) {
   // /site aberto no painel → vai para o domínio do site (em localhost continua servindo, para testar)
   if (host === HOST_OFICIAL && request.nextUrl.pathname.startsWith("/site")) {
     const destino = request.nextUrl.pathname.replace(/^\/site/, "") || "/";
-    return NextResponse.redirect(`https://${HOST_SITE}${destino}${request.nextUrl.search}`, 308);
+    return NextResponse.redirect(`https://www.${HOST_SITE}${destino}${request.nextUrl.search}`, 308);
   }
 
   const { response, claims } = await atualizarSessao(request);
