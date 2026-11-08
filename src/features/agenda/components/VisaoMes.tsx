@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { diaDaSemana, diasEntre, hojeISO, horaDe, intervaloDoMes, type DataISO } from "@/lib/datas";
+import { datasEspeciais } from "@/lib/feriados";
 import { primeiroNome } from "@/lib/texto";
 import { cn } from "@/lib/utils";
 import type { Agendamento, Expediente } from "@/types/database";
@@ -17,7 +18,7 @@ type Props = {
   expediente: Expediente;
 };
 
-type Item = { id: string; texto: string; tipo: "atendimento" | "bloqueio"; status: Agendamento["status"]; inicio: string };
+type Item = { id: string; texto: string; tipo: "atendimento" | "bloqueio" | "data"; status: Agendamento["status"]; inicio: string };
 
 /** "08:00" → "8h"; "13:30" → "13h30" (como no Google Agenda). */
 function horaCurta(iso: string) {
@@ -36,6 +37,12 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
   const hoje = hojeISO();
 
   const porDia = new Map<DataISO, Item[]>();
+  // feriados e datas comemorativas primeiro (verde, como no Google Agenda)
+  const anos = [...new Set(dias.map((d) => Number(d.slice(0, 4))))];
+  for (const e of anos.flatMap((a) => datasEspeciais(a))) {
+    if (e.data < inicio || e.data > fim) continue;
+    porDia.set(e.data, [...(porDia.get(e.data) ?? []), { id: `data-${e.data}-${e.nome}`, texto: e.nome, tipo: "data", status: "agendado", inicio: e.data }]);
+  }
   for (const a of [...agendamentos].sort((x, y) => x.inicio.localeCompare(y.inicio))) {
     if (a.status === "cancelado") continue;
     const dIni = diaEmSP(new Date(a.inicio));
@@ -95,8 +102,10 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
                   className={cn(
                     // corta a sobra sem reticências (cabe mais letra, como no Google Agenda)
                     "block overflow-hidden rounded-[3px] px-[3px] py-px text-[10px] leading-tight font-semibold tracking-tight whitespace-nowrap sm:px-1 sm:text-[11px]",
-                    it.tipo === "bloqueio"
-                      ? "bg-muted text-muted-foreground"
+                    it.tipo === "data"
+                      ? "bg-emerald-600 text-white dark:bg-emerald-700"
+                      : it.tipo === "bloqueio"
+                        ? "bg-muted text-muted-foreground"
                       : it.status === "pendente"
                         ? "border border-dashed border-amber-400 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100"
                         : it.status === "concluido"
@@ -113,7 +122,8 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
         })}
       </div>
       <p className="border-t px-3 py-2 text-xs text-muted-foreground">
-        Toque num dia para ver os horários. Cinza = bloqueio ou dia em que você não atende. Tracejado = pedido aguardando.
+        Toque num dia para ver os horários. Verde = feriado ou data comemorativa. Cinza = bloqueio ou dia em que você não atende. Tracejado = pedido
+        aguardando.
       </p>
     </div>
   );

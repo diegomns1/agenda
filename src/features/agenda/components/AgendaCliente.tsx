@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarOffIcon } from "lucide-react";
+import { CalendarOffIcon, UploadIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ import {
   somarDias,
   type DataISO,
 } from "@/lib/datas";
+import { datasDoDia } from "@/lib/feriados";
 import { cn } from "@/lib/utils";
 import type { Agendamento, Expediente, Servico } from "@/types/database";
 import { janelaDoDia } from "@/features/agenda/disponibilidade";
@@ -140,6 +141,16 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
         <VisaoMes data={data} agendamentos={agendamentos} expediente={expediente} />
       ) : (
         <>
+          {visao === "dia" && datasDoDia(data).length > 0 ? (
+            <p className="flex flex-wrap items-center gap-1.5 text-sm">
+              {datasDoDia(data).map((e) => (
+                <span key={e.nome} className="rounded-md bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white dark:bg-emerald-700">
+                  {e.feriado ? `Feriado: ${e.nome}` : e.nome}
+                </span>
+              ))}
+            </p>
+          ) : null}
+
           {visao === "dia" && !diaAtendeHoje ? (
             <p className="flex items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-sm text-muted-foreground">
               <CalendarOffIcon className="size-4" />
@@ -169,6 +180,11 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
                       <span className={cn("text-base font-semibold", c.dia === hoje && "rounded-full bg-primary px-2 text-primary-foreground")}>
                         {Number(c.dia.slice(8, 10))}
                       </span>
+                      {datasDoDia(c.dia)[0] ? (
+                        <span className="mt-0.5 max-w-full truncate rounded bg-emerald-600 px-1 text-[9px] leading-tight font-semibold text-white dark:bg-emerald-700">
+                          {datasDoDia(c.dia)[0].nome}
+                        </span>
+                      ) : null}
                     </Link>
                   )
                 : undefined
@@ -203,6 +219,14 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
           ) : null}
         </>
       )}
+
+      <Link
+        href="/agenda/importar"
+        className="flex items-center justify-center gap-2 rounded-xl border border-dashed px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+      >
+        <UploadIcon className="size-4" />
+        Usa o Google Agenda? <span className="font-semibold text-primary">Importar agenda</span>
+      </Link>
 
       {/* Formulário: novo / editar / remarcar */}
       <Dialog open={form !== null} onOpenChange={(aberto) => !aberto && setForm(null)}>
