@@ -50,6 +50,10 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   lista de pendentes com check (`cliente_avisada_em`).
 - Agenda sem conflito garantido no banco por `EXCLUDE` (btree_gist) sobre `tstzrange(inicio, fim)`,
   cobrindo atendimentos **e** bloqueios (mesma tabela `agendamentos`, coluna `tipo`).
+- /agenda abre no mês (estilo Google: "8h Nome"); dia/semana com rolagem própria (`GradeHoraria`, overscroll-contain).
+  Feriados e datas comemorativas calculados em `src/lib/feriados.ts` (sem API).
+- Importar do Google Agenda em /agenda/importar: .zip/.ics lido no navegador (`features/importar/ical.ts`, ical.js +
+  fflate; testável com `node` direto, sem imports "@/"); a action insere em lotes e o EXCLUDE recusa conflitos.
 - Stories nunca mostram nome de cliente. 16 temas (grupos "sempre" e "datas") em `features/stories/temas.ts`; os com
   `imagem: true` usam papel de parede em `public/stories/temas/<id>.jpg` (+ `<id>-mini.jpg`), gerados no Higgsfield
   (script `scripts/baixar-fundos-stories.mjs`). A rota baixa o .jpg e passa como data URL (satori recusa localhost).
