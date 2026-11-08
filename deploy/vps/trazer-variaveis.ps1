@@ -1,4 +1,4 @@
-# Leva as variáveis do Vaguinha da Vercel para a VPS SEM ninguém copiar nada e SEM mostrar valores na tela.
+﻿# Leva as variáveis do Vaguinha da Vercel para a VPS SEM ninguém copiar nada e SEM mostrar valores na tela.
 # Roda no computador do Diego (PowerShell):
 #   powershell -ExecutionPolicy Bypass -File C:\claude\agenda-saas\deploy\vps\trazer-variaveis.ps1
 # O que acontece:
@@ -43,16 +43,18 @@ function Pedir-Segredo($nome, $dica) {
 try {
   Write-Host ""
   Write-Host "PASSO 1 de 3: login na Vercel. Vai abrir o navegador: confira e clique em Autorizar / Confirm." -ForegroundColor Yellow
-  npx --yes vercel@latest login
+  cmd /c "npx --yes vercel@latest login"
   if ($LASTEXITCODE -ne 0) { throw "Login na Vercel não terminou." }
 
   Write-Host ""
   Write-Host "PASSO 2 de 3: baixando as variáveis do projeto agenda..." -ForegroundColor Yellow
-  npx --yes vercel@latest link --yes --project agenda --scope diegomns --cwd $tmp *> $null
+  # via cmd: a Vercel escreve avisos (ex.: a versão) no canal de erro, e o PowerShell trataria isso como falha
+  $arqEnv = Join-Path $tmp ".env.vercel"
+  cmd /c "npx --yes vercel@latest link --yes --project agenda --scope diegomns --cwd `"$tmp`" >nul 2>&1"
   if ($LASTEXITCODE -ne 0) { throw "Não consegui ligar ao projeto agenda na Vercel." }
-  npx --yes vercel@latest env pull (Join-Path $tmp ".env.vercel") --environment=production --yes --cwd $tmp *> $null
-  if ($LASTEXITCODE -ne 0) { throw "Não consegui baixar as variáveis da Vercel." }
-  $v = Ler-Env (Join-Path $tmp ".env.vercel")
+  cmd /c "npx --yes vercel@latest env pull `"$arqEnv`" --environment=production --yes --cwd `"$tmp`" >nul 2>&1"
+  if ($LASTEXITCODE -ne 0 -or -not (Test-Path $arqEnv)) { throw "Não consegui baixar as variáveis da Vercel." }
+  $v = Ler-Env $arqEnv
   Write-Host ("   {0} variáveis recebidas da Vercel." -f $v.Count)
 
   # monta o arquivo da VPS com os nomes que o app usa
@@ -99,6 +101,7 @@ try {
 
   Write-Host ""
   Write-Host "Enviando para a VPS..." -ForegroundColor Yellow
+  $ErrorActionPreference = "Continue"
   ($conteudo + "`n") | ssh $VPS "umask 077; mkdir -p /root/vaguinha/config; cat > /root/vaguinha/config/env.novo && mv /root/vaguinha/config/env.novo /root/vaguinha/config/env && chmod 600 /root/vaguinha/config/env && echo ok-vps"
   if ($LASTEXITCODE -ne 0) { throw "Não consegui gravar na VPS." }
 
@@ -118,5 +121,11 @@ catch {
   Write-Host "Nada foi mostrado na tela. Pode rodar de novo."
 }
 finally {
-  if (Test-Path $tmp) { Remove-Item -Recurse -Force $tmp }
+  # apaga a cópia local (se algum programa ainda estiver com a pasta aberta, tenta de novo em 2 s)
+  foreach ($i in 1..3) {
+    if (-not (Test-Path $tmp)) { break }
+    Start-Sleep -Seconds 2
+    Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
+  }
+  if (Test-Path $tmp) { Write-Host "Aviso: apague a pasta $tmp quando puder (tem as variáveis)." -ForegroundColor Yellow }
 }
