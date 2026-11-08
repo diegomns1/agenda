@@ -30,7 +30,7 @@ export const PLANOS = {
     nome: "Premium",
     curto: "Premium",
     preco: 39.9,
-    descricao: "Tudo do Profissional + stories para o Instagram + relatórios do mês.",
+    descricao: "Tudo do Profissional + assistente de IA + stories para o Instagram + relatórios do mês.",
     nivel: 3,
   },
 } as const;
@@ -46,6 +46,8 @@ export const RECURSOS = {
   stories: { nome: "Stories para o Instagram", planoMinimo: "premium" as Plano },
   // relatórios do mês + aviso "vagou um horário" na tela Hoje
   relatorios: { nome: "Relatórios", planoMinimo: "premium" as Plano },
+  // chat de IA que consulta e propõe mudanças na agenda (src/features/assistente)
+  assistente: { nome: "Assistente de IA", planoMinimo: "premium" as Plano },
 } as const;
 
 export type Recurso = keyof typeof RECURSOS;

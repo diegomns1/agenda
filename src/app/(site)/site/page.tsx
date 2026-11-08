@@ -93,9 +93,10 @@ const PLANOS_SITE = [
   {
     id: "premium" as const,
     destaque: false,
-    para: "Para quem vive de Instagram",
+    para: "Para quem quer uma secretária no bolso",
     itens: [
       "Tudo do Profissional",
+      "Assistente de IA: peça mudanças na agenda escrevendo",
       "Stories do dia, da semana e do mês",
       "Story de serviço com foto e valor",
       "Relatório do mês: quanto entrou, quem desmarcou e remarcou",
@@ -105,6 +106,10 @@ const PLANOS_SITE = [
 ];
 
 const DUVIDAS = [
+  {
+    p: "O que o assistente de IA faz?",
+    r: "Você escreve como falaria com uma secretária, por exemplo \"muda a Bruna de hoje para sexta às 15h\" ou \"quem eu atendo amanhã?\". Ele consulta a sua agenda, prepara a mudança e mostra para você confirmar. Nada muda sem o seu toque em Confirmar. Faz parte do plano Premium.",
+  },
   {
     p: "Preciso instalar alguma coisa?",
     r: "Não. O Vaguinha abre no navegador do celular. Se quiser, adicione à tela de início: ele vira um app, com ícone e tudo, e passa a receber as notificações de lembrete.",
@@ -232,6 +237,36 @@ export default function PaginaSite() {
           </Revelar>
           <Revelar atraso={120} className="mx-auto w-full max-w-sm">
             <MockLinkPublico />
+          </Revelar>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------- Assistente de IA */}
+      <section id="assistente" className="scroll-mt-20 border-b border-vinho/10">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:py-20">
+          <Revelar className="order-2 mx-auto w-full max-w-sm md:order-1">
+            <MockAssistente />
+          </Revelar>
+          <Revelar atraso={120} className="order-1 md:order-2">
+            <p className="text-sm font-semibold tracking-wide text-vinho uppercase">Novo · plano Premium</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Uma secretária no seu bolso</h2>
+            <p className="mt-4 max-w-lg text-muted-foreground">
+              Escreva do seu jeito, entre um atendimento e outro: o assistente de IA entende, olha a sua agenda e prepara a mudança.
+              Você só confere e toca em Confirmar.
+            </p>
+            <ul className="mt-6 grid gap-2 text-sm">
+              {[
+                "\"Muda a Bruna de hoje para sexta às 15h\"",
+                "\"Quais horários estão livres na quarta?\"",
+                "\"Bloqueia minha tarde de quinta, vou ao médico\"",
+                "\"Quanto eu faturei este mês?\"",
+              ].map((t) => (
+                <li key={t} className="flex items-start gap-2">
+                  <CheckIcon className="mt-0.5 size-4 shrink-0 text-vinho" />
+                  {t}
+                </li>
+              ))}
+            </ul>
           </Revelar>
         </div>
       </section>
@@ -465,6 +500,30 @@ function MockCelular() {
               {n}
             </span>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MockAssistente() {
+  return (
+    <div className="grid gap-2.5 rounded-3xl border border-vinho/10 bg-card p-4 shadow-xl shadow-vinho/10">
+      <div className="flex items-center gap-2 border-b border-vinho/10 pb-2.5">
+        <span className="gradiente-marca flex size-8 items-center justify-center rounded-xl text-white">
+          <SparklesIcon className="size-4" />
+        </span>
+        <p className="text-sm font-bold">Assistente</p>
+      </div>
+      <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-vinho px-3 py-2 text-sm text-white">Muda a Bruna de hoje para sexta às 15h</p>
+      <div className="max-w-[90%] rounded-2xl rounded-bl-md bg-muted px-3 py-2 text-sm">
+        A sexta às 15:00 está livre. Preparei a mudança:
+        <div className="mt-2 rounded-xl border bg-background p-2.5">
+          <p className="text-xs font-semibold">Remarcar Bruna (Manicure) de hoje às 14:00 para sexta, 14/11 às 15:00</p>
+          <div className="mt-2 flex gap-2">
+            <span className="rounded-full bg-vinho px-3 py-1 text-xs font-bold text-white">Confirmar</span>
+            <span className="rounded-full px-3 py-1 text-xs text-muted-foreground">Não</span>
+          </div>
         </div>
       </div>
     </div>

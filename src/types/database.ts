@@ -221,6 +221,28 @@ export type Database = {
         Update: CobrancaUpdate;
         Relationships: [];
       };
+      assistente_uso: {
+        Row: {
+          profissional_id: string;
+          dia: string;
+          mensagens: number;
+          tokens_entrada: number;
+          tokens_saida: number;
+          custo_usd: number;
+          updated_at: string;
+        };
+        Insert: {
+          profissional_id: string;
+          dia: string;
+          mensagens?: number;
+          tokens_entrada?: number;
+          tokens_saida?: number;
+          custo_usd?: number;
+          updated_at?: string;
+        };
+        Update: Partial<{ mensagens: number; tokens_entrada: number; tokens_saida: number; custo_usd: number; updated_at: string }>;
+        Relationships: [];
+      };
       agendamento_eventos: {
         Row: AgendamentoEvento;
         Insert: Pick<AgendamentoEvento, "profissional_id" | "tipo"> & Partial<AgendamentoEvento>;

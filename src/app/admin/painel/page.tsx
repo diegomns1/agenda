@@ -40,6 +40,11 @@ export default async function PaginaPainelDono() {
         <Numero rotulo="Cadastros este mês" valor={String(t.cadastrosNoMes)} detalhe={`${t.cadastrosMesAnterior} no mês anterior`} />
         <Numero rotulo="Atendimentos marcados no mês" valor={t.atendimentosNoMes === null ? "—" : String(t.atendimentosNoMes)} detalhe="somando todas as profissionais" />
         <Numero rotulo="Pedidos pelo link no mês" valor={t.pedidosLinkNoMes === null ? "—" : String(t.pedidosLinkNoMes)} />
+        <Numero
+          rotulo="Assistente de IA no mês"
+          valor={t.assistente === null ? "—" : `US$ ${t.assistente.custoUsd.toFixed(2)}`}
+          detalhe={t.assistente === null ? undefined : `${t.assistente.mensagens} mensagens de ${t.assistente.usuarios} conta${t.assistente.usuarios === 1 ? "" : "s"} (crédito: US$ 100/mês)`}
+        />
       </section>
 
       <section className="rounded-2xl border bg-card p-4">

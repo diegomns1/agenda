@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BellIcon, CalendarDaysIcon, CalendarPlusIcon, ChartColumnIcon, ChevronRightIcon, ImagePlusIcon, LockIcon, UserRoundPenIcon } from "lucide-react";
-import { BriefcaseIcon } from "lucide-react";
+import { BotMessageSquareIcon, BriefcaseIcon } from "lucide-react";
 import { termosDoRamo } from "@/lib/ramos";
 import { listarVagas } from "@/features/relatorios/vagas";
 import { resumoDoMes } from "@/features/relatorios/dados";
@@ -165,6 +165,24 @@ export default async function PaginaHoje() {
           </div>
         </CardContent>
       </Card>
+
+      <Link
+        href="/assistente"
+        className="cartao-vivo surgir surgir-atraso-3 flex items-center gap-3 rounded-2xl border border-primary/20 bg-card px-4 py-3"
+      >
+        <span className="gradiente-marca flex size-10 items-center justify-center rounded-xl text-white">
+          <BotMessageSquareIcon className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold">Assistente de IA</p>
+          <p className="text-sm text-muted-foreground">&quot;Muda a Bruna para sexta às 15h&quot;: peça escrevendo e só confirme.</p>
+        </div>
+        {podeRelatorios ? (
+          <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+        ) : (
+          <LockIcon className="size-4 shrink-0 text-muted-foreground" />
+        )}
+      </Link>
 
       <Link
         href="/relatorios"

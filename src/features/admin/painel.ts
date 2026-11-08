@@ -22,6 +22,8 @@ export type PainelDono = {
     cadastrosMesAnterior: number;
     atendimentosNoMes: number | null;
     pedidosLinkNoMes: number | null;
+    /** Uso do assistente de IA no mês (custo estimado em dólar). null = indisponível. */
+    assistente: { mensagens: number; custoUsd: number; usuarios: number } | null;
   };
   cadastrosPorMes: { chave: string; rotulo: string; valor: number }[];
   porRamo: { nome: string; valor: number; detalhe?: string }[];
@@ -47,14 +49,22 @@ export async function montarPainelDono(): Promise<PainelDono> {
   }
   const leitor = admin ?? (await criarClienteServidor());
 
-  const [perfisRes, cobrRes, agRes, evRes] = await Promise.all([
+  const [perfisRes, cobrRes, agRes, evRes, iaRes] = await Promise.all([
     leitor.from("profiles").select("id, status, plano, ativa_ate, ramo, ramo_outro, tratamento, asaas_subscription_id, created_at"),
     admin ? admin.from("cobrancas").select("valor, status, pago_em").gte("pago_em", inicioMes) : Promise.resolve(null),
     admin ? admin.from("agendamentos").select("id", { count: "exact", head: true }).eq("tipo", "atendimento").gte("inicio", inicioMes) : Promise.resolve(null),
     admin
       ? admin.from("agendamento_eventos").select("id", { count: "exact", head: true }).eq("tipo", "marcado").eq("origem", "online").gte("created_at", inicioMes)
       : Promise.resolve(null),
+    admin ? admin.from("assistente_uso").select("profissional_id, mensagens, custo_usd").gte("dia", `${mes}-01`) : Promise.resolve(null),
   ]);
+  const usoIa = iaRes?.data
+    ? {
+        mensagens: iaRes.data.reduce((s, u) => s + u.mensagens, 0),
+        custoUsd: iaRes.data.reduce((s, u) => s + Number(u.custo_usd), 0),
+        usuarios: new Set(iaRes.data.map((u) => u.profissional_id)).size,
+      }
+    : null;
   if (perfisRes.error) throw new Error(`Erro no painel: ${perfisRes.error.message}`);
   const perfis = perfisRes.data;
 
@@ -124,6 +134,7 @@ export async function montarPainelDono(): Promise<PainelDono> {
       cadastrosMesAnterior: perfis.filter((p) => mesDe(p.created_at) === mesAnterior).length,
       atendimentosNoMes: agRes ? (agRes.count ?? 0) : null,
       pedidosLinkNoMes: evRes ? (evRes.count ?? 0) : null,
+      assistente: usoIa,
     },
     cadastrosPorMes,
     porRamo,

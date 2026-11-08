@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BellIcon, ChartColumnIcon, LifeBuoyIcon, ShieldCheckIcon } from "lucide-react";
+import { BellIcon, BotMessageSquareIcon, ChartColumnIcon, LifeBuoyIcon, ShieldCheckIcon } from "lucide-react";
 import { NOME_APP, SUPORTE_WHATSAPP } from "@/lib/constantes";
 import { linkWhatsApp } from "@/lib/telefone";
 import { BotaoSair } from "@/features/auth/components/BotaoSair";
@@ -30,6 +30,11 @@ export function Cabecalho({ titulo, logoUrl, admin, lembretesPendentes = 0, most
           <span className="truncate text-[15px] font-bold tracking-tight text-foreground">{titulo || NOME_APP}</span>
         </Link>
         <div className="flex items-center gap-0.5">
+          <Button asChild variant="ghost" size="icon" aria-label="Assistente de IA">
+            <Link href="/assistente">
+              <BotMessageSquareIcon />
+            </Link>
+          </Button>
           <Button asChild variant="ghost" size="icon" aria-label="Relatórios">
             <Link href="/relatorios">
               <ChartColumnIcon />
