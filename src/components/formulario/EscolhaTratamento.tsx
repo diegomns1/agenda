@@ -29,7 +29,7 @@ export function EscolhaTratamento({ inicial, erro, aoMudar }: { inicial?: Tratam
             )}
           >
             {TRATAMENTOS[t].rotulo}
-            <span className="block text-[11px] font-normal text-muted-foreground">&quot;{TRATAMENTOS[t].exemplo}&quot;</span>
+            <span className="block text-mini font-normal text-muted-foreground">&quot;{TRATAMENTOS[t].exemplo}&quot;</span>
           </button>
         ))}
       </div>

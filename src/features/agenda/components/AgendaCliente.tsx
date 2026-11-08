@@ -239,7 +239,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
                         <span
                           title={datasDoDia(c.dia)[0].nome}
                           className={cn(
-                            "mt-0.5 max-w-full truncate rounded px-1 text-[11px] leading-tight font-semibold",
+                            "mt-0.5 max-w-full truncate rounded px-1 text-mini leading-tight font-semibold",
                             datasDoDia(c.dia)[0].feriado ? VISUAL_DATA.feriado.chip : VISUAL_DATA.comemorativa.chip,
                           )}
                         >
@@ -264,7 +264,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
               <span className="text-muted-foreground">
                 {cancelados.length} cancelado{cancelados.length === 1 ? "" : "s"} neste período
               </span>
-              <Button variant="ghost" className="h-11 sm:h-8" onClick={() => setMostrarCancelados((x) => !x)}>
+              <Button variant="ghost" className="h-toque sm:h-8" onClick={() => setMostrarCancelados((x) => !x)}>
                 {mostrarCancelados ? "Esconder da agenda" : "Mostrar na agenda"}
               </Button>
             </div>
@@ -284,13 +284,13 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
 
       {!avisoImportarFechado ? (
         <div className="flex items-center gap-1 rounded-xl border border-dashed pl-3 text-sm text-muted-foreground">
-          <Link href="/agenda/importar" className="flex min-h-11 flex-1 items-center gap-2 transition-colors hover:text-foreground">
+          <Link href="/agenda/importar" className="flex min-h-toque flex-1 items-center gap-2 transition-colors hover:text-foreground">
             <UploadIcon className="size-4 shrink-0" />
             <span>
               Usa o Google Agenda? <span className="font-semibold text-primary">Importar agenda</span>
             </span>
           </Link>
-          <Button variant="ghost" size="icon" className="size-11" aria-label="Fechar aviso de importar agenda" onClick={fecharAvisoImportar}>
+          <Button variant="ghost" size="icon" className="size-toque" aria-label="Fechar aviso de importar agenda" onClick={fecharAvisoImportar}>
             <XIcon />
           </Button>
         </div>
@@ -300,7 +300,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
       <Flutuante>
         <Button
           onClick={() => abrirNovo("atendimento")}
-          className="fixed right-4 bottom-[calc(72px+env(safe-area-inset-bottom))] z-30 h-14 gap-2 rounded-full px-5 text-base font-semibold shadow-lg shadow-primary/30 sm:hidden"
+          className="fixed right-4 bottom-[calc(72px+env(safe-area-inset-bottom))] z-30 h-14 gap-2 rounded-full px-5 text-base font-semibold shadow-alta sm:hidden"
         >
           <PlusIcon className="size-5" />
           Marcar

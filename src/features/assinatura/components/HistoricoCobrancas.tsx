@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 import type { Cobranca } from "@/types/database";
 
 const TOM = {
-  ok: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-  aviso: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
-  erro: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+  ok: "bg-sucesso text-sucesso-texto",
+  aviso: "bg-aviso text-aviso-texto",
+  erro: "bg-destructive/10 text-destructive",
   neutro: "bg-muted text-muted-foreground",
 };
 

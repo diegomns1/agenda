@@ -38,7 +38,7 @@ export function CampoBusca({ placeholder = "Buscar por nome ou WhatsApp" }: { pl
         onChange={(e) => setValor(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="h-11 pl-9 pr-9 text-base"
+        className="h-toque pl-9 pr-9 text-base"
       />
       {valor ? (
         <button

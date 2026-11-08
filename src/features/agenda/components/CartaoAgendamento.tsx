@@ -33,7 +33,7 @@ export function CartaoAgendamento({ agendamento: a, compacto, style, onClick }: 
       aria-label={rotuloAcessivel(a, inicio, fim)}
       className={cn(
         "flex w-full flex-col overflow-hidden rounded-lg border text-left transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-        compacto ? "px-1.5 py-1 text-[11px] leading-tight" : "px-3 py-2 text-sm",
+        compacto ? "px-1.5 py-1 text-mini leading-tight" : "px-3 py-2 text-sm",
         visual.cartao,
       )}
     >

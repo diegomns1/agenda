@@ -227,7 +227,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
                 name="slug"
                 value={slug}
                 onChange={(e) => setSlug(slugDe(e.target.value.replace(/\s/g, "-")))}
-                className="h-11 min-w-0 flex-1 bg-transparent px-3 text-base outline-none"
+                className="h-toque min-w-0 flex-1 bg-transparent px-3 text-base outline-none"
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -248,7 +248,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
                 id="confirmacao_online"
                 name="confirmacao_online"
                 defaultValue={perfil.confirmacao_online}
-                className="h-11 rounded-lg border border-input bg-background px-3 text-base"
+                className="h-toque rounded-lg border border-input bg-background px-3 text-base"
               >
                 <option value="manual">Eu confirmo cada pedido</option>
                 <option value="automatica">Confirmar automaticamente</option>
@@ -260,7 +260,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
                 id="antecedencia_min_horas"
                 name="antecedencia_min_horas"
                 defaultValue={perfil.antecedencia_min_horas}
-                className="h-11 rounded-lg border border-input bg-background px-3 text-base"
+                className="h-toque rounded-lg border border-input bg-background px-3 text-base"
               >
                 {[0, 1, 2, 3, 6, 12, 24, 48].map((h) => (
                   <option key={h} value={h}>

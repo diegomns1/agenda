@@ -17,7 +17,7 @@ export function Aviso({ tipo = "erro", children, className }: Props) {
         "flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm",
         tipo === "erro"
           ? "border-destructive/30 bg-destructive/10 text-destructive"
-          : "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100",
+          : "border-sucesso-borda bg-sucesso text-sucesso-texto",
         className,
       )}
     >

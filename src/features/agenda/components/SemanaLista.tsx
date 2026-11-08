@@ -103,7 +103,7 @@ export function SemanaLista({ colunas, expediente, intervaloMin, hoje, agoraMin,
                   <button
                     type="button"
                     onClick={() => aoMarcar(c.dia)}
-                    className="min-h-11 rounded-lg px-2 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                    className="min-h-toque rounded-lg px-2 text-sm font-medium text-primary underline-offset-4 hover:underline"
                   >
                     Marcar encaixe
                   </button>
@@ -123,7 +123,7 @@ export function SemanaLista({ colunas, expediente, intervaloMin, hoje, agoraMin,
                       <button
                         type="button"
                         onClick={() => aoMarcar(c.dia, minutosParaHora(l.ini))}
-                        className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-dashed border-primary/30 px-3 text-left text-sm transition-colors hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        className="flex min-h-toque w-full items-center gap-2 rounded-lg border border-dashed border-primary/30 px-3 text-left text-sm transition-colors hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                         aria-label={`Livre das ${minutosParaHora(l.ini)} às ${minutosParaHora(l.fim)}. Marcar às ${minutosParaHora(l.ini)}`}
                       >
                         <span className="flex-1 text-muted-foreground">

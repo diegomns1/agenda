@@ -24,10 +24,10 @@ export function SolicitacoesPendentes({ solicitacoes }: { solicitacoes: Agendame
   }
 
   return (
-    <Card className="surgir surgir-atraso-1 rounded-3xl border-amber-300/70">
+    <Card className="surgir surgir-atraso-1 rounded-3xl border-pendente-borda/50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <HourglassIcon className="size-4 text-amber-600" />
+          <HourglassIcon className="size-4 text-aviso-forte" />
           {solicitacoes.length === 1 ? "1 pedido aguardando sua confirmação" : `${solicitacoes.length} pedidos aguardando sua confirmação`}
         </CardTitle>
         <CardDescription>Vieram pelo seu link de agendamento. O horário já está reservado até você decidir.</CardDescription>
@@ -36,9 +36,9 @@ export function SolicitacoesPendentes({ solicitacoes }: { solicitacoes: Agendame
         <ul className="divide-y">
           {solicitacoes.map((a) => (
             <li key={a.id} className="flex flex-wrap items-center gap-3 py-2.5">
-              <div className="w-16 shrink-0 rounded-xl bg-amber-50 py-1 text-center dark:bg-amber-950">
+              <div className="w-16 shrink-0 rounded-xl bg-pendente py-1 text-center text-pendente-texto">
                 <p className="text-lg font-extrabold tabular-nums leading-tight">{horaDe(a.inicio)}</p>
-                <p className="text-[11px] text-muted-foreground capitalize">{rotuloRelativo(dataDe(a.inicio))}</p>
+                <p className="text-mini text-muted-foreground capitalize">{rotuloRelativo(dataDe(a.inicio))}</p>
               </div>
               <div className="min-w-0 flex-1">
                 <Link href={`/agenda?visao=dia&data=${dataDe(a.inicio)}`} className="block truncate font-semibold hover:underline">

@@ -129,9 +129,9 @@ export function ImportarAgenda() {
           </div>
         </div>
         {resultado.recusados.length > 0 ? (
-          <div className="grid grid-cols-1 gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950/40">
+          <div className="grid grid-cols-1 gap-2 rounded-xl border border-aviso-borda/60 bg-aviso p-3 text-sm text-aviso-texto">
             <p className="flex items-center gap-2 font-medium">
-              <TriangleAlertIcon className="size-4 text-amber-600" />
+              <TriangleAlertIcon className="size-4 text-aviso-forte" />
               {resultado.recusados.length === 1
                 ? "1 ficou de fora porque o horário já estava ocupado"
                 : `${resultado.recusados.length} ficaram de fora porque o horário já estava ocupado`}
@@ -191,7 +191,7 @@ export function ImportarAgenda() {
           </span>
         </label>
         <input ref={inputRef} type="file" accept=".zip,.ics,text/calendar,application/zip" className="hidden" onChange={aoEscolher} />
-        <Button className="h-11 w-fit" onClick={() => inputRef.current?.click()} disabled={lendo || enviando}>
+        <Button className="h-toque w-fit" onClick={() => inputRef.current?.click()} disabled={lendo || enviando}>
           {lendo ? <Loader2Icon className="animate-spin" /> : <FileUpIcon />}
           {agendas ? "Escolher outro arquivo" : "Escolher arquivo (.zip ou .ics)"}
         </Button>
@@ -291,7 +291,7 @@ export function ImportarAgenda() {
                 </span>
               </label>
 
-              <Button className="h-11" onClick={importar} disabled={enviando || aImportar === 0}>
+              <Button className="h-toque" onClick={importar} disabled={enviando || aImportar === 0}>
                 {enviando ? <Loader2Icon className="animate-spin" /> : <CalendarCheckIcon />}
                 {enviando ? "Trazendo para a agenda…" : `Trazer ${aImportar} para a agenda`}
               </Button>

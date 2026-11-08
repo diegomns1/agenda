@@ -73,7 +73,7 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
   const cliente = a?.cliente_id ? clientes.find((c) => c.id === a.cliente_id) : undefined;
   const status = a ? STATUS_AGENDAMENTO[a.status] : null;
   const IconeStatus = a && a.tipo === "atendimento" ? VISUAL_STATUS[a.status].Icone : null;
-  const botao = "h-11 sm:h-8";
+  const botao = "h-toque sm:h-8";
 
   return (
     <>
@@ -134,7 +134,7 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
                     ) : cliente?.telefone ? (
                       <Button asChild variant="outline" className={botao}>
                         <a href={linkWhatsApp(cliente.telefone)} target="_blank" rel="noopener noreferrer">
-                          <IconeWhatsApp className="size-4 text-emerald-700 dark:text-emerald-400" />
+                          <IconeWhatsApp className="size-4 text-whatsapp" />
                           WhatsApp
                         </a>
                       </Button>

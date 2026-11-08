@@ -76,7 +76,7 @@ export function FormCliente({ cliente, nomeInicial, aoConcluir }: Props) {
           erros={estado.erros?.telefone}
         />
         {repetido ? (
-          <p role="status" className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:bg-amber-950 dark:text-amber-100">
+          <p role="status" className="rounded-lg border border-aviso-borda/60 bg-aviso px-3 py-2 text-sm text-aviso-texto">
             Já existe <strong className="font-semibold">{repetido.nome}</strong> com esse WhatsApp.{" "}
             <Link href={`/clientes/${repetido.id}`} className="font-semibold underline underline-offset-4">
               Abrir o cadastro

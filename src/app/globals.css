@@ -43,6 +43,55 @@
   --color-vinho: var(--vinho);
   --color-rosa: var(--rosa);
   --color-creme: var(--creme);
+
+  /* Situações da agenda e mensagens (semânticos → classes bg-concluido, text-concluido-texto, border-concluido-borda…) */
+  --color-pendente: var(--pendente-fundo);
+  --color-pendente-texto: var(--pendente-texto);
+  --color-pendente-borda: var(--pendente-borda);
+  --color-concluido: var(--concluido-fundo);
+  --color-concluido-texto: var(--concluido-texto);
+  --color-concluido-borda: var(--concluido-borda);
+  --color-faltou: var(--faltou-fundo);
+  --color-faltou-texto: var(--faltou-texto);
+  --color-faltou-borda: var(--faltou-borda);
+  --color-feriado: var(--feriado-fundo);
+  --color-feriado-texto: var(--feriado-texto);
+  --color-comemorativa: var(--comemorativa-fundo);
+  --color-comemorativa-texto: var(--comemorativa-texto);
+  --color-comemorativa-borda: var(--comemorativa-borda);
+  --color-aviso: var(--aviso-fundo);
+  --color-aviso-texto: var(--aviso-texto);
+  --color-aviso-borda: var(--aviso-borda);
+  --color-aviso-forte: var(--aviso-forte);
+  --color-sucesso: var(--sucesso-fundo);
+  --color-sucesso-texto: var(--sucesso-texto);
+  --color-sucesso-borda: var(--sucesso-borda);
+  --color-sucesso-forte: var(--sucesso-forte);
+  --color-whatsapp: var(--whatsapp);
+
+  /* Tipografia: menor tamanho permitido no painel (11px) para pílulas, legendas e selos */
+  --text-mini: 0.6875rem;
+  --text-mini--line-height: 1.25;
+  /* nome do negócio no topo e itens de menu (15px) */
+  --text-destaque: 0.9375rem;
+  --text-destaque--line-height: 1.35;
+
+  /* pílulas da visão do mês (rounded-chip) */
+  --radius-chip: var(--chip-raio);
+  /* janela em gaveta no celular (rounded-t-gaveta) */
+  --radius-gaveta: var(--gaveta-raio);
+
+  /* Alvo de toque: 44px (h-toque, size-toque, min-h-toque) */
+  --spacing-toque: var(--alvo-toque);
+
+  /* Sombras com a cor do tema (shadow-suave / shadow-media / shadow-alta) */
+  --shadow-suave: var(--sombra-suave);
+  --shadow-media: var(--sombra-media);
+  --shadow-alta: var(--sombra-alta);
+
+  /* Movimento (ease-saida / ease-vai-volta) */
+  --ease-saida: var(--curva-saida);
+  --ease-vai-volta: var(--curva-vai-volta);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -124,6 +173,100 @@
   --sidebar-accent-foreground: #f6ecef;
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: #d799af;
+}
+
+/* ================================================================== */
+/* TOKENS VAGUINHA — três camadas (documentadas em DESIGN.md)           */
+/* 1. primitivos: valores crus (não usar direto nos componentes)        */
+/* 2. semânticos: o que a cor/medida significa (é o que os componentes  */
+/*    usam, via classes do Tailwind mapeadas no @theme acima)           */
+/* 3. componentes: medidas de peças específicas                         */
+/* As cores de situação NÃO mudam com o tema (rosa/grafite/azul…):      */
+/* "concluído" é sempre verde, "faltou" sempre rosa-avermelhado etc.    */
+/* ================================================================== */
+
+/* --- 1. Primitivos ------------------------------------------------- */
+:root {
+  --ambar-50: #fffbeb;  --ambar-100: #fef3c7; --ambar-500: #d97706; --ambar-700: #b45309; --ambar-900: #78350f; --ambar-950: #451a03;
+  --esmeralda-50: #ecfdf5; --esmeralda-100: #d1fae5; --esmeralda-300: #6ee7b7; --esmeralda-700: #047857; --esmeralda-800: #065f46; --esmeralda-900: #064e3b; --esmeralda-950: #022c22;
+  --rubi-50: #fff1f2; --rubi-100: #ffe4e6; --rubi-300: #fda4af; --rubi-800: #9f1239; --rubi-900: #881337; --rubi-950: #4c0519;
+  --ceu-50: #f0f9ff; --ceu-200: #bae6fd; --ceu-700: #0369a1; --ceu-800: #075985; --ceu-900: #0c4a6e; --ceu-950: #082f49;
+  --verde-whatsapp: #128c4a;
+
+  --duracao-rapida: 150ms;
+  --duracao-media: 240ms;
+  --duracao-lenta: 420ms;
+  --curva-saida: cubic-bezier(0.22, 1, 0.36, 1);
+  --curva-vai-volta: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* --- 2. Semânticos (claro) ----------------------------------------- */
+:root {
+  /* pedido pelo link, aguardando confirmação */
+  --pendente-fundo: var(--ambar-50);
+  --pendente-texto: var(--ambar-900);
+  --pendente-borda: var(--ambar-500);
+  /* atendimento feito */
+  --concluido-fundo: var(--esmeralda-50);
+  --concluido-texto: var(--esmeralda-900);
+  --concluido-borda: var(--esmeralda-300);
+  /* cliente não veio */
+  --faltou-fundo: var(--rubi-50);
+  --faltou-texto: var(--rubi-900);
+  --faltou-borda: var(--rubi-300);
+  /* feriado nacional (cheio) e data comemorativa do comércio (contorno) */
+  --feriado-fundo: var(--ceu-700);
+  --feriado-texto: #ffffff;
+  --comemorativa-fundo: var(--ceu-50);
+  --comemorativa-texto: var(--ceu-900);
+  --comemorativa-borda: var(--ceu-700);
+  /* mensagens */
+  --aviso-fundo: var(--ambar-50);
+  --aviso-texto: var(--ambar-950);
+  --aviso-borda: var(--ambar-500);
+  --aviso-forte: var(--ambar-700);
+  --sucesso-fundo: var(--esmeralda-50);
+  --sucesso-texto: var(--esmeralda-950);
+  --sucesso-borda: var(--esmeralda-300);
+  --sucesso-forte: var(--esmeralda-700);
+  --whatsapp: var(--verde-whatsapp);
+
+  /* sombras levam um pouco da cor do tema (não cinza puro) */
+  --sombra-suave: 0 1px 2px color-mix(in oklch, var(--primary), transparent 88%);
+  --sombra-media: 0 8px 22px -10px color-mix(in oklch, var(--primary), transparent 68%);
+  --sombra-alta: 0 18px 40px -14px color-mix(in oklch, var(--primary), transparent 58%);
+}
+
+/* --- 2b. Semânticos (escuro) --------------------------------------- */
+.dark {
+  --pendente-fundo: var(--ambar-950);
+  --pendente-texto: var(--ambar-100);
+  --concluido-fundo: var(--esmeralda-950);
+  --concluido-texto: var(--esmeralda-100);
+  --concluido-borda: var(--esmeralda-800);
+  --faltou-fundo: var(--rubi-950);
+  --faltou-texto: var(--rubi-100);
+  --faltou-borda: var(--rubi-800);
+  --feriado-fundo: var(--ceu-800);
+  --comemorativa-fundo: var(--ceu-950);
+  --comemorativa-texto: var(--ceu-200);
+  --aviso-fundo: var(--ambar-950);
+  --aviso-texto: var(--ambar-100);
+  --sucesso-fundo: var(--esmeralda-950);
+  --sucesso-texto: var(--esmeralda-100);
+  --sucesso-borda: var(--esmeralda-800);
+  --sucesso-forte: var(--esmeralda-300);
+  --aviso-forte: var(--ambar-500);
+}
+
+/* --- 3. Componentes ------------------------------------------------ */
+:root {
+  /* menor área tocável (botões, links de ação, itens de menu) no celular */
+  --alvo-toque: 2.75rem;
+  /* pílulas da agenda (mês) e selos */
+  --chip-raio: 0.1875rem;
+  /* janela que sobe de baixo no celular */
+  --gaveta-raio: 1rem;
 }
 
 @layer base {
@@ -214,11 +357,11 @@
 
 /* Cartões: leve elevação ao passar o mouse / tocar */
 .cartao-vivo {
-  transition: transform 220ms ease, box-shadow 220ms ease;
+  transition: transform var(--duracao-media) var(--curva-saida), box-shadow var(--duracao-media) var(--curva-saida);
 }
 .cartao-vivo:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px -12px color-mix(in oklch, var(--vinho), transparent 70%);
+  box-shadow: var(--sombra-alta);
 }
 
 /* Entrada suave de conteúdo (páginas, cartões) */
@@ -227,7 +370,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 .surgir {
-  animation: surgir 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: surgir var(--duracao-lenta) var(--curva-saida) both;
 }
 .surgir-atraso-1 { animation-delay: 60ms; }
 .surgir-atraso-2 { animation-delay: 120ms; }

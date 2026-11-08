@@ -45,7 +45,7 @@ export function BarraAgenda({ visao, data, aoMarcar, aoBloquear }: Props) {
               href={href(v, data)}
               aria-current={visao === v ? "page" : undefined}
               className={cn(
-                "flex min-h-11 items-center justify-center rounded-lg px-3 transition-colors sm:min-h-8",
+                "flex min-h-toque items-center justify-center rounded-lg px-3 transition-colors sm:min-h-8",
                 visao === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -54,7 +54,7 @@ export function BarraAgenda({ visao, data, aoMarcar, aoBloquear }: Props) {
           ))}
         </nav>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={aoBloquear} className="h-11 sm:h-8">
+          <Button variant="outline" onClick={aoBloquear} className="h-toque sm:h-8">
             <LockIcon />
             Bloquear
           </Button>
@@ -68,17 +68,17 @@ export function BarraAgenda({ visao, data, aoMarcar, aoBloquear }: Props) {
 
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
-          <Button asChild variant="ghost" size="icon" className="size-11 sm:size-8">
+          <Button asChild variant="ghost" size="icon" className="size-toque sm:size-8">
             <Link href={href(visao, anterior)} aria-label={`${nomePeriodo === "semana" ? "Semana" : nomePeriodo === "mês" ? "Mês" : "Dia"} anterior`}>
               <ChevronLeftIcon />
             </Link>
           </Button>
-          <Button asChild variant="ghost" size="icon" className="size-11 sm:size-8">
+          <Button asChild variant="ghost" size="icon" className="size-toque sm:size-8">
             <Link href={href(visao, proximo)} aria-label={`Próxim${nomePeriodo === "semana" ? "a semana" : nomePeriodo === "mês" ? "o mês" : "o dia"}`}>
               <ChevronRightIcon />
             </Link>
           </Button>
-          <Button asChild variant={data === hoje ? "secondary" : "ghost"} className="h-11 sm:h-8">
+          <Button asChild variant={data === hoje ? "secondary" : "ghost"} className="h-toque sm:h-8">
             <Link href={href(visao, hoje)}>Hoje</Link>
           </Button>
         </div>

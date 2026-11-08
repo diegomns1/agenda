@@ -42,7 +42,7 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <MessageCircleIcon className="size-4 text-emerald-600" />
+            <MessageCircleIcon className="size-4 text-whatsapp" />
             WhatsApp
           </CardTitle>
         </CardHeader>
@@ -66,7 +66,7 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <StickyNoteIcon className="size-4 text-amber-600" />
+            <StickyNoteIcon className="size-4 text-aviso-forte" />
             Observações
           </CardTitle>
         </CardHeader>

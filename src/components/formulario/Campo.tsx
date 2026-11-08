@@ -23,7 +23,7 @@ export function Campo({ rotulo, nome, erros, dica, className, id, ...props }: Pr
         name={nome}
         aria-invalid={erro ? true : undefined}
         aria-describedby={erro ? `${campoId}-erro` : dica ? `${campoId}-dica` : undefined}
-        className={cn("h-11 text-base", className)}
+        className={cn("h-toque text-base", className)}
         {...props}
       />
       {erro ? (

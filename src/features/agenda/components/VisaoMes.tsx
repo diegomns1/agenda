@@ -125,14 +125,14 @@ export function VisaoMes({ data, agendamentos, expediente }: Props) {
                   title={it.completo}
                   className={cn(
                     // corta a sobra sem reticências (cabe mais letra, como no Google Agenda); o nome inteiro fica no title
-                    "block overflow-hidden rounded-[3px] px-[3px] py-px text-[11px] leading-tight font-semibold tracking-tight whitespace-nowrap sm:px-1",
+                    "block overflow-hidden rounded-chip px-[3px] py-px text-mini leading-tight font-semibold tracking-tight whitespace-nowrap sm:px-1",
                     it.classes,
                   )}
                 >
                   {it.texto}
                 </span>
               ))}
-              {resto > 0 ? <span className="px-1 text-[11px] font-semibold text-muted-foreground">+{resto} mais</span> : null}
+              {resto > 0 ? <span className="px-1 text-mini font-semibold text-muted-foreground">+{resto} mais</span> : null}
             </Link>
           );
         })}

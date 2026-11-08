@@ -207,9 +207,9 @@ function SeletorTema({
                     className={cn("grid gap-1 rounded-xl p-1 text-left transition-colors hover:bg-muted", temaId === t.id && "bg-primary/10 ring-2 ring-primary")}
                   >
                     <MiniaturaTema tema={t} corPrimaria={corPrimaria} corSecundaria={corSecundaria} meuFundo={meuFundo} />
-                    <span className="truncate text-[11px] leading-tight font-medium">{t.nome}</span>
-                    {t.quando ? <span className="truncate text-[10px] leading-tight text-muted-foreground">{t.quando}</span> : null}
-                    {t.personalizado ? <span className="truncate text-[10px] leading-tight text-muted-foreground">{meuFundo ? "sua imagem" : "subir imagem"}</span> : null}
+                    <span className="truncate text-mini leading-tight font-medium">{t.nome}</span>
+                    {t.quando ? <span className="truncate text-mini leading-tight text-muted-foreground">{t.quando}</span> : null}
+                    {t.personalizado ? <span className="truncate text-mini leading-tight text-muted-foreground">{meuFundo ? "sua imagem" : "subir imagem"}</span> : null}
                   </button>
                 ))}
               </div>
@@ -485,7 +485,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
           <section className="grid gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="data-story">Dia</Label>
-              <Input id="data-story" type="date" value={dia} onChange={(e) => e.target.value && setDia(e.target.value)} className="h-11 w-48 text-base" />
+              <Input id="data-story" type="date" value={dia} onChange={(e) => e.target.value && setDia(e.target.value)} className="h-toque w-48 text-base" />
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm text-muted-foreground">
@@ -528,7 +528,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
           <section className="grid gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="inicio-semana">A partir de</Label>
-              <Input id="inicio-semana" type="date" value={inicioSemana} onChange={(e) => e.target.value && setInicioSemana(e.target.value)} className="h-11 w-48 text-base" />
+              <Input id="inicio-semana" type="date" value={inicioSemana} onChange={(e) => e.target.value && setInicioSemana(e.target.value)} className="h-toque w-48 text-base" />
             </div>
             <p className="text-sm text-muted-foreground">
               {sugerindo ? (
@@ -553,7 +553,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
                       ativo ? "border-primary bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted",
                     )}
                   >
-                    <span className="text-[11px] uppercase">{DIAS_CURTOS[diaDaSemana(d)]}</span>
+                    <span className="text-mini uppercase">{DIAS_CURTOS[diaDaSemana(d)]}</span>
                     <span className="text-base font-semibold">{d.slice(8)}</span>
                   </button>
                 );
@@ -567,7 +567,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
           <section className="grid gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="mes-story">Mês</Label>
-              <Input id="mes-story" type="month" value={mes} onChange={(e) => /^\d{4}-\d{2}$/.test(e.target.value) && setMes(e.target.value)} className="h-11 w-48 text-base" />
+              <Input id="mes-story" type="month" value={mes} onChange={(e) => /^\d{4}-\d{2}$/.test(e.target.value) && setMes(e.target.value)} className="h-toque w-48 text-base" />
             </div>
             <p className="text-sm text-muted-foreground">
               {sugerindo ? (
@@ -695,15 +695,15 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
         ) : null}
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={compartilhar} disabled={ocupado !== null || carregandoPrevia} className="h-11">
+          <Button onClick={compartilhar} disabled={ocupado !== null || carregandoPrevia} className="h-toque">
             {ocupado === "compartilhar" ? <Loader2Icon className="animate-spin" /> : <Share2Icon />}
             Compartilhar
           </Button>
-          <Button variant="outline" onClick={baixar} disabled={ocupado !== null || carregandoPrevia} className="h-11">
+          <Button variant="outline" onClick={baixar} disabled={ocupado !== null || carregandoPrevia} className="h-toque">
             {ocupado === "baixar" ? <Loader2Icon className="animate-spin" /> : <DownloadIcon />}
             Baixar imagem
           </Button>
-          <Button variant="ghost" onClick={() => setVersao((v) => v + 1)} className="h-11" aria-label="Atualizar prévia">
+          <Button variant="ghost" onClick={() => setVersao((v) => v + 1)} className="h-toque" aria-label="Atualizar prévia">
             <RefreshCwIcon />
             Atualizar
           </Button>

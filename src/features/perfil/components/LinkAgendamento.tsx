@@ -39,7 +39,7 @@ export function LinkAgendamento({ url }: { url: string }) {
           {url.replace(/^https?:\/\//, "")}
         </a>
         <Button type="button" size="icon-sm" variant="ghost" onClick={copiar} aria-label="Copiar link">
-          {copiado ? <CheckIcon className="text-emerald-600" /> : <CopyIcon />}
+          {copiado ? <CheckIcon className="text-sucesso-forte" /> : <CopyIcon />}
         </Button>
       </div>
       <div className="flex flex-wrap gap-2">

@@ -91,9 +91,9 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">{p.nome}</span>
                     {planoAssinado === id && temAssinatura ? (
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">atual</span>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-mini font-bold text-primary">atual</span>
                     ) : id === "premium" ? (
-                      <span className="gradiente-marca rounded-full px-2 py-0.5 text-[10px] font-bold text-white">Mais escolhido</span>
+                      <span className="gradiente-marca rounded-full px-2 py-0.5 text-mini font-bold text-white">Mais escolhido</span>
                     ) : null}
                   </div>
                   <span className="text-xl font-extrabold tracking-tight">{formatarPreco(p.preco)}</span>
@@ -128,7 +128,7 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
                   <span>
                     <span className="flex items-center gap-2 font-semibold">
                       {nome}
-                      {formaAtual === id && temAssinatura ? <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">atual</span> : null}
+                      {formaAtual === id && temAssinatura ? <span className="rounded-full bg-primary/10 px-2 py-0.5 text-mini font-bold text-primary">atual</span> : null}
                     </span>
                     <span className="block text-xs text-muted-foreground">{detalhe}</span>
                   </span>
@@ -147,7 +147,7 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
               placeholder="000.000.000-00"
               value={documento}
               onChange={(e) => setDocumento(formatarCpfCnpj(e.target.value) || e.target.value.replace(/[^\d.\-/]/g, ""))}
-              className="h-11 max-w-xs text-base"
+              className="h-toque max-w-xs text-base"
               aria-invalid={estado.erros?.cpf_cnpj ? true : undefined}
             />
             {estado.erros?.cpf_cnpj?.[0] ? (

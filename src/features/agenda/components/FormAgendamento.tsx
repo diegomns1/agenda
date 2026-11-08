@@ -40,7 +40,7 @@ type Props = {
 };
 
 const selectClass =
-  "h-11 w-full rounded-lg border border-input bg-background px-3 text-base disabled:opacity-50";
+  "h-toque w-full rounded-lg border border-input bg-background px-3 text-base disabled:opacity-50";
 
 export function FormAgendamento({ clientes, servicos, inicial, aoConcluir }: Props) {
   const ag = inicial?.agendamento ?? null;
@@ -180,7 +180,7 @@ function CamposAtendimento({
             <button
               type="button"
               onClick={() => setNovaCliente((x) => !x)}
-              className="-my-2 inline-flex min-h-11 items-center gap-1 px-1 text-sm font-medium text-primary hover:underline"
+              className="-my-2 inline-flex min-h-toque items-center gap-1 px-1 text-sm font-medium text-primary hover:underline"
             >
               {novaCliente ? <UsersIcon className="size-4" /> : <UserPlusIcon className="size-4" />}
               {novaCliente ? "Escolher da lista" : "Novo cadastro"}
@@ -195,7 +195,7 @@ function CamposAtendimento({
               name="nova_cliente_nome"
               placeholder="Nome (novo cadastro)"
               defaultValue={v?.nova_cliente_nome ?? ""}
-              className="h-11 text-base"
+              className="h-toque text-base"
               autoFocus
             />
             <Input
@@ -206,7 +206,7 @@ function CamposAtendimento({
               placeholder="WhatsApp (opcional)"
               value={telefoneNova}
               onChange={(e) => setTelefoneNova(mascararTelefone(e.target.value))}
-              className="h-11 text-base"
+              className="h-toque text-base"
             />
           </div>
         ) : (
@@ -265,7 +265,7 @@ function CamposAtendimento({
               step={5}
               value={duracao}
               onChange={(e) => setDuracao(e.target.value)}
-              className="h-11 w-20 text-base"
+              className="h-toque w-20 text-base"
             />
             <span className="text-sm text-muted-foreground">min</span>
           </div>
@@ -294,7 +294,7 @@ function CamposAtendimento({
             step={300}
             value={hora}
             onChange={(e) => setHora(e.target.value)}
-            className="h-11 w-40 text-base"
+            className="h-toque w-40 text-base"
           />
         ) : (
           <>
@@ -400,7 +400,7 @@ function CamposBloqueio({ inicial, estado }: { inicial?: InicialForm; estado: Es
         <div className="grid gap-1.5">
           <Label htmlFor="dias">Quantos dias seguidos</Label>
           <div className="flex items-center gap-2">
-            <Input id="dias" name="dias" type="number" min={1} max={60} defaultValue={v?.dias ?? diasInicial} className="h-11 w-24 text-base" />
+            <Input id="dias" name="dias" type="number" min={1} max={60} defaultValue={v?.dias ?? diasInicial} className="h-toque w-24 text-base" />
             <span className="text-sm text-muted-foreground">dia(s), contando a data acima</span>
           </div>
         </div>

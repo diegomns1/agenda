@@ -29,7 +29,7 @@ export function BotaoEnviar({
     <Button
       type="submit"
       size="lg"
-      className={cn("h-11 w-full rounded-xl text-base font-semibold shadow-md shadow-vinho/20", brilho && "brilho", className)}
+      className={cn("h-toque w-full rounded-xl text-base font-semibold shadow-media", brilho && "brilho", className)}
       disabled={disabled || ocupado}
       {...props}
     >

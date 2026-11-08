@@ -44,7 +44,7 @@ export default async function PaginaHoje() {
   return (
     <div className="grid gap-5">
       {/* Capa */}
-      <section className="gradiente-marca surgir relative overflow-hidden rounded-3xl p-5 text-white shadow-lg shadow-vinho/20">
+      <section className="gradiente-marca surgir relative overflow-hidden rounded-3xl p-5 text-white shadow-alta">
         <div className="pointer-events-none absolute -top-16 -right-10 size-48 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-6 size-44 rounded-full bg-rosa/30 blur-2xl" />
         <p className="text-sm/5 text-white/80">
@@ -64,7 +64,7 @@ export default async function PaginaHoje() {
           </div>
         </div>
         {perfil ? (
-          <p className="mt-3 inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-semibold">
+          <p className="mt-3 inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 text-mini font-semibold">
             Plano {PLANOS[perfil.plano]?.nome ?? perfil.plano}
           </p>
         ) : null}
@@ -140,7 +140,7 @@ export default async function PaginaHoje() {
                   <Link href={`/agenda?visao=dia&data=${dataDe(a.inicio)}`} className="flex items-center gap-3 py-2.5 transition-colors hover:text-primary">
                     <div className="w-16 shrink-0 rounded-xl bg-primary/8 py-1 text-center">
                       <p className="text-lg font-extrabold tabular-nums leading-tight">{horaDe(a.inicio)}</p>
-                      <p className="text-[11px] text-muted-foreground capitalize">{rotuloRelativo(dataDe(a.inicio))}</p>
+                      <p className="text-mini text-muted-foreground capitalize">{rotuloRelativo(dataDe(a.inicio))}</p>
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold">{a.cliente_nome}</p>

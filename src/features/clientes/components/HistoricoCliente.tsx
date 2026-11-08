@@ -37,7 +37,7 @@ export function HistoricoCliente({ historico }: { historico: Agendamento[] }) {
                 className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
               >
                 <div className="flex w-14 shrink-0 flex-col items-center rounded-lg bg-muted py-1 text-center leading-tight">
-                  <span className="text-[10px] uppercase text-muted-foreground">{formatarData(a.inicio, "MMM")}</span>
+                  <span className="text-mini uppercase text-muted-foreground">{formatarData(a.inicio, "MMM")}</span>
                   <span className="text-lg font-semibold">{formatarData(a.inicio, "dd")}</span>
                 </div>
                 <div className="min-w-0 flex-1">

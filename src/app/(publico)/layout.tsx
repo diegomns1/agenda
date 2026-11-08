@@ -7,7 +7,7 @@ export default function LayoutPublico({ children }: { children: React.ReactNode 
       <div className="surgir flutuar mb-8">
         <LogoVaguinha variante="vertical" className="h-28 w-auto drop-shadow-sm" />
       </div>
-      <div className="surgir surgir-atraso-1 w-full max-w-sm rounded-3xl bg-card/90 p-6 shadow-xl shadow-vinho/10 ring-1 ring-vinho/10 backdrop-blur">
+      <div className="surgir surgir-atraso-1 w-full max-w-sm rounded-3xl bg-card/90 p-6 shadow-alta ring-1 ring-vinho/10 backdrop-blur">
         {children}
       </div>
       <p className="surgir surgir-atraso-2 mt-6 text-center text-xs text-muted-foreground">

@@ -65,7 +65,7 @@ function Variacao({ chave, valor, anterior, rotuloAnterior, claro = false }: { c
     <span
       className={cn(
         "inline-flex items-center gap-0.5 text-xs font-semibold",
-        claro ? "text-white/90" : bom === null ? "text-muted-foreground" : bom ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400",
+        claro ? "text-white/90" : bom === null ? "text-muted-foreground" : bom ? "text-sucesso-forte" : "text-destructive",
       )}
     >
       <Icone className="size-3.5" />
@@ -82,7 +82,7 @@ export function PainelRelatorio({ relatorio }: { relatorio: Relatorio }) {
   return (
     <div className="grid gap-5">
       {/* Destaque: faturamento */}
-      <section className="gradiente-marca relative overflow-hidden rounded-3xl p-5 text-white shadow-lg shadow-vinho/20">
+      <section className="gradiente-marca relative overflow-hidden rounded-3xl p-5 text-white shadow-alta">
         <div className="pointer-events-none absolute -top-16 -right-10 size-48 rounded-full bg-white/10 blur-2xl" />
         <p className="text-sm text-white/80">Faturamento em {relatorio.rotuloMes}{relatorio.mesEmAndamento ? " (até agora)" : ""}</p>
         <p className="mt-1 text-5xl font-extrabold tracking-tight">{formatarMoeda(ind.faturamento.valor)}</p>
@@ -107,7 +107,7 @@ export function PainelRelatorio({ relatorio }: { relatorio: Relatorio }) {
               <span className="text-2xl font-extrabold tracking-tight">{formatar(chave, i.valor)}</span>
               <Variacao chave={chave} valor={i.valor} anterior={i.anterior} rotuloAnterior={rotuloAnterior} />
               {clicavel ? (
-                <span className="mt-1 inline-flex items-center gap-0.5 text-[11px] font-semibold text-primary">
+                <span className="mt-1 inline-flex items-center gap-0.5 text-mini font-semibold text-primary">
                   {aberto === chave ? "Esconder" : "Ver quem"}
                   <ChevronDownIcon className={cn("size-3 transition-transform", aberto === chave && "rotate-180")} />
                 </span>
@@ -206,7 +206,7 @@ function GraficoMeses({ serie, mesSelecionado }: { serie: Relatorio["serieMeses"
                 aria-label={`${s.rotulo}: ${formatarMoeda(s.faturamento)}, ${s.atendimentos} atendimentos`}
               >
                 {mostrarValor ? (
-                  <span className="mb-1 rounded-md bg-background/90 px-1 text-[11px] font-semibold whitespace-nowrap text-foreground tabular-nums shadow-sm ring-1 ring-border">
+                  <span className="mb-1 rounded-md bg-background/90 px-1 text-mini font-semibold whitespace-nowrap text-foreground tabular-nums shadow-sm ring-1 ring-border">
                     {formatarMoeda(s.faturamento)}
                   </span>
                 ) : null}
@@ -221,7 +221,7 @@ function GraficoMeses({ serie, mesSelecionado }: { serie: Relatorio["serieMeses"
             );
           })}
         </div>
-        <div className="mt-1.5 grid grid-cols-6 text-center text-[11px] text-muted-foreground capitalize">
+        <div className="mt-1.5 grid grid-cols-6 text-center text-mini text-muted-foreground capitalize">
           {serie.map((s) => (
             <span key={s.mes} className={cn(s.mes === mesSelecionado && "font-bold text-foreground")}>
               {s.rotulo}

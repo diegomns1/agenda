@@ -62,7 +62,7 @@ export function AgendarOnline({ perfil }: Props) {
             <li key={e} className="flex items-center gap-2">
               <span
                 className={cn(
-                  "flex size-6 items-center justify-center rounded-full border text-[11px] transition-colors",
+                  "flex size-6 items-center justify-center rounded-full border text-mini transition-colors",
                   atual || feita ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground",
                 )}
               >
@@ -135,9 +135,9 @@ export function AgendarOnline({ perfil }: Props) {
                     ativo ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted",
                   )}
                 >
-                  <span className="text-[11px] uppercase opacity-80">{formatarDataISO(d, "EEE").replace(".", "")}</span>
+                  <span className="text-mini uppercase opacity-80">{formatarDataISO(d, "EEE").replace(".", "")}</span>
                   <span className="text-xl font-extrabold leading-tight">{Number(d.slice(8, 10))}</span>
-                  <span className="text-[11px] opacity-80">{formatarDataISO(d, "MMM").replace(".", "")}</span>
+                  <span className="text-mini opacity-80">{formatarDataISO(d, "MMM").replace(".", "")}</span>
                 </button>
               );
             })}
@@ -285,7 +285,7 @@ function Confirmacao({ perfil, pedido, aoNovo }: { perfil: PerfilPublico; pedido
           {horaDe(pedido.inicio)} às {horaDe(pedido.fim)}
         </p>
         {!confirmado ? (
-          <p className="mt-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+          <p className="mt-2 inline-block rounded-full bg-aviso px-2 py-0.5 text-xs font-semibold text-aviso-texto">
             Aguardando confirmação
           </p>
         ) : null}
@@ -300,7 +300,7 @@ function Confirmacao({ perfil, pedido, aoNovo }: { perfil: PerfilPublico; pedido
           </Button>
         ) : null}
         {confirmado ? (
-          <Button asChild variant="outline" className="h-11 rounded-xl">
+          <Button asChild variant="outline" className="h-toque rounded-xl">
             <a href={google} target="_blank" rel="noopener noreferrer">
               <CalendarPlusIcon />
               Adicionar ao Google Agenda

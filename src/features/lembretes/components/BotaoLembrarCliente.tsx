@@ -40,7 +40,7 @@ export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "
   if (avisada) {
     return (
       <Button variant="outline" size={tamanho} className={className} onClick={() => marcar(false)} disabled={pendente} title="Desmarcar">
-        <CheckIcon className="text-emerald-600" />
+        <CheckIcon className="text-sucesso-forte" />
         Lembrete enviado
         <UndoIcon className="opacity-50" />
       </Button>
@@ -64,7 +64,7 @@ export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "
         rel="noopener noreferrer"
         onClick={() => marcar(true)}
       >
-        <MessageCircleIcon className={destaque ? undefined : "text-emerald-700 dark:text-emerald-400"} />
+        <MessageCircleIcon className={destaque ? undefined : "text-whatsapp"} />
         Enviar lembrete
       </a>
     </Button>

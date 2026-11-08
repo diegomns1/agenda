@@ -94,7 +94,7 @@ export function GradeHoraria({
           {linhas.map((t) => (
             <span
               key={t}
-              className="absolute right-1.5 -translate-y-1/2 text-[11px] tabular-nums text-muted-foreground"
+              className="absolute right-1.5 -translate-y-1/2 text-mini tabular-nums text-muted-foreground"
               style={{ top: (t - inicioMin) * PX_POR_MIN }}
             >
               {minutosParaHora(t)}
@@ -128,8 +128,8 @@ export function GradeHoraria({
 
               {ehHoje && agoraMin != null && agoraMin >= inicioMin && agoraMin <= fimMin ? (
                 <div className="pointer-events-none absolute inset-x-0 z-[12] flex items-center" style={{ top: (agoraMin - inicioMin) * PX_POR_MIN }}>
-                  <span className="size-2 -translate-x-1 rounded-full bg-rose-500" />
-                  <span className="h-px flex-1 bg-rose-500" />
+                  <span className="size-2 -translate-x-1 rounded-full bg-destructive" />
+                  <span className="h-px flex-1 bg-destructive" />
                 </div>
               ) : null}
 

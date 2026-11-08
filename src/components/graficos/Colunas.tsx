@@ -37,7 +37,7 @@ export function Colunas({ pontos, destaque, formato = "numero", altura = 140 }: 
                 aria-label={`${p.rotulo}: ${fmt(p.valor)}`}
               >
                 {ativo || foco === p.chave ? (
-                  <span className="mb-1 rounded-md bg-background/90 px-1 text-[11px] font-semibold whitespace-nowrap text-foreground tabular-nums shadow-sm ring-1 ring-border">
+                  <span className="mb-1 rounded-md bg-background/90 px-1 text-mini font-semibold whitespace-nowrap text-foreground tabular-nums shadow-sm ring-1 ring-border">
                     {fmt(p.valor)}
                   </span>
                 ) : null}
@@ -49,7 +49,7 @@ export function Colunas({ pontos, destaque, formato = "numero", altura = 140 }: 
             );
           })}
         </div>
-        <div className="mt-1.5 grid text-center text-[11px] text-muted-foreground capitalize" style={{ gridTemplateColumns: `repeat(${pontos.length}, minmax(0, 1fr))` }}>
+        <div className="mt-1.5 grid text-center text-mini text-muted-foreground capitalize" style={{ gridTemplateColumns: `repeat(${pontos.length}, minmax(0, 1fr))` }}>
           {pontos.map((p) => (
             <span key={p.chave} className={cn(p.chave === destaque && "font-bold text-foreground")}>
               {p.rotulo}

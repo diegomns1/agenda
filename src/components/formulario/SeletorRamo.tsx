@@ -50,7 +50,7 @@ export function SeletorRamo({ ramoInicial, outroInicial, erro, rotulo = "Seu ram
         <button
           type="button"
           onClick={() => setAberto(true)}
-          className="flex h-11 items-center justify-between gap-2 rounded-lg border border-input bg-background px-3 text-left text-base"
+          className="flex h-toque items-center justify-between gap-2 rounded-lg border border-input bg-background px-3 text-left text-base"
         >
           <span className="truncate">{escolhido?.nome ?? (outro || "Outros")}</span>
           <span className="shrink-0 text-xs font-semibold text-primary">Trocar</span>
@@ -65,13 +65,13 @@ export function SeletorRamo({ ramoInicial, outroInicial, erro, rotulo = "Seu ram
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Busque: unha, cabelo, tatuagem, personal..."
               autoComplete="off"
-              className="h-11 pl-9 text-base"
+              className="h-toque pl-9 text-base"
             />
           </div>
           <div className="max-h-64 overflow-y-auto pr-1" role="listbox" aria-label="Ramos">
             {porGrupo.map(([grupo, ramos]) => (
               <div key={grupo} className="py-1">
-                <p className="px-2 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{GRUPOS[grupo]}</p>
+                <p className="px-2 pb-1 text-mini font-semibold tracking-wide text-muted-foreground uppercase">{GRUPOS[grupo]}</p>
                 {ramos.map((r) => (
                   <button
                     key={r.id}
@@ -110,7 +110,7 @@ export function SeletorRamo({ ramoInicial, outroInicial, erro, rotulo = "Seu ram
               value={outro}
               onChange={(e) => setOutro(e.target.value.slice(0, 60))}
               placeholder="Qual é o seu ramo? Ex.: Fotografia de pets"
-              className="h-11 text-base"
+              className="h-toque text-base"
               autoFocus
             />
           ) : null}

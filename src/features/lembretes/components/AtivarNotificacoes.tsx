@@ -145,7 +145,7 @@ export function AtivarNotificacoes({ aparelhos }: { aparelhos: number }) {
           </p>
         ) : estado === "ativo" ? (
           <>
-            <p className="text-sm text-emerald-700 dark:text-emerald-300">Ativas neste aparelho.</p>
+            <p className="text-sm text-sucesso-forte">Ativas neste aparelho.</p>
             <div className="flex flex-wrap gap-2">
               <Button onClick={testar} disabled={pendente}>
                 {pendente ? <Loader2Icon className="animate-spin" /> : <BellRingIcon />}

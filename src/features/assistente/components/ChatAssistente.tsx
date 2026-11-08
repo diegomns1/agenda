@@ -126,7 +126,7 @@ export function ChatAssistente({ nome }: { nome: string }) {
                         <p
                           className={cn(
                             "mt-1 inline-flex items-center gap-1 text-xs font-semibold",
-                            p.situacao === "confirmada" ? "text-emerald-700" : p.situacao === "erro" ? "text-destructive" : "text-muted-foreground",
+                            p.situacao === "confirmada" ? "text-sucesso-forte" : p.situacao === "erro" ? "text-destructive" : "text-muted-foreground",
                           )}
                         >
                           {p.situacao === "confirmada" ? <CheckIcon className="size-3.5" /> : <XIcon className="size-3.5" />}
@@ -180,14 +180,14 @@ export function ChatAssistente({ nome }: { nome: string }) {
           }}
           rows={1}
           placeholder="Ex.: muda a Bruna de hoje para sexta às 15h"
-          className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-background px-3.5 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          className="max-h-32 min-h-toque flex-1 resize-none rounded-2xl border border-input bg-background px-3.5 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           aria-label="Mensagem para o assistente"
         />
-        <Button type="submit" size="icon" className="size-11 shrink-0 rounded-full" disabled={enviando || !texto.trim()} aria-label="Enviar">
+        <Button type="submit" size="icon" className="size-toque shrink-0 rounded-full" disabled={enviando || !texto.trim()} aria-label="Enviar">
           {enviando ? <Loader2Icon className="animate-spin" /> : <SendHorizontalIcon />}
         </Button>
       </form>
-      <div className="flex items-center justify-between gap-2 px-4 pb-3 text-[11px] text-muted-foreground">
+      <div className="flex items-center justify-between gap-2 px-4 pb-3 text-mini text-muted-foreground">
         <span>O assistente pode errar: confira antes de confirmar.</span>
         {restantes !== null ? <span>{restantes} mensagens restantes hoje</span> : null}
         {falas.length > 0 ? (

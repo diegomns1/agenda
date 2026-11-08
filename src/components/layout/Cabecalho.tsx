@@ -22,7 +22,7 @@ export function Cabecalho({ titulo, logoUrl, admin, lembretesPendentes = 0, most
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-2 pr-2 pl-4">
-        <Link href="/" className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5">
+        <Link href="/" className="flex min-h-toque min-w-0 flex-1 items-center gap-2.5">
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logoUrl} alt="" className="size-9 shrink-0 rounded-full bg-white object-contain ring-2 ring-rosa/40" />
@@ -31,7 +31,7 @@ export function Cabecalho({ titulo, logoUrl, admin, lembretesPendentes = 0, most
               <LogoVaguinha variante="simbolo" className="h-5" />
             </span>
           )}
-          <span className="truncate text-[15px] font-bold tracking-tight text-foreground">{titulo || NOME_APP}</span>
+          <span className="truncate text-destaque font-bold tracking-tight text-foreground">{titulo || NOME_APP}</span>
         </Link>
         <div className="flex shrink-0 items-center">
           <Button asChild variant="ghost" className="hidden h-9 sm:inline-flex">
@@ -47,11 +47,11 @@ export function Cabecalho({ titulo, logoUrl, admin, lembretesPendentes = 0, most
             </Link>
           </Button>
           {mostrarSino ? (
-            <Button asChild variant="ghost" size="icon" className="size-11">
+            <Button asChild variant="ghost" size="icon" className="size-toque">
               <Link href="/lembretes" className="relative" aria-label={`Lembretes${lembretesPendentes ? `: ${lembretesPendentes} para avisar` : ""}`}>
                 <BellIcon className="size-5" />
                 {lembretesPendentes > 0 ? (
-                  <span className="absolute top-1 right-1 flex min-w-[18px] animate-in zoom-in items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold leading-[18px] text-primary-foreground shadow tabular-nums">
+                  <span className="absolute top-1 right-1 flex min-w-[18px] animate-in zoom-in items-center justify-center rounded-full bg-primary px-1 text-mini font-bold leading-[18px] text-primary-foreground shadow tabular-nums">
                     {lembretesPendentes > 9 ? "9+" : lembretesPendentes}
                   </span>
                 ) : null}

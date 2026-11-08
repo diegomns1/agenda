@@ -80,7 +80,7 @@ export function FormServico({ servico, aoConcluir }: Props) {
             step={5}
             value={duracao}
             onChange={(e) => setDuracao(e.target.value)}
-            className="h-11 w-28 text-base"
+            className="h-toque w-28 text-base"
             aria-invalid={estado.erros?.duracao_min ? true : undefined}
           />
           <span className="text-sm text-muted-foreground">minutos</span>
@@ -102,7 +102,7 @@ export function FormServico({ servico, aoConcluir }: Props) {
             inputMode="decimal"
             placeholder="0,00"
             defaultValue={v?.valor ?? (servico ? moedaParaCampo(servico.valor) : "")}
-            className="h-11 pl-9 text-base"
+            className="h-toque pl-9 text-base"
             aria-invalid={estado.erros?.valor ? true : undefined}
           />
         </div>

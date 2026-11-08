@@ -46,7 +46,7 @@ export function FormLogin({ proximo, mensagem }: { proximo?: string; mensagem?: 
           onClick={() => setVerSenha((v) => !v)}
           aria-label={verSenha ? "Esconder senha" : "Mostrar senha"}
           aria-pressed={verSenha}
-          className="absolute top-[26px] right-0 flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="absolute top-[26px] right-0 flex size-toque items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
           {verSenha ? <EyeOffIcon className="size-5" /> : <EyeIcon className="size-5" />}
         </button>
@@ -57,12 +57,12 @@ export function FormLogin({ proximo, mensagem }: { proximo?: string; mensagem?: 
       </BotaoEnviar>
 
       <div className="flex flex-col items-center text-sm">
-        <Link href="/recuperar-senha" className="inline-flex min-h-11 items-center px-3 text-muted-foreground underline-offset-4 hover:underline">
+        <Link href="/recuperar-senha" className="inline-flex min-h-toque items-center px-3 text-muted-foreground underline-offset-4 hover:underline">
           Esqueci minha senha
         </Link>
         <p className="text-muted-foreground">
           Ainda não tem conta?{" "}
-          <Link href="/cadastro" className="inline-flex min-h-11 items-center px-2 font-semibold text-foreground underline-offset-4 hover:underline">
+          <Link href="/cadastro" className="inline-flex min-h-toque items-center px-2 font-semibold text-foreground underline-offset-4 hover:underline">
             Criar conta
           </Link>
         </p>

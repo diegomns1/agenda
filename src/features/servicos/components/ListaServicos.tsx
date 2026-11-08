@@ -186,7 +186,7 @@ export function ListaServicos({ servicos }: { servicos: Servico[] }) {
                 onPointerUp={soltarArrasto}
                 onPointerCancel={soltarArrasto}
                 className={cn(
-                  "flex h-11 w-8 shrink-0 touch-none items-center justify-center rounded-md text-muted-foreground",
+                  "flex h-toque w-8 shrink-0 touch-none items-center justify-center rounded-md text-muted-foreground",
                   "cursor-grab select-none hover:bg-muted hover:text-foreground active:cursor-grabbing disabled:opacity-50",
                 )}
               >

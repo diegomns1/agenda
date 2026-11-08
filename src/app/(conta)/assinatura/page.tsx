@@ -62,7 +62,7 @@ export default async function PaginaAssinatura() {
         </CardHeader>
         {pendente ? (
           <CardContent>
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm dark:border-amber-900 dark:bg-amber-950">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-aviso-borda/60 bg-aviso px-3 py-2.5 text-sm text-aviso-texto">
               <span>
                 Mensalidade de <strong>R$ {pendente.valor.toFixed(2).replace(".", ",")}</strong> com vencimento em{" "}
                 <strong>{formatarDataISO(pendente.vencimento)}</strong> aguardando pagamento.

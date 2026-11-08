@@ -3,11 +3,12 @@ import type { Agendamento, StatusAgendamento } from "@/types/database";
 
 /**
  * Cores e ícones de cada situação da agenda, num lugar só.
+ * As cores vêm dos tokens semânticos de `globals.css` (bg-concluido, text-faltou-texto…), documentados em DESIGN.md.
  * Mês, semana, dia, detalhe e histórico usam esta tabela: a mesma cor significa a mesma coisa em todo o painel.
  *
  * - agendado: cor do tema, cheia (é o que importa na agenda)
  * - aguardando confirmação (pedido pelo link): âmbar tracejado
- * - concluído: verde-esmeralda clarinho, com ✓
+ * - concluído: verde clarinho, com ✓
  * - faltou: rosa-avermelhado, com ícone de pessoa riscada
  * - cancelado: cinza tracejado e riscado
  * - bloqueio: cinza listrado, com cadeado
@@ -26,35 +27,21 @@ export type VisualStatus = {
 
 const LISTRAS = "bg-[repeating-linear-gradient(135deg,transparent,transparent_6px,rgba(0,0,0,0.05)_6px,rgba(0,0,0,0.05)_12px)]";
 
+const PENDENTE = "border-dashed border-pendente-borda bg-pendente text-pendente-texto";
+const CONCLUIDO = "border-concluido-borda bg-concluido text-concluido-texto";
+const FALTOU = "border-faltou-borda bg-faltou text-faltou-texto";
+
 export const VISUAL_STATUS: Record<StatusAgendamento, VisualStatus> = {
   agendado: {
     rotulo: "Agendado",
     Icone: null,
     chip: "bg-primary text-primary-foreground",
-    cartao: "border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/20",
+    cartao: "border-primary bg-primary text-primary-foreground shadow-suave",
     etiqueta: "border-primary/30 bg-primary/12 text-primary",
   },
-  pendente: {
-    rotulo: "Aguardando confirmação",
-    Icone: HourglassIcon,
-    chip: "border border-dashed border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100",
-    cartao: "border-dashed border-amber-500 bg-amber-50 text-amber-950 dark:bg-amber-950 dark:text-amber-100",
-    etiqueta: "border-dashed border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100",
-  },
-  concluido: {
-    rotulo: "Concluído",
-    Icone: CheckIcon,
-    chip: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100",
-    cartao: "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100",
-    etiqueta: "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100",
-  },
-  faltou: {
-    rotulo: "Faltou",
-    Icone: UserXIcon,
-    chip: "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-100",
-    cartao: "border-rose-300 bg-rose-50 text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-100",
-    etiqueta: "border-rose-300 bg-rose-50 text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-100",
-  },
+  pendente: { rotulo: "Aguardando confirmação", Icone: HourglassIcon, chip: `border ${PENDENTE}`, cartao: PENDENTE, etiqueta: PENDENTE },
+  concluido: { rotulo: "Concluído", Icone: CheckIcon, chip: CONCLUIDO, cartao: CONCLUIDO, etiqueta: CONCLUIDO },
+  faltou: { rotulo: "Faltou", Icone: UserXIcon, chip: FALTOU, cartao: FALTOU, etiqueta: FALTOU },
   cancelado: {
     rotulo: "Cancelado",
     Icone: BanIcon,
@@ -77,14 +64,14 @@ export const VISUAL_DATA = {
   feriado: {
     rotulo: "Feriado",
     Icone: FlagIcon,
-    chip: "bg-sky-700 text-white dark:bg-sky-800",
-    etiqueta: "border-sky-700 bg-sky-700 text-white dark:bg-sky-800",
+    chip: "bg-feriado text-feriado-texto",
+    etiqueta: "border-feriado bg-feriado text-feriado-texto",
   },
   comemorativa: {
     rotulo: "Data comemorativa",
     Icone: FlagIcon,
-    chip: "border border-sky-700/60 bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-100",
-    etiqueta: "border-sky-700/60 bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-100",
+    chip: "border border-comemorativa-borda/60 bg-comemorativa text-comemorativa-texto",
+    etiqueta: "border-comemorativa-borda/60 bg-comemorativa text-comemorativa-texto",
   },
 } as const;
 

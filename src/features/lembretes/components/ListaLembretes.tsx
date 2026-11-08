@@ -21,7 +21,7 @@ function Item({ a, modelo, destaque }: { a: LembreteItem; modelo: string; destaq
     <li className={cn("flex flex-wrap items-center gap-3 px-4 py-3", destaque && "bg-primary/5")}>
       <div className="w-16 shrink-0 text-center">
         <p className="text-lg font-semibold tabular-nums leading-tight">{horaDe(a.inicio)}</p>
-        <p className="text-[11px] text-muted-foreground capitalize">{rotuloRelativo(dataDe(a.inicio))}</p>
+        <p className="text-mini text-muted-foreground capitalize">{rotuloRelativo(dataDe(a.inicio))}</p>
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">
@@ -36,7 +36,7 @@ function Item({ a, modelo, destaque }: { a: LembreteItem; modelo: string; destaq
         <p className="truncate text-sm text-muted-foreground">
           {a.servico_nome}
           {!a.telefone ? (
-            <span className="ml-2 inline-flex items-center gap-1 text-amber-700 dark:text-amber-300">
+            <span className="ml-2 inline-flex items-center gap-1 text-aviso-forte">
               <PhoneOffIcon className="size-3" /> sem WhatsApp
             </span>
           ) : null}

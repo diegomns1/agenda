@@ -32,13 +32,13 @@ export function VagasAbertas({ vagas }: { vagas: Vaga[] }) {
   }
 
   return (
-    <section className="surgir rounded-2xl border border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/40">
+    <section className="surgir rounded-2xl border border-sucesso-borda bg-sucesso p-4">
       <h2 className="flex items-center gap-2 font-semibold">
-        <CalendarXIcon className="size-4 text-emerald-700 dark:text-emerald-400" />
+        <CalendarXIcon className="size-4 text-sucesso-forte" />
         {visiveis.length === 1 ? "Vagou um horário" : `Vagaram ${visiveis.length} horários`}
       </h2>
       <p className="text-xs text-muted-foreground">Alguém desmarcou ou remarcou. Que tal divulgar o horário livre?</p>
-      <ul className="mt-2 divide-y divide-emerald-200 dark:divide-emerald-900">
+      <ul className="mt-2 divide-y divide-sucesso-borda">
         {visiveis.map((v) => (
           <li key={v.id} className="flex items-center gap-2 py-2.5">
             <div className="min-w-0 flex-1 text-sm">
