@@ -24,6 +24,9 @@ export const SUPORTE_WHATSAPP = process.env.NEXT_PUBLIC_SUPORTE_WHATSAPP?.replac
 /** Site institucional. Endereço principal com www (na Vercel, vaguinha.app redireciona para cá). Painel: URL_APP. */
 export const URL_SITE = "https://www.vaguinha.app";
 
+/** Ação principal do site, com o mesmo texto no menu, no topo e no fim da página. */
+export const ACAO_PRINCIPAL_SITE = "Começar o teste grátis";
+
 /** URL pública do app: NEXT_PUBLIC_APP_URL, ou o domínio de produção da Vercel, ou localhost. */
 export const URL_APP =
   process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??

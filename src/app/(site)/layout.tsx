@@ -3,32 +3,32 @@ import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
 import { Button } from "@/components/ui/button";
-import { URL_APP, URL_SITE } from "@/lib/constantes";
+import { ACAO_PRINCIPAL_SITE, URL_APP, URL_SITE } from "@/lib/constantes";
 import { EMAIL_CONTATO } from "@/lib/legal";
 
 export const metadata: Metadata = {
   metadataBase: new URL(URL_SITE),
-  title: { absolute: "Vaguinha · Agenda online para quem atende com hora marcada" },
+  title: { absolute: "Vaguinha · Agenda no celular para profissionais de beleza e saúde" },
   description:
-    "Agenda, clientes, lembretes, link para marcarem sozinhos e stories prontos para o Instagram. Feito para manicures, barbeiros, cabeleireiros, tatuadores, personal trainers e todo profissional que atende com hora marcada.",
+    "Agenda, histórico de clientes, lembretes, link para pedirem horário e stories dos horários livres. Para manicure, barbearia, salão, estética, personal e quem atende com hora marcada. 3 dias grátis.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "pt_BR",
     url: URL_SITE,
     siteName: "Vaguinha",
-    title: "Vaguinha · sua agenda cheia, sem bagunça no WhatsApp",
-    description: "Agenda, clientes, lembretes e link de agendamento para profissionais autônomos.",
+    title: "Vaguinha · Agenda no celular para profissionais de beleza e saúde",
+    description: "Agenda, clientes, lembretes e link de agendamento. 3 dias grátis; planos a partir de R$ 29,90 por mês.",
   },
   twitter: { card: "summary_large_image" },
 };
 
 const NAV = [
   { href: "#recursos", rotulo: "Recursos" },
+  { href: "#link", rotulo: "Link de agendamento" },
   { href: "#assistente", rotulo: "Assistente de IA" },
-  { href: "#como-funciona", rotulo: "Como funciona" },
   { href: "#planos", rotulo: "Planos" },
-  { href: "#duvidas", rotulo: "Dúvidas" },
+  { href: "#duvidas", rotulo: "Perguntas" },
 ];
 
 export default function LayoutSite({ children }: { children: React.ReactNode }) {
@@ -36,10 +36,10 @@ export default function LayoutSite({ children }: { children: React.ReactNode }) 
     <div className="flex flex-1 flex-col bg-background">
       <header className="sticky top-0 z-30 border-b border-vinho/10 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link href="/site" aria-label="Vaguinha, início" className="shrink-0">
+          <Link href="/site" aria-label="Vaguinha, início" className="flex min-h-toque shrink-0 items-center">
             <LogoVaguinha variante="horizontal" className="h-9 w-auto" />
           </Link>
-          <nav className="hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex" aria-label="Seções">
+          <nav className="hidden items-center gap-5 text-sm font-medium text-muted-foreground lg:flex" aria-label="Seções">
             {NAV.map((n) => (
               <a key={n.href} href={n.href} className="transition-colors hover:text-foreground">
                 {n.rotulo}
@@ -47,13 +47,13 @@ export default function LayoutSite({ children }: { children: React.ReactNode }) 
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" className="hidden sm:inline-flex">
-              <a href={`${URL_APP}/login`}>Acessar painel</a>
+            <Button asChild variant="ghost" className="hidden xl:inline-flex">
+              <a href={`${URL_APP}/login`}>Entrar no painel</a>
             </Button>
             <Button asChild className="rounded-full px-4 shadow-md shadow-vinho/20">
               <a href={`${URL_APP}/cadastro`}>
-                Começar grátis
-                <ArrowRightIcon />
+                {ACAO_PRINCIPAL_SITE}
+                <ArrowRightIcon className="hidden sm:block" />
               </a>
             </Button>
           </div>
@@ -67,19 +67,19 @@ export default function LayoutSite({ children }: { children: React.ReactNode }) 
           <div className="grid gap-3">
             <LogoVaguinha variante="horizontal" className="h-9 w-auto" />
             <p className="max-w-sm text-sm text-muted-foreground">
-              Agenda online para quem atende com hora marcada. Feito no Brasil, em português, para caber no seu dia.
+              Agenda no celular para profissionais de beleza e saúde que atendem com hora marcada. Feito no Brasil.
             </p>
           </div>
           <div className="grid content-start gap-2 text-sm">
             <p className="font-semibold">Vaguinha</p>
             <a href={`${URL_APP}/login`} className="text-muted-foreground hover:text-foreground">
-              Acessar painel
-            </a>
-            <a href={`${URL_APP}/cadastro`} className="text-muted-foreground hover:text-foreground">
-              Criar conta grátis
+              Entrar no painel
             </a>
             <a href="#planos" className="text-muted-foreground hover:text-foreground">
               Planos e preços
+            </a>
+            <a href="#duvidas" className="text-muted-foreground hover:text-foreground">
+              Perguntas frequentes
             </a>
           </div>
           <div className="grid content-start gap-2 text-sm">

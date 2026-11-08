@@ -16,9 +16,9 @@ const TEXTOS: Record<
   { titulo: string; texto: string; Icone: typeof ClockIcon }
 > = {
   pendente: {
-    titulo: "Conta aguardando aprovação",
+    titulo: "Cadastro recebido. Falta a liberação",
     texto:
-      "Seu cadastro foi recebido. Em breve a conta será liberada e você poderá usar a agenda. Volte aqui mais tarde ou aguarde nosso contato.",
+      "Uma pessoa confere cada conta antes de liberar. Você recebe um e-mail quando a sua estiver pronta, e os 3 dias grátis começam nesse dia. Enquanto isso, vá separando a lista dos seus serviços com valores e duração, e a sua logo: é o primeiro passo depois de entrar.",
     Icone: ClockIcon,
   },
   recusada: {

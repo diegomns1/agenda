@@ -103,7 +103,22 @@ Não usam variáveis CSS porque não rodam no navegador do painel:
 - dados de escolha do usuário: cores de marca sugeridas (`features/perfil/schema.ts`, `FormPerfil`) e
   amostras dos temas (`lib/ramos.ts`);
 - `themeColor` da barra do navegador (`app/layout.tsx`).
-O site público (`app/(site)`) ainda tem valores próprios e entra na etapa 5 do plano.
+O site público (`app/(site)`) segue a seção "Site público" abaixo; o fundo creme fica (é a marca), mesmo com o
+detector do Impeccable apontando "cream-palette".
+
+## Site público (etapa 5, regras da Taste Skill)
+
+- Título diz o que é e para quem ("Agenda no celular para profissionais de beleza e saúde"); a primeira tela
+  tem um fato concreto (3 dias grátis, preço a partir de R$ 29,90).
+- Uma ação principal, com o mesmo texto no menu, no topo e no fim: `ACAO_PRINCIPAL_SITE` em `lib/constantes.ts`.
+  Os cartões de plano não têm botão (o plano é escolhido depois, no painel).
+- Cada parte ocupa uma tela no computador (`md:min-h-[calc(100svh-4rem)]`). Nada aparece "surgindo" ao rolar;
+  só o topo entra uma vez ao carregar. Cartões de recurso sobem 2px no hover (`.cartao-vivo`).
+- Recursos mostram um pedaço da tela real (componentes `Fragmento*` em `site/page.tsx`), não ícone genérico.
+- Textos: sem slogan, sem pergunta como título, sem "solução/simples/poderoso"; nada inventado (clientes,
+  números, depoimentos). A aprovação manual do cadastro é dita no site, no cadastro e nos e-mails.
+- Cadastro: nome, e-mail, senha primeiro; ramo/tratamento/WhatsApp depois; sem "confirmar senha" (tem o olho);
+  sugestão para e-mail digitado errado (`features/auth/sugerir-email.ts`).
 
 ## Como conferir
 

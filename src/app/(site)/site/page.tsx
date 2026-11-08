@@ -1,24 +1,20 @@
 import Link from "next/link";
-import {
-  ArrowRightIcon,
-  BellRingIcon,
-  CalendarDaysIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  HeartIcon,
-  Link2Icon,
-  MessageCircleIcon,
-  ShieldCheckIcon,
-  SmartphoneIcon,
-  SparklesIcon,
-  UsersIcon,
-} from "lucide-react";
-import { Revelar } from "@/components/site/Revelar";
+import { ArrowRightIcon, BellRingIcon, CheckIcon, ChevronDownIcon, FileTextIcon, Link2Icon, MailIcon, SparklesIcon } from "lucide-react";
+import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
 import { Button } from "@/components/ui/button";
-import { URL_APP } from "@/lib/constantes";
+import { ACAO_PRINCIPAL_SITE as ACAO_PRINCIPAL, URL_APP } from "@/lib/constantes";
 import { EMAIL_CONTATO } from "@/lib/legal";
 import { PLANOS, formatarPreco } from "@/lib/planos";
 import { cn } from "@/lib/utils";
+
+/*
+ * Site público (etapa 5 do plano de design, com as regras da Taste Skill):
+ * - o título diz o que é e para quem; a primeira tela tem um fato concreto (3 dias grátis, R$ 29,90);
+ * - uma ação principal com o mesmo texto no menu, no topo e no fim ("Começar o teste grátis");
+ * - nada aparece "surgindo" ao rolar; só o topo entra uma vez ao carregar; cartões sobem 2px no hover;
+ * - cada recurso mostra um pedaço da tela real em vez de ícone genérico;
+ * - a aprovação do cadastro é dita com clareza (é o que a pessoa vai encontrar).
+ */
 
 const CADASTRO = `${URL_APP}/cadastro`;
 const LOGIN = `${URL_APP}/login`;
@@ -28,379 +24,354 @@ const PROFISSOES = [
   "Barbearia",
   "Salão de beleza",
   "Sobrancelha e cílios",
-  "Tatuagem",
   "Estética",
   "Massoterapia",
+  "Tatuagem",
   "Personal trainer",
-  "Psicologia",
   "Nutrição",
-  "Banho e tosa",
-  "Aulas particulares",
-];
-
-const RECURSOS = [
-  {
-    Icone: CalendarDaysIcon,
-    titulo: "Agenda que não deixa marcar em cima",
-    texto: "Dia, semana e mês na palma da mão. Marcar, remarcar, bloquear almoço ou férias. Dois horários nunca se chocam.",
-  },
-  {
-    Icone: UsersIcon,
-    titulo: "Seus clientes com histórico",
-    texto: "Nome, WhatsApp, observações e tudo o que já foi feito. Pra lembrar da cor, do corte ou do detalhe sem perguntar.",
-  },
-  {
-    Icone: BellRingIcon,
-    titulo: "Lembretes que chegam no seu celular",
-    texto: "Um dia antes e uma hora antes de cada atendimento. Com um toque, abre o WhatsApp com a mensagem pronta.",
-  },
-  {
-    Icone: Link2Icon,
-    titulo: "Link para marcarem sozinhos",
-    texto: "Coloque na bio do Instagram. A pessoa escolhe o serviço e o horário livre; você confirma (ou deixa confirmar sozinho).",
-  },
-  {
-    Icone: SparklesIcon,
-    titulo: "Stories prontos para o Instagram",
-    texto: "Horários do dia, agenda da semana, calendário do mês e tabela de valores, com a sua logo e as suas cores.",
-  },
-  {
-    Icone: SmartphoneIcon,
-    titulo: "Vira um app no seu celular",
-    texto: "Sem loja de aplicativos: adicione à tela de início e pronto. Funciona no Android e no iPhone.",
-  },
+  "Psicologia",
 ];
 
 const PASSOS = [
-  { n: "1", titulo: "Crie sua conta", texto: "Leva um minuto. Nome, e-mail e senha. Você testa grátis por 3 dias." },
-  { n: "2", titulo: "Monte sua agenda", texto: "Cadastre seus serviços, valores e horários de atendimento. Suba sua logo e escolha suas cores." },
-  { n: "3", titulo: "Compartilhe e atenda", texto: "Cole seu link na bio, poste os stories e deixe os lembretes trabalharem por você." },
+  {
+    titulo: "Crie a conta",
+    texto: "Nome, ramo, e-mail e senha. Uma pessoa confere cada cadastro e libera o acesso; o teste de 3 dias começa nesse dia.",
+  },
+  { titulo: "Monte a agenda", texto: "Cadastre serviços, valores e horários de atendimento. Suba a logo e escolha as cores." },
+  { titulo: "Divulgue o link", texto: "Coloque o link na bio, poste os stories e deixe os lembretes avisarem você." },
 ];
 
 const PLANOS_SITE = [
   {
     id: "essencial" as const,
     destaque: false,
-    para: "Para organizar a agenda",
-    itens: ["Agenda por dia, semana e mês", "Cadastro de clientes com histórico", "Serviços e valores", "App no celular com sua logo e cores"],
+    para: "Para organizar a agenda.",
+    itens: ["Agenda por dia, semana e mês", "Clientes com histórico", "Serviços e valores", "Importar do Google Agenda", "App no celular com sua logo e cores"],
   },
   {
     id: "profissional" as const,
     destaque: false,
-    para: "Para lotar a agenda sem esforço",
-    itens: ["Tudo do Essencial", "Link para marcarem sozinhos", "Lembretes 1 dia e 1 hora antes", "WhatsApp com a mensagem pronta", "Lista do que falta avisar"],
+    para: "Para clientes pedirem horário pelo link e receberem lembrete.",
+    itens: ["Tudo do Essencial", "Link de agendamento", "Lembrete 1 dia e 1 hora antes", "WhatsApp com a mensagem pronta", "Lista de quem falta avisar"],
   },
   {
     id: "premium" as const,
     destaque: true,
-    para: "Para quem quer uma secretária no bolso",
+    para: "Para divulgar horários vagos e usar o assistente de IA.",
     itens: [
       "Tudo do Profissional",
-      "Assistente de IA: peça mudanças na agenda escrevendo",
+      "Assistente de IA que remarca pelo texto",
       "Stories do dia, da semana e do mês",
+      "Story do horário que vagou",
       "Story de serviço com foto e valor",
-      "Relatório do mês: quanto entrou, quem desmarcou e remarcou",
-      "Aviso de horário que vagou, pronto para divulgar",
+      "Relatório do mês: quanto entrou, faltas e remarcações",
     ],
   },
 ];
 
 const DUVIDAS = [
   {
-    p: "O que o assistente de IA faz?",
-    r: "Você escreve como falaria com uma secretária, por exemplo \"muda a Bruna de hoje para sexta às 15h\" ou \"quem eu atendo amanhã?\". Ele consulta a sua agenda, prepara a mudança e mostra para você confirmar. Nada muda sem o seu toque em Confirmar. Faz parte do plano Premium.",
+    p: "Por que o cadastro passa por aprovação?",
+    r: "Uma pessoa da equipe confere cada cadastro antes de liberar o acesso, para o Vaguinha ter só profissionais de verdade. Você recebe um e-mail quando a conta for liberada, e o teste de 3 dias começa nesse dia.",
   },
   {
     p: "Preciso instalar alguma coisa?",
-    r: "Não. O Vaguinha abre no navegador do celular. Se quiser, adicione à tela de início: ele vira um app, com ícone e tudo, e passa a receber as notificações de lembrete.",
+    r: "Não. O Vaguinha abre no navegador do celular. Se quiser, adicione à tela de início: ele vira um app, com ícone, e passa a receber as notificações de lembrete.",
   },
   {
     p: "Funciona no iPhone?",
-    r: "Sim. No iPhone, adicione à tela de início (Compartilhar → Adicionar à Tela de Início) para receber os lembretes. No Android, basta aceitar o aviso de instalar.",
+    r: "Sim. No iPhone, toque em Compartilhar → Adicionar à Tela de Início para receber os lembretes. No Android, basta aceitar o aviso de instalar.",
   },
   {
     p: "Meus clientes precisam baixar algo ou criar conta?",
-    r: "Não. Eles abrem o seu link, escolhem o serviço e o horário, e informam o nome e o WhatsApp. Só isso.",
+    r: "Não. Eles abrem o seu link, escolhem o serviço e o horário, e informam o nome e o WhatsApp.",
   },
   {
     p: "O Vaguinha manda mensagem no WhatsApp sozinho?",
-    r: "Não, e isso é de propósito: mensagens automáticas podem bloquear o seu número. O Vaguinha prepara a mensagem e abre o WhatsApp da pessoa; você só toca em enviar.",
+    r: "Não. Mensagem automática pode bloquear o seu número. O Vaguinha prepara o texto e abre o WhatsApp do cliente; você toca em enviar.",
+  },
+  {
+    p: "Dá para trazer a agenda que eu uso no Google?",
+    r: "Dá. No Google Agenda, exporte o arquivo (Configurações → Importar e exportar) e envie no Vaguinha em Agenda → Importar. Os compromissos entram de uma vez, sem digitar um por um.",
   },
   {
     p: "Como funciona o pagamento?",
-    r: "Você testa grátis por 3 dias, com a agenda, os clientes e os serviços. Depois, é uma assinatura mensal simples por Pix ou cartão de crédito, sem fidelidade. Você cancela quando quiser e seus dados continuam guardados.",
+    r: "O teste de 3 dias é grátis e não pede cartão. Depois, a assinatura é mensal, por Pix ou cartão de crédito, sem fidelidade. Se cancelar, seus dados continuam guardados.",
   },
   {
     p: "Meus dados e os dos meus clientes estão seguros?",
-    r: "Sim. Cada profissional só enxerga a própria agenda, com regras aplicadas direto no banco de dados. Não vendemos dados nem entramos em contato com os seus clientes. Veja a Política de Privacidade.",
+    r: "Cada profissional só enxerga a própria agenda, com regras aplicadas direto no banco de dados. Não vendemos dados nem entramos em contato com os seus clientes.",
   },
 ];
+
+/** Altura de uma tela menos o cabeçalho fixo (64px). */
+const TELA = "md:min-h-[calc(100svh-4rem)]";
 
 export default function PaginaSite() {
   return (
     <>
-      {/* ------------------------------------------------------------ Hero */}
-      <section className="fundo-aurora">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 pt-14 pb-16 sm:px-6 md:grid-cols-[1.1fr_0.9fr] md:pt-20 md:pb-24">
+      {/* ------------------------------------------------------------ Topo */}
+      <section className={cn("fundo-aurora before:animate-none after:animate-none", "flex items-center md:min-h-[calc(100svh-4rem)]")}>
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pt-12 pb-16 sm:px-6 md:grid-cols-[1.1fr_0.9fr] md:py-16">
           <div className="grid gap-6">
-            <span className="surgir inline-flex w-fit items-center gap-2 rounded-full border border-vinho/15 bg-card/80 px-3 py-1 text-xs font-semibold text-vinho shadow-sm">
-              <HeartIcon className="size-3.5 fill-rosa text-rosa" />
-              Teste grátis por 3 dias
-            </span>
-            <h1 className="surgir surgir-atraso-1 text-4xl leading-[1.08] font-extrabold tracking-tight sm:text-5xl md:text-6xl">
-              Sua agenda cheia, <span className="texto-gradiente">sem bagunça</span> no WhatsApp.
+            <h1 className="surgir text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-5xl md:text-[3.5rem]">
+              Agenda no celular para profissionais de beleza e saúde
             </h1>
-            <p className="surgir surgir-atraso-2 max-w-xl text-lg text-muted-foreground">
-              O Vaguinha organiza horários, clientes e lembretes de quem trabalha por conta própria. E ainda deixa seus clientes marcarem sozinhos pelo seu
-              link, sem você parar o atendimento para responder.
+            <p className="surgir surgir-atraso-1 max-w-xl text-lg text-pretty text-muted-foreground">
+              Marque, remarque e bloqueie horários, guarde o histórico de cada cliente e deixe seus clientes pedirem horário pelo seu link, sem
+              parar o atendimento para responder.
             </p>
-            <div className="surgir surgir-atraso-3 flex flex-wrap items-center gap-3">
-              <Button asChild size="lg" className="brilho h-12 rounded-full px-6 text-base shadow-lg shadow-vinho/25">
+            <div className="surgir surgir-atraso-2 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button asChild size="lg" className="brilho h-12 rounded-full px-6 text-base shadow-lg shadow-vinho/25 sm:h-12">
                 <a href={CADASTRO}>
-                  Começar grátis
+                  {ACAO_PRINCIPAL}
                   <ArrowRightIcon />
                 </a>
               </Button>
-              <Button asChild size="lg" variant="outline" className="h-12 rounded-full px-6 text-base">
-                <a href={LOGIN}>Já tenho conta</a>
+              <Button asChild size="lg" variant="outline" className="h-12 rounded-full px-6 text-base sm:h-12">
+                <a href={LOGIN}>Entrar no painel</a>
               </Button>
             </div>
-            <ul className="surgir surgir-atraso-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-              {["Sem cartão para testar", "Em português, feito no Brasil", "Cancele quando quiser"].map((t) => (
-                <li key={t} className="inline-flex items-center gap-1.5">
-                  <CheckIcon className="size-4 text-vinho" />
-                  {t}
-                </li>
-              ))}
-            </ul>
+            <p className="surgir surgir-atraso-3 text-sm text-muted-foreground">
+              <strong className="font-semibold text-foreground">3 dias grátis.</strong> Depois, planos a partir de{" "}
+              <strong className="font-semibold text-foreground">{formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês</strong>,
+              por Pix ou cartão de crédito.
+            </p>
           </div>
 
           <MockCelular />
         </div>
       </section>
 
-      {/* ------------------------------------------------------- Profissões */}
-      <section className="border-y border-vinho/10 bg-card/50">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-4 py-8 sm:px-6">
-          <p className="text-sm font-medium text-muted-foreground">Feito para quem atende com hora marcada</p>
-          <ul className="flex flex-wrap justify-center gap-2">
-            {PROFISSOES.map((p, i) => (
-              <Revelar key={p} atraso={i * 50}>
-                <li className="rounded-full bg-background px-4 py-1.5 text-sm font-medium ring-1 ring-vinho/10">{p}</li>
-              </Revelar>
-            ))}
-          </ul>
-        </div>
-      </section>
-
       {/* --------------------------------------------------------- Recursos */}
-      <section id="recursos" className="scroll-mt-20">
-        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 md:py-24">
-          <Revelar className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Tudo o que o seu dia precisa. Nada que você não vai usar.</h2>
-            <p className="mt-3 text-muted-foreground">Sem planilha, sem caderninho, sem ficar rolando conversa para achar o horário combinado.</p>
-          </Revelar>
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {RECURSOS.map((r, i) => (
-              <Revelar key={r.titulo} atraso={(i % 3) * 90}>
-                <article className="cartao-vivo h-full rounded-3xl border border-vinho/10 bg-card p-6">
-                  <div className="gradiente-marca mb-4 flex size-11 items-center justify-center rounded-2xl text-white shadow-md shadow-vinho/20">
-                    <r.Icone className="size-5" />
-                  </div>
-                  <h3 className="text-lg font-bold">{r.titulo}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{r.texto}</p>
-                </article>
-              </Revelar>
-            ))}
+      <section id="recursos" className={cn("flex scroll-mt-16 items-center border-t border-vinho/10 bg-card/50", TELA)}>
+        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">O que o Vaguinha faz no seu dia</h2>
+            <p className="mt-3 text-muted-foreground">Tudo o que hoje fica espalhado entre caderninho, print e conversa de WhatsApp.</p>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Recurso titulo="Impede dois clientes no mesmo horário" texto="Dia, semana e mês como no Google Agenda, com feriados. O horário ocupado fica recusado.">
+              <FragmentoConflito />
+            </Recurso>
+            <Recurso titulo="Guarda o histórico de cada cliente" texto="WhatsApp, observações e tudo o que já foi feito: a cor, o corte, a alergia.">
+              <FragmentoHistorico />
+            </Recurso>
+            <Recurso titulo="Avisa você um dia e uma hora antes" texto="A notificação chega no celular e abre o WhatsApp do cliente com a mensagem pronta.">
+              <FragmentoLembrete />
+            </Recurso>
+            <Recurso titulo="Traz sua agenda do Google" texto="Envie o arquivo exportado do Google Agenda e os compromissos entram de uma vez.">
+              <FragmentoImportar />
+            </Recurso>
+            <Recurso titulo="Monta stories dos horários livres" texto="Dia, semana ou só o horário que vagou, com a sua logo e 16 temas para escolher.">
+              <FragmentoStory />
+            </Recurso>
+            <Recurso titulo="Abre como app no celular" texto="Adicione à tela de início, sem loja de aplicativos. Funciona no Android e no iPhone.">
+              <FragmentoApp />
+            </Recurso>
           </div>
         </div>
       </section>
 
       {/* ----------------------------------------------------- Link público */}
-      <section className="gradiente-marca text-white">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:py-20">
-          <Revelar>
-            <p className="text-sm font-semibold tracking-wide text-rosa uppercase">Seu link de agendamento</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">vaguinha.app/p/seu-nome</h2>
+      <section id="link" className={cn("gradiente-marca flex scroll-mt-16 items-center text-white", TELA)}>
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-2">
+          <div>
+            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Seu link de agendamento</h2>
+            <p className="mt-2 text-xl font-bold text-rosa">vaguinha.app/p/seu-nome</p>
             <p className="mt-4 max-w-lg text-white/85">
-              A pessoa abre o link, vê os seus serviços e só os horários realmente livres, e pede o horário com nome e WhatsApp. Você
-              recebe uma notificação e confirma com um toque. Ou deixa confirmar sozinho, se preferir.
+              O cliente abre o link, escolhe o serviço, vê só os horários livres e pede com nome e WhatsApp. Você confirma com um toque ou deixa
+              confirmar sozinho.
             </p>
-            <ul className="mt-6 grid gap-2 text-sm text-white/90">
-              {["Página com a sua logo e as suas cores", "Nunca mostra o nome de outros clientes", "Antecedência mínima e limite de pedidos por pessoa", "Funciona na bio do Instagram e no status do WhatsApp"].map((t) => (
+            <ul className="mt-6 grid gap-2.5 text-sm text-white/90">
+              {[
+                "Página com a sua logo e as suas cores",
+                "Nunca mostra o nome de outros clientes",
+                "Antecedência mínima e limite de pedidos por pessoa",
+                "Cabe na bio do Instagram e no status do WhatsApp",
+              ].map((t) => (
                 <li key={t} className="flex items-start gap-2">
                   <CheckIcon className="mt-0.5 size-4 shrink-0 text-rosa" />
                   {t}
                 </li>
               ))}
             </ul>
-          </Revelar>
-          <Revelar atraso={120} className="mx-auto w-full max-w-sm">
+          </div>
+          <div className="mx-auto w-full max-w-sm">
             <MockLinkPublico />
-          </Revelar>
+          </div>
         </div>
       </section>
 
       {/* ------------------------------------------------- Assistente de IA */}
-      <section id="assistente" className="scroll-mt-20 border-b border-vinho/10">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:py-20">
-          <Revelar className="order-2 mx-auto w-full max-w-sm md:order-1">
-            <MockAssistente />
-          </Revelar>
-          <Revelar atraso={120} className="order-1 md:order-2">
-            <p className="text-sm font-semibold tracking-wide text-vinho uppercase">Novo · plano Premium</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Uma secretária no seu bolso</h2>
-            <p className="mt-4 max-w-lg text-muted-foreground">
-              Escreva do seu jeito, entre um atendimento e outro: o assistente de IA entende, olha a sua agenda e prepara a mudança.
-              Você só confere e toca em Confirmar.
+      <section id="assistente" className={cn("flex scroll-mt-16 items-center", TELA)}>
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-2">
+          <div>
+            <h2 className="text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">Assistente de IA que mexe na sua agenda</h2>
+            <p className="mt-4 max-w-lg text-pretty text-muted-foreground">
+              No plano Premium. Escreva como escreveria para uma recepcionista: o assistente olha a agenda, prepara a mudança e só aplica depois do
+              seu Confirmar.
             </p>
             <ul className="mt-6 grid gap-2 text-sm">
               {[
-                "\"Muda a Bruna de hoje para sexta às 15h\"",
-                "\"Quais horários estão livres na quarta?\"",
-                "\"Bloqueia minha tarde de quinta, vou ao médico\"",
-                "\"Quanto eu faturei este mês?\"",
+                "“Muda a Bruna de hoje para sexta às 15h”",
+                "“Quais horários estão livres na quarta?”",
+                "“Bloqueia minha tarde de quinta, vou ao médico”",
+                "“Quanto entrou este mês?”",
               ].map((t) => (
-                <li key={t} className="flex items-start gap-2">
-                  <CheckIcon className="mt-0.5 size-4 shrink-0 text-vinho" />
+                <li key={t} className="w-fit rounded-2xl rounded-bl-md bg-muted px-3 py-2">
                   {t}
                 </li>
               ))}
             </ul>
-          </Revelar>
+          </div>
+          <div className="mx-auto w-full max-w-sm">
+            <MockAssistente />
+          </div>
         </div>
       </section>
 
       {/* ----------------------------------------------------- Como funciona */}
-      <section id="como-funciona" className="scroll-mt-20">
-        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 md:py-24">
-          <Revelar className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Pronto em três passos</h2>
-            <p className="mt-3 text-muted-foreground">Você não precisa entender de tecnologia. Se usa WhatsApp, usa o Vaguinha.</p>
-          </Revelar>
-          <ol className="mt-12 grid gap-6 md:grid-cols-3">
+      <section id="como-funciona" className={cn("flex scroll-mt-16 items-center border-y border-vinho/10 bg-card/50", TELA)}>
+        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">Do cadastro ao primeiro horário pelo link</h2>
+            <p className="mt-3 text-muted-foreground">Se você usa WhatsApp, consegue usar o Vaguinha.</p>
+          </div>
+          <ol className="mt-10 grid gap-4 md:grid-cols-3">
             {PASSOS.map((p, i) => (
-              <Revelar key={p.n} atraso={i * 110}>
-                <li className="relative rounded-3xl border border-vinho/10 bg-card p-6 pt-8">
-                  <span className="gradiente-marca absolute -top-5 left-6 flex size-10 items-center justify-center rounded-2xl text-lg font-extrabold text-white shadow-md shadow-vinho/25">
-                    {p.n}
-                  </span>
-                  <h3 className="text-lg font-bold">{p.titulo}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.texto}</p>
-                </li>
-              </Revelar>
+              <li key={p.titulo} className="rounded-3xl border border-vinho/10 bg-background p-6">
+                <span className="flex size-10 items-center justify-center rounded-2xl bg-vinho text-lg font-extrabold text-white">{i + 1}</span>
+                <h3 className="mt-4 text-lg font-bold">{p.titulo}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.texto}</p>
+              </li>
             ))}
           </ol>
+          <div className="mt-10">
+            <h3 className="text-sm font-semibold">Ramos que você escolhe no cadastro (e outros)</h3>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {PROFISSOES.map((p) => (
+                <li key={p} className="rounded-full bg-background px-4 py-1.5 text-sm font-medium ring-1 ring-vinho/10">
+                  {p}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
       {/* ----------------------------------------------------------- Planos */}
-      <section id="planos" className="scroll-mt-20 border-y border-vinho/10 bg-card/50">
-        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 md:py-24">
-          <Revelar className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Planos simples, preço de um esmalte</h2>
+      <section id="planos" className={cn("flex scroll-mt-16 items-center", TELA)}>
+        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
+              Planos a partir de {formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês
+            </h2>
             <p className="mt-3 text-muted-foreground">
-              Teste <strong className="text-foreground">grátis por 3 dias</strong> com a agenda, os clientes e os serviços. Depois, você escolhe o
-              plano que faz sentido para o seu momento.
+              O teste grátis tem a agenda, os clientes e os serviços. Depois, você escolhe o plano no painel e paga por Pix ou cartão de crédito,
+              sem fidelidade.
             </p>
-          </Revelar>
-          <div className="mt-12 grid gap-5 lg:grid-cols-3">
-            {PLANOS_SITE.map((p, i) => {
+          </div>
+          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+            {PLANOS_SITE.map((p) => {
               const plano = PLANOS[p.id];
               return (
-                <Revelar key={p.id} atraso={i * 100}>
-                  <article
-                    className={cn(
-                      "cartao-vivo relative flex h-full flex-col rounded-3xl border bg-background p-6",
-                      p.destaque ? "border-vinho shadow-xl shadow-vinho/15 ring-1 ring-vinho lg:-translate-y-2" : "border-vinho/10",
-                    )}
-                  >
-                    {p.destaque ? (
-                      <span className="gradiente-marca absolute -top-3 left-6 rounded-full px-3 py-1 text-xs font-bold text-white shadow">Mais escolhido</span>
-                    ) : null}
-                    <p className="text-sm font-semibold text-vinho">{plano.nome}</p>
-                    <p className="text-sm text-muted-foreground">{p.para}</p>
-                    <p className="mt-4 flex items-baseline gap-1">
-                      <span className="text-4xl font-extrabold tracking-tight">{formatarPreco(plano.preco).replace("/mês", "")}</span>
-                      <span className="text-sm text-muted-foreground">/mês</span>
-                    </p>
-                    <ul className="mt-6 grid gap-2.5 text-sm">
-                      {p.itens.map((t) => (
-                        <li key={t} className="flex items-start gap-2">
-                          <CheckIcon className="mt-0.5 size-4 shrink-0 text-vinho" />
-                          {t}
-                        </li>
-                      ))}
-                    </ul>
-                    <Button asChild className={cn("mt-8 h-11 rounded-full", !p.destaque && "bg-vinho/10 text-vinho shadow-none hover:bg-vinho/15")}>
-                      <a href={CADASTRO}>Começar grátis</a>
-                    </Button>
-                  </article>
-                </Revelar>
+                <article
+                  key={p.id}
+                  className={cn(
+                    "relative flex h-full flex-col rounded-3xl border bg-card p-6",
+                    p.destaque ? "border-vinho shadow-alta ring-1 ring-vinho" : "border-vinho/10",
+                  )}
+                >
+                  {p.destaque ? (
+                    <span className="absolute -top-3 left-6 rounded-full bg-vinho px-3 py-1 text-xs font-bold text-white">Mais escolhido</span>
+                  ) : null}
+                  <h3 className="text-lg font-bold text-vinho">{plano.nome}</h3>
+                  <p className="text-sm text-muted-foreground">{p.para}</p>
+                  <p className="mt-4 flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold tracking-tight tabular-nums">{formatarPreco(plano.preco).replace("/mês", "")}</span>
+                    <span className="text-sm text-muted-foreground">por mês</span>
+                  </p>
+                  <ul className="mt-6 grid gap-2.5 text-sm">
+                    {p.itens.map((t) => (
+                      <li key={t} className="flex items-start gap-2">
+                        <CheckIcon className="mt-0.5 size-4 shrink-0 text-vinho" />
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
               );
             })}
           </div>
-          <p className="mt-6 text-center text-xs text-muted-foreground">Valores por mês, sem fidelidade. Cancele quando quiser.</p>
+          <p className="mt-8 text-sm text-muted-foreground">
+            O plano é escolhido depois do teste, dentro do painel, em <strong className="font-semibold text-foreground">Assinatura</strong>. Sem
+            fidelidade: cancele quando quiser.
+          </p>
         </div>
       </section>
 
       {/* ---------------------------------------------------------- Dúvidas */}
-      <section id="duvidas" className="scroll-mt-20">
-        <div className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 md:py-24">
-          <Revelar className="text-center">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Dúvidas comuns</h2>
-          </Revelar>
-          <div className="mt-10 grid gap-3">
-            {DUVIDAS.map((d, i) => (
-              <Revelar key={d.p} atraso={i * 60}>
-                <details className="group rounded-2xl border border-vinho/10 bg-card px-5 py-4 open:shadow-md open:shadow-vinho/10">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
-                    {d.p}
-                    <ChevronDownIcon className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    {d.r}
-                    {d.p.startsWith("Meus dados") ? (
-                      <>
-                        {" "}
-                        <Link href="/privacidade" className="text-vinho underline underline-offset-4">
-                          Ler a política
-                        </Link>
-                        .
-                      </>
-                    ) : null}
-                  </p>
-                </details>
-              </Revelar>
+      <section id="duvidas" className="scroll-mt-16 border-t border-vinho/10 bg-card/50">
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-[0.8fr_1.2fr] md:py-24">
+          <div>
+            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Perguntas frequentes</h2>
+            <p className="mt-3 text-muted-foreground">
+              Não achou a sua?{" "}
+              <a href={`mailto:${EMAIL_CONTATO}`} className="font-semibold text-vinho underline underline-offset-4">
+                Escreva para {EMAIL_CONTATO}
+              </a>
+              .
+            </p>
+          </div>
+          <div className="grid content-start gap-3">
+            {DUVIDAS.map((d) => (
+              <details key={d.p} className="group rounded-2xl border border-vinho/10 bg-background px-5 open:shadow-media">
+                <summary className="flex min-h-toque cursor-pointer list-none items-center justify-between gap-4 py-3 font-semibold [&::-webkit-details-marker]:hidden">
+                  {d.p}
+                  <ChevronDownIcon className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                </summary>
+                <p className="pb-4 text-sm leading-relaxed text-muted-foreground">
+                  {d.r}
+                  {d.p.startsWith("Meus dados") ? (
+                    <>
+                      {" "}
+                      <Link href="/privacidade" className="text-vinho underline underline-offset-4">
+                        Ler a Política de Privacidade
+                      </Link>
+                      .
+                    </>
+                  ) : null}
+                </p>
+              </details>
             ))}
           </div>
         </div>
       </section>
 
-      {/* -------------------------------------------------------- CTA final */}
-      <section className="fundo-aurora border-t border-vinho/10">
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-4 py-20 text-center sm:px-6">
-          <Revelar>
-            <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-card shadow-md ring-1 ring-vinho/10">
-              <ShieldCheckIcon className="size-7 text-vinho" />
-            </div>
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Comece hoje. Sua agenda agradece amanhã.</h2>
-            <p className="mt-3 text-muted-foreground">Crie a conta, cadastre seus serviços e compartilhe o link. Em dez minutos está no ar.</p>
-          </Revelar>
-          <Revelar atraso={120} className="flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg" className="h-12 rounded-full px-7 text-base shadow-lg shadow-vinho/25">
+      {/* -------------------------------------------------------- Fim */}
+      <section className="border-t border-vinho/10">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-6 px-4 py-20 sm:px-6 md:flex-row md:items-end md:justify-between md:py-28">
+          <div className="max-w-2xl">
+            <h2 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">Teste o Vaguinha grátis por 3 dias</h2>
+            <p className="mt-3 text-lg text-muted-foreground">
+              Sem cartão para começar. Depois do teste, planos a partir de {formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês.
+            </p>
+          </div>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <Button asChild size="lg" className="h-12 rounded-full px-7 text-base shadow-lg shadow-vinho/25 sm:h-12">
               <a href={CADASTRO}>
-                Criar minha conta grátis
+                {ACAO_PRINCIPAL}
                 <ArrowRightIcon />
               </a>
             </Button>
-            <Button asChild size="lg" variant="outline" className="h-12 rounded-full px-6 text-base">
+            <Button asChild size="lg" variant="outline" className="h-12 rounded-full px-6 text-base sm:h-12">
               <a href={`mailto:${EMAIL_CONTATO}`}>
-                <MessageCircleIcon />
-                Falar com a gente
+                <MailIcon />
+                Enviar um e-mail
               </a>
             </Button>
-          </Revelar>
+          </div>
         </div>
       </section>
     </>
@@ -408,8 +379,116 @@ export default function PaginaSite() {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Ilustrações feitas em CSS (sem imagens): celular com a tela "Hoje" e   */
-/* o link público. Dados fictícios.                                       */
+/* Cartão de recurso: um pedaço da tela real em cima, título e uma frase.  */
+/* ---------------------------------------------------------------------- */
+
+function Recurso({ titulo, texto, children }: { titulo: string; texto: string; children: React.ReactNode }) {
+  return (
+    <article className="cartao-vivo flex h-full flex-col rounded-3xl border border-vinho/10 bg-background p-4">
+      <div aria-hidden className="flex h-32 items-center justify-center overflow-hidden rounded-2xl bg-muted/60 px-4">
+        {children}
+      </div>
+      <h3 className="mt-4 px-2 text-lg leading-snug font-bold">{titulo}</h3>
+      <p className="mt-1.5 px-2 pb-2 text-sm leading-relaxed text-muted-foreground">{texto}</p>
+    </article>
+  );
+}
+
+function FragmentoConflito() {
+  return (
+    <div className="grid w-full max-w-60 gap-1.5 text-mini">
+      <div className="flex items-center gap-2 rounded-lg bg-primary px-2.5 py-1.5 font-semibold text-primary-foreground">
+        <span className="tabular-nums">14:00</span> Carol · Manicure
+      </div>
+      <div className="flex items-center justify-between gap-2 rounded-lg border border-dashed border-destructive/60 bg-background px-2.5 py-1.5">
+        <span className="font-semibold">
+          <span className="tabular-nums">14:00</span> Bia
+        </span>
+        <span className="font-semibold text-destructive">Horário ocupado</span>
+      </div>
+      <div className="flex items-center gap-2 rounded-lg bg-background px-2.5 py-1.5 text-muted-foreground">
+        <span className="tabular-nums">15:00</span> Livre
+      </div>
+    </div>
+  );
+}
+
+function FragmentoHistorico() {
+  return (
+    <div className="w-full max-w-60 rounded-xl bg-background p-2.5 text-mini shadow-suave">
+      <p className="text-xs font-bold">Thaís Moreira</p>
+      <p className="mt-1 rounded-md bg-aviso px-1.5 py-0.5 font-semibold text-aviso-texto">Alergia a acetona</p>
+      <ul className="mt-1.5 grid gap-0.5 text-muted-foreground">
+        <li>12/10 · Alongamento em gel, nude 02</li>
+        <li>28/09 · Manutenção</li>
+      </ul>
+    </div>
+  );
+}
+
+function FragmentoLembrete() {
+  return (
+    <div className="grid w-full max-w-60 gap-1.5">
+      <div className="flex items-center gap-2 rounded-xl bg-background p-2 shadow-suave">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-vinho text-white">
+          <BellRingIcon className="size-3.5" />
+        </span>
+        <div className="min-w-0 text-mini">
+          <p className="truncate font-bold">Amanhã às 9:00 · Juliana</p>
+          <p className="truncate text-muted-foreground">Toque para enviar o lembrete</p>
+        </div>
+      </div>
+      <span className="flex items-center justify-center gap-1.5 rounded-lg bg-whatsapp py-1.5 text-mini font-bold text-white">
+        <IconeWhatsApp className="size-3.5" />
+        Abrir no WhatsApp
+      </span>
+    </div>
+  );
+}
+
+function FragmentoImportar() {
+  return (
+    <div className="flex w-full max-w-60 items-center gap-2 text-mini">
+      <span className="flex flex-col items-center gap-1 rounded-xl bg-background px-3 py-2 shadow-suave">
+        <FileTextIcon className="size-5 text-muted-foreground" />
+        <span className="font-semibold">agenda.ics</span>
+      </span>
+      <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
+      <span className="flex-1 rounded-xl bg-sucesso px-2.5 py-2 font-semibold text-sucesso-texto">
+        <CheckIcon className="mb-0.5 inline size-3.5" /> Compromissos importados para a agenda
+      </span>
+    </div>
+  );
+}
+
+function FragmentoStory() {
+  return (
+    <div className="flex h-28 w-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-lg bg-vinho p-1.5 text-center text-white shadow-suave">
+      <span className="text-mini leading-tight font-bold">Vagou um horário</span>
+      <span className="rounded-md bg-white px-1.5 py-0.5 text-xs font-extrabold text-vinho tabular-nums">16:30</span>
+      <span className="text-mini text-white/85">sexta</span>
+    </div>
+  );
+}
+
+function FragmentoApp() {
+  return (
+    <div className="grid grid-cols-4 gap-3">
+      {[0, 1, 2].map((i) => (
+        <span key={i} className="size-11 rounded-xl bg-background/80" />
+      ))}
+      <span className="flex flex-col items-center gap-1">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icons/icon-192.png" alt="" width={44} height={44} className="size-11 rounded-xl shadow-suave" />
+        <span className="text-mini font-semibold">Vaguinha</span>
+      </span>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* Telas feitas em HTML (sem imagens): celular com a tela "Hoje", o link   */
+/* público e o assistente. Dados fictícios.                                */
 /* ---------------------------------------------------------------------- */
 
 function MockCelular() {
@@ -419,37 +498,36 @@ function MockCelular() {
     { hora: "14:00", nome: "Renata", servico: "Alongamento em gel", cor: "bg-vinho/70" },
   ];
   return (
-    <div className="surgir surgir-atraso-2 relative mx-auto w-full max-w-[300px] md:justify-self-end">
-      {/* cartão flutuante: pedido pelo link */}
-      <div className="flutuar absolute -top-6 -left-6 z-10 hidden w-56 rounded-2xl bg-card p-3 shadow-xl ring-1 ring-vinho/10 sm:block" style={{ animationDelay: "1s" }}>
+    <div aria-hidden className="surgir surgir-atraso-2 relative mx-auto w-full max-w-[300px] sm:my-16 md:justify-self-end">
+      {/* cartões fora da tela do celular (em cima e embaixo), para não cobrir nada dela */}
+      <div className="surgir surgir-atraso-4 absolute -top-16 -left-12 z-10 hidden w-56 rounded-2xl bg-card p-3 shadow-alta ring-1 ring-vinho/10 sm:block">
         <div className="flex items-center gap-2">
-          <span className="pulsar-suave flex size-8 shrink-0 items-center justify-center rounded-full bg-rosa/30 text-vinho">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-rosa/30 text-vinho">
             <Link2Icon className="size-4" />
           </span>
           <div className="min-w-0">
             <p className="truncate text-xs font-semibold">Novo pedido pelo link</p>
-            <p className="truncate text-[11px] text-muted-foreground">Beatriz · quinta, 15:30</p>
+            <p className="truncate text-mini text-muted-foreground">Beatriz · quinta, 15:30</p>
           </div>
         </div>
       </div>
-      {/* cartão flutuante: lembrete */}
-      <div className="flutuar absolute -right-4 bottom-16 z-10 hidden w-52 rounded-2xl bg-card p-3 shadow-xl ring-1 ring-vinho/10 sm:block" style={{ animationDelay: "2.2s" }}>
+      <div className="surgir surgir-atraso-4 absolute -right-10 -bottom-16 z-10 hidden w-52 rounded-2xl bg-card p-3 shadow-alta ring-1 ring-vinho/10 sm:block">
         <div className="flex items-center gap-2">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sucesso text-sucesso-texto">
             <BellRingIcon className="size-4" />
           </span>
           <div className="min-w-0">
             <p className="truncate text-xs font-semibold">Amanhã: Juliana às 09:00</p>
-            <p className="truncate text-[11px] text-muted-foreground">Toque para enviar o lembrete</p>
+            <p className="truncate text-mini text-muted-foreground">Toque para enviar o lembrete</p>
           </div>
         </div>
       </div>
 
       {/* o celular */}
       <div className="celular-moldura overflow-hidden rounded-[2.4rem] bg-background">
-        <div className="flex items-center justify-between px-5 pt-4 pb-2 text-[11px] text-muted-foreground">
+        <div className="flex items-center justify-between px-5 pt-4 pb-2 text-mini text-muted-foreground">
           <span>9:41</span>
-          <span className="h-4 w-16 rounded-full bg-[#1f1f23]" aria-hidden="true" />
+          <span className="h-4 w-16 rounded-full bg-[#1f1f23]" />
           <span>100%</span>
         </div>
         <div className="flex items-center gap-2 px-4 pb-3">
@@ -459,10 +537,10 @@ function MockCelular() {
             <p className="-mt-0.5 text-sm font-bold">Ana · Studio Nails</p>
           </div>
         </div>
-        <div className="mx-4 rounded-2xl bg-card p-3 shadow-sm ring-1 ring-vinho/10">
+        <div className="mx-4 rounded-2xl bg-card p-3 shadow-suave ring-1 ring-vinho/10">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold">Hoje</p>
-            <span className="rounded-full bg-vinho/10 px-2 py-0.5 text-[10px] font-bold text-vinho">3 atendimentos</span>
+            <span className="rounded-full bg-vinho/10 px-2 py-0.5 text-mini font-bold text-vinho">3 atendimentos</span>
           </div>
           <ul className="mt-2 grid gap-1.5">
             {atendimentos.map((a) => (
@@ -471,7 +549,7 @@ function MockCelular() {
                 <span className="w-10 text-xs font-bold tabular-nums">{a.hora}</span>
                 <div className="min-w-0">
                   <p className="truncate text-xs font-semibold">{a.nome}</p>
-                  <p className="truncate text-[10px] text-muted-foreground">{a.servico}</p>
+                  <p className="truncate text-mini text-muted-foreground">{a.servico}</p>
                 </div>
               </li>
             ))}
@@ -479,17 +557,17 @@ function MockCelular() {
         </div>
         <div className="mx-4 mt-3 grid grid-cols-2 gap-2">
           <div className="rounded-2xl bg-card p-3 ring-1 ring-vinho/10">
-            <p className="text-[10px] text-muted-foreground">Esta semana</p>
+            <p className="text-mini text-muted-foreground">Esta semana</p>
             <p className="text-lg font-extrabold">14</p>
-            <p className="text-[10px] text-muted-foreground">horários marcados</p>
+            <p className="text-mini text-muted-foreground">horários marcados</p>
           </div>
           <div className="gradiente-marca rounded-2xl p-3 text-white">
-            <p className="text-[10px] text-white/80">Livres hoje</p>
+            <p className="text-mini text-white/80">Livres hoje</p>
             <p className="text-lg font-extrabold">4</p>
-            <p className="text-[10px] text-white/80">postar nos stories</p>
+            <p className="text-mini text-white/80">postar nos stories</p>
           </div>
         </div>
-        <div className="mt-4 flex items-center justify-around border-t border-vinho/10 px-2 py-3 text-[10px] text-muted-foreground">
+        <div className="mt-4 flex items-center justify-around border-t border-vinho/10 px-2 py-3 text-mini text-muted-foreground">
           {[
             ["Hoje", true],
             ["Agenda", false],
@@ -508,7 +586,7 @@ function MockCelular() {
 
 function MockAssistente() {
   return (
-    <div className="grid gap-2.5 rounded-3xl border border-vinho/10 bg-card p-4 shadow-xl shadow-vinho/10">
+    <div aria-hidden className="grid gap-2.5 rounded-3xl border border-vinho/10 bg-card p-4 shadow-alta">
       <div className="flex items-center gap-2 border-b border-vinho/10 pb-2.5">
         <span className="gradiente-marca flex size-8 items-center justify-center rounded-xl text-white">
           <SparklesIcon className="size-4" />
@@ -519,7 +597,7 @@ function MockAssistente() {
       <div className="max-w-[90%] rounded-2xl rounded-bl-md bg-muted px-3 py-2 text-sm">
         A sexta às 15:00 está livre. Preparei a mudança:
         <div className="mt-2 rounded-xl border bg-background p-2.5">
-          <p className="text-xs font-semibold">Remarcar Bruna (Manicure) de hoje às 14:00 para sexta, 14/11 às 15:00</p>
+          <p className="text-xs font-semibold">Remarcar Bruna (Manicure) de hoje às 14:00 para sexta às 15:00</p>
           <div className="mt-2 flex gap-2">
             <span className="rounded-full bg-vinho px-3 py-1 text-xs font-bold text-white">Confirmar</span>
             <span className="rounded-full px-3 py-1 text-xs text-muted-foreground">Não</span>
@@ -533,15 +611,15 @@ function MockAssistente() {
 function MockLinkPublico() {
   const horarios = ["09:00", "09:30", "11:00", "14:00", "15:30", "16:00"];
   return (
-    <div className="rounded-3xl bg-background p-4 text-foreground shadow-2xl shadow-black/30 ring-1 ring-white/20">
+    <div aria-hidden className="rounded-3xl bg-background p-4 text-foreground shadow-2xl shadow-black/30 ring-1 ring-white/20">
       <div className="flex items-center gap-3">
         <span className="flex size-11 items-center justify-center rounded-full bg-vinho text-base font-extrabold text-white">A</span>
         <div>
           <p className="text-sm font-bold">Studio Ana Nails</p>
-          <p className="text-xs text-muted-foreground">@studioananails</p>
+          <p className="text-xs text-muted-foreground">Manicure e pedicure</p>
         </div>
       </div>
-      <div className="mt-4 flex gap-1 text-[10px] font-semibold text-muted-foreground">
+      <div className="mt-4 flex gap-1 text-mini font-semibold text-muted-foreground">
         <span className="rounded-full bg-vinho px-2 py-0.5 text-white">1 Serviço</span>
         <span className="rounded-full bg-vinho/15 px-2 py-0.5 text-vinho">2 Dia e hora</span>
         <span className="rounded-full px-2 py-0.5">3 Seus dados</span>
@@ -549,13 +627,16 @@ function MockLinkPublico() {
       <p className="mt-3 text-xs font-semibold">Quinta, 13 de novembro</p>
       <div className="mt-2 grid grid-cols-3 gap-1.5">
         {horarios.map((h, i) => (
-          <span key={h} className={cn("rounded-xl border py-1.5 text-center text-xs font-semibold tabular-nums", i === 4 ? "border-vinho bg-vinho text-white" : "border-vinho/15 bg-card")}>
+          <span
+            key={h}
+            className={cn("rounded-xl border py-1.5 text-center text-xs font-semibold tabular-nums", i === 4 ? "border-vinho bg-vinho text-white" : "border-vinho/15 bg-card")}
+          >
             {h}
           </span>
         ))}
       </div>
       <div className="mt-3 rounded-2xl bg-card p-3 ring-1 ring-vinho/10">
-        <p className="text-[11px] text-muted-foreground">Manicure · 45 min · R$ 55,00</p>
+        <p className="text-mini text-muted-foreground">Manicure · 45 min · R$ 55,00</p>
         <p className="text-sm font-bold">Quinta às 15:30</p>
       </div>
       <div className="mt-3 flex h-10 items-center justify-center rounded-full bg-vinho text-sm font-bold text-white">Pedir este horário</div>

@@ -17,6 +17,8 @@ function esc(texto: string) {
 type Partes = {
   para: string;
   assunto: string;
+  /** Linha que aparece ao lado do assunto na caixa de entrada (não aparece no corpo). */
+  previa?: string;
   titulo: string;
   saudacao?: string;
   paragrafos: string[];
@@ -32,7 +34,12 @@ function montar(p: Partes): Email {
     : "";
   const obsHtml = p.observacao ? `<p style="margin:18px 0 0;font-size:13px;line-height:1.5;color:#6b6b73">${esc(p.observacao)}</p>` : "";
 
+  const previaHtml = p.previa
+    ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${esc(p.previa)}${"&#8204;&nbsp;".repeat(40)}</div>`
+    : "";
+
   const html = `<!doctype html><html lang="pt-BR"><body style="margin:0;background:${CREME};font-family:Nunito,Segoe UI,Arial,sans-serif">
+${previaHtml}
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${CREME};padding:28px 12px">
 <tr><td align="center">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:20px;overflow:hidden">
@@ -80,13 +87,14 @@ export function emailCadastroRecebido(para: string, nome: string): Email {
   return montar({
     para,
     assunto: `Recebemos seu cadastro no ${NOME_APP}`,
-    titulo: "Cadastro recebido!",
+    previa: "Falta só a liberação da conta. Enquanto isso, separe seus serviços e valores.",
+    titulo: "Cadastro recebido",
     saudacao: `Oi, ${primeiroNome(nome)}!`,
     paragrafos: [
-      "Sua conta foi criada e está em análise. Fazemos uma conferência rápida antes de liberar o acesso, para manter o Vaguinha só com profissionais de verdade.",
-      "Assim que a conta for aprovada, você recebe outro e-mail com o link para entrar e começa o seu teste grátis de 3 dias. Normalmente a aprovação leva poucas horas.",
+      "Uma pessoa confere cada conta antes de liberar o acesso, para o Vaguinha ter só profissionais de verdade. Quando a sua estiver pronta, chega outro e-mail com o link para entrar, e os 3 dias grátis começam nesse dia.",
+      "Para ganhar tempo, separe a lista dos seus serviços com valor e duração, e a sua logo. É a primeira coisa que o painel vai pedir.",
     ],
-    botao: { texto: "Ver situação da conta", url: `${URL_APP}/login` },
+    botao: { texto: "Ver a situação da conta", url: `${URL_APP}/login` },
   });
 }
 
@@ -109,21 +117,22 @@ export function emailNovoCadastroAdmin(para: string, dados: { nome: string; emai
 export function emailContaAprovada(para: string, nome: string, reativacao = false, fimDoTeste: string | null = null): Email {
   return montar({
     para,
-    assunto: reativacao ? `Sua conta no ${NOME_APP} foi reativada` : `Sua conta no ${NOME_APP} foi aprovada!`,
-    titulo: reativacao ? "Conta reativada" : "Tudo certo, sua conta foi aprovada!",
+    assunto: reativacao ? `Sua conta no ${NOME_APP} foi reativada` : `Sua conta no ${NOME_APP} está liberada`,
+    previa: reativacao
+      ? "Sua agenda, clientes e serviços continuam onde estavam."
+      : fimDoTeste
+        ? `Teste grátis até ${formatarDataISO(fimDoTeste)}. Primeiro passo: cadastrar seus serviços.`
+        : "Primeiro passo: cadastrar seus serviços.",
+    titulo: reativacao ? "Conta reativada" : "Sua conta está liberada",
     saudacao: `Oi, ${primeiroNome(nome)}!`,
     paragrafos: reativacao
       ? ["Seu acesso ao Vaguinha está liberado de novo. Sua agenda, clientes e serviços continuam onde estavam."]
       : [
-          "Seu acesso está liberado. Entre no painel, complete seu perfil (logo, cores e horários) e cadastre seus serviços: em poucos minutos sua agenda está pronta.",
-          ...(fimDoTeste
-            ? [
-                `Seu teste grátis vai até ${formatarDataISO(fimDoTeste)}, com os recursos do plano Essencial: agenda, clientes e serviços. Para continuar depois disso, ou para liberar o link de agendamento, os lembretes e os stories, é só assinar um plano pela página Assinatura.`,
-              ]
-            : []),
-          "Dica: pelo celular, use “Adicionar à tela de início” para o Vaguinha virar um app.",
+          ...(fimDoTeste ? [`Seu teste grátis vai até ${formatarDataISO(fimDoTeste)}, com a agenda, os clientes e os serviços.`] : []),
+          "O primeiro passo é cadastrar seus serviços com valor e duração. Com isso, a agenda já sabe quanto tempo reservar em cada horário e o seu link mostra os preços certos.",
+          "No celular, abra o painel, toque em Compartilhar (iPhone) ou no menu ⋮ (Android) e escolha Adicionar à tela de início. O Vaguinha vira um app e passa a avisar dos horários.",
         ],
-    botao: { texto: "Acessar o painel", url: `${URL_APP}/login` },
+    botao: reativacao ? { texto: "Abrir o painel", url: `${URL_APP}/login` } : { texto: "Cadastrar meus serviços", url: `${URL_APP}/servicos` },
   });
 }
 
@@ -164,11 +173,13 @@ export function emailVencimentoProximo(para: string, nome: string, plano: Plano,
     return montar({
       para,
       assunto: `Seu teste grátis do ${NOME_APP} termina ${quando}`,
+      previa: `Para continuar, planos a partir de ${formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês. Nada é apagado.`,
       titulo: `Seu teste grátis termina ${quando}`,
       saudacao: `Oi, ${primeiroNome(nome)}!`,
       paragrafos: [
-        `O teste vale até ${formatarDataISO(ativaAte)}. Depois disso a agenda fica em espera até você assinar um plano. Nada é apagado: clientes, serviços e horários continuam lá.`,
-        `Os planos começam em ${formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês, com pagamento por Pix ou cartão de crédito e sem fidelidade. No Profissional você ganha o link de agendamento e os lembretes; no Premium, o assistente de IA e os stories prontos para o Instagram.`,
+        `O teste vale até ${formatarDataISO(ativaAte)}. Depois disso a agenda fica em espera até você escolher um plano. Clientes, serviços e horários continuam guardados.`,
+        `Os planos começam em ${formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês, por Pix ou cartão de crédito, sem fidelidade.`,
+        `Essencial (${formatarPreco(PLANOS.essencial.preco)}): agenda, clientes e serviços. Profissional (${formatarPreco(PLANOS.profissional.preco)}): mais o link de agendamento e os lembretes. Premium (${formatarPreco(PLANOS.premium.preco)}): mais o assistente de IA, os stories e o relatório do mês.`,
       ],
       botao: { texto: "Escolher meu plano", url: `${URL_APP}/assinatura` },
     });

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { cadastrar } from "@/features/auth/actions";
 import { Campo } from "@/components/formulario/Campo";
 import { BotaoEnviar } from "@/components/formulario/BotaoEnviar";
@@ -9,15 +10,24 @@ import { Aviso } from "@/components/formulario/Aviso";
 import { ESTADO_INICIAL } from "@/components/formulario/tipos";
 import { SeletorRamo } from "@/components/formulario/SeletorRamo";
 import { EscolhaTratamento } from "@/components/formulario/EscolhaTratamento";
+import { sugerirEmail } from "@/features/auth/sugerir-email";
 
+/*
+ * Cadastro (etapa 5): o fácil primeiro (nome, e-mail, senha), depois o que personaliza o painel.
+ * Sem "confirmar senha": o olho mostra o que foi digitado. E-mail com erro comum de digitação
+ * ("gmial.com") ganha uma sugestão de um toque.
+ */
 export function FormCadastro() {
   const [estado, acao] = useActionState(cadastrar, ESTADO_INICIAL);
+  const [verSenha, setVerSenha] = useState(false);
+  const [email, setEmail] = useState(estado.valores?.email ?? "");
+  const [sugestao, setSugestao] = useState<string | null>(null);
 
   if (estado.ok) {
     return (
       <div className="grid gap-4">
         <Aviso tipo="sucesso">{estado.mensagem}</Aviso>
-        <Link href="/login" className="text-center text-sm font-medium underline-offset-4 hover:underline">
+        <Link href="/login" className="inline-flex min-h-toque items-center justify-center text-sm font-medium underline-offset-4 hover:underline">
           Ir para o login
         </Link>
       </div>
@@ -37,61 +47,90 @@ export function FormCadastro() {
         erros={estado.erros?.nome}
         required
       />
-      <EscolhaTratamento
-        inicial={estado.valores?.tratamento as "ela" | "ele" | "neutro" | undefined}
-        erro={estado.erros?.tratamento?.[0]}
-      />
-      <SeletorRamo
-        ramoInicial={estado.valores?.ramo}
-        outroInicial={estado.valores?.ramo_outro}
-        erro={estado.erros?.ramo?.[0]}
-      />
-      <Campo
-        rotulo="WhatsApp (opcional)"
-        nome="telefone"
-        type="tel"
-        autoComplete="tel"
-        inputMode="tel"
-        placeholder="(11) 99999-9999"
-        defaultValue={estado.valores?.telefone}
-        erros={estado.erros?.telefone}
-      />
-      <Campo
-        rotulo="E-mail"
-        nome="email"
-        type="email"
-        autoComplete="email"
-        inputMode="email"
-        placeholder="voce@exemplo.com"
-        defaultValue={estado.valores?.email}
-        erros={estado.erros?.email}
-        required
-      />
-      <Campo
-        rotulo="Senha"
-        nome="senha"
-        type="password"
-        autoComplete="new-password"
-        dica="Pelo menos 6 caracteres"
-        erros={estado.erros?.senha}
-        required
-      />
-      <Campo
-        rotulo="Confirmar senha"
-        nome="confirmarSenha"
-        type="password"
-        autoComplete="new-password"
-        erros={estado.erros?.confirmarSenha}
-        required
-      />
+      <div className="grid gap-1.5">
+        <Campo
+          rotulo="E-mail"
+          nome="email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          placeholder="voce@exemplo.com"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setSugestao(null);
+          }}
+          onBlur={() => setSugestao(sugerirEmail(email))}
+          erros={estado.erros?.email}
+          required
+        />
+        {sugestao ? (
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            Você quis dizer{" "}
+            <button
+              type="button"
+              className="inline-flex min-h-toque items-center font-semibold text-primary underline underline-offset-4"
+              onClick={() => {
+                setEmail(sugestao);
+                setSugestao(null);
+              }}
+            >
+              {sugestao}
+            </button>
+            ?
+          </p>
+        ) : null}
+      </div>
+      <div className="relative">
+        <Campo
+          rotulo="Senha"
+          nome="senha"
+          type={verSenha ? "text" : "password"}
+          autoComplete="new-password"
+          dica="Pelo menos 6 caracteres"
+          erros={estado.erros?.senha}
+          className="pr-12"
+          required
+        />
+        <button
+          type="button"
+          onClick={() => setVerSenha((v) => !v)}
+          aria-label={verSenha ? "Esconder senha" : "Mostrar senha"}
+          aria-pressed={verSenha}
+          className="absolute top-[26px] right-0 flex size-toque items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:size-toque"
+        >
+          {verSenha ? <EyeOffIcon className="size-5" /> : <EyeIcon className="size-5" />}
+        </button>
+      </div>
+
+      <fieldset className="mt-1 grid gap-4 border-t pt-4">
+        <legend className="sr-only">Sobre o seu trabalho</legend>
+        <p className="text-sm text-muted-foreground">Para o painel já abrir com as palavras do seu ramo:</p>
+        <SeletorRamo ramoInicial={estado.valores?.ramo} outroInicial={estado.valores?.ramo_outro} erro={estado.erros?.ramo?.[0]} />
+        <EscolhaTratamento
+          inicial={estado.valores?.tratamento as "ela" | "ele" | "neutro" | undefined}
+          erro={estado.erros?.tratamento?.[0]}
+        />
+        <Campo
+          rotulo="WhatsApp (opcional)"
+          nome="telefone"
+          type="tel"
+          autoComplete="tel"
+          inputMode="tel"
+          placeholder="(11) 99999-9999"
+          dica="Só para falarmos com você sobre a conta."
+          defaultValue={estado.valores?.telefone}
+          erros={estado.erros?.telefone}
+        />
+      </fieldset>
 
       <div className="grid gap-1.5">
-        <label className="flex items-start gap-2.5 text-sm leading-snug">
+        <label className="flex min-h-toque items-start gap-2.5 text-sm leading-snug">
           <input
             type="checkbox"
             name="aceite"
             defaultChecked={estado.valores?.aceite === "on"}
-            className="mt-0.5 size-4 shrink-0 accent-primary"
+            className="mt-0.5 size-5 shrink-0 accent-primary"
             aria-invalid={estado.erros?.aceite ? true : undefined}
           />
           <span>
@@ -110,12 +149,12 @@ export function FormCadastro() {
       </div>
 
       <BotaoEnviar textoCarregando="Criando conta..." brilho>
-        Criar conta
+        Criar minha conta
       </BotaoEnviar>
 
       <p className="text-center text-sm text-muted-foreground">
         Já tem conta?{" "}
-        <Link href="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
+        <Link href="/login" className="inline-flex min-h-toque items-center px-1 font-semibold text-foreground underline-offset-4 hover:underline">
           Entrar
         </Link>
       </p>
