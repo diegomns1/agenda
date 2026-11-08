@@ -17,7 +17,8 @@ gravar() {
   local nome="$1" valor="$2" tmp
   tmp=$(mktemp)
   grep -vE "^$nome=" "$ARQ" > "$tmp" || true
-  printf '%s=%s\n' "$nome" "$valor" >> "$tmp"
+  # o Next expande $ nos arquivos .env (a chave do Asaas começa com $aact_): grava como \$
+  printf '%s=%s\n' "$nome" "${valor//\$/\\\$}" >> "$tmp"
   cat "$tmp" > "$ARQ"
   rm -f "$tmp"
 }
