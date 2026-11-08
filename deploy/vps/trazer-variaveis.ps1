@@ -19,7 +19,8 @@ function Ler-Env($arquivo) {
         $v = $Matches[2].Trim()
         if ($v.Length -ge 2 -and $v.StartsWith('"') -and $v.EndsWith('"')) { $v = $v.Substring(1, $v.Length - 2) }
         $v = $v -replace '\\n', "`n"
-        if ($v -ne "") { $h[$Matches[1]] = $v }
+        # a Vercel entrega "[SENSITIVE]" no lugar das variáveis secretas: conta como vazio
+        if ($v -ne "" -and $v -notmatch '^\[[A-Z_]+\]$') { $h[$Matches[1]] = $v }
       }
     }
   }
@@ -42,9 +43,15 @@ function Pedir-Segredo($nome, $dica) {
 
 try {
   Write-Host ""
-  Write-Host "PASSO 1 de 3: login na Vercel. Vai abrir o navegador: confira e clique em Autorizar / Confirm." -ForegroundColor Yellow
-  cmd /c "npx --yes vercel@latest login"
-  if ($LASTEXITCODE -ne 0) { throw "Login na Vercel não terminou." }
+  Write-Host "PASSO 1 de 3: login na Vercel." -ForegroundColor Yellow
+  cmd /c "npx --yes vercel@latest whoami >nul 2>&1"
+  if ($LASTEXITCODE -eq 0) {
+    Write-Host "   Já estava logado."
+  } else {
+    Write-Host "   Vai abrir o navegador: confira e clique em Autorizar / Confirm."
+    cmd /c "npx --yes vercel@latest login"
+    if ($LASTEXITCODE -ne 0) { throw "Login na Vercel não terminou." }
+  }
 
   Write-Host ""
   Write-Host "PASSO 2 de 3: baixando as variáveis do projeto agenda..." -ForegroundColor Yellow
@@ -75,8 +82,39 @@ try {
     ASAAS_API_KEY                = Primeiro $v @("ASAAS_API_KEY")
     ASAAS_WEBHOOK_TOKEN          = Primeiro $v @("ASAAS_WEBHOOK_TOKEN")
   }
+  # o que não é segredo já vai preenchido
+  if (-not $final.NEXT_PUBLIC_SUPABASE_URL) { $final.NEXT_PUBLIC_SUPABASE_URL = "https://bdiefcuoomhtspmktksz.supabase.co" }
   if (-not $final.EMAIL_REMETENTE) { $final.EMAIL_REMETENTE = "Vaguinha <contato@vaguinha.app>" }
   if (-not $final.ASAAS_AMBIENTE) { $final.ASAAS_AMBIENTE = "producao" }
+  if (-not $final.EMAIL_ADMIN) {
+    Write-Host ""
+    $e = Read-Host "Seu e-mail para receber o aviso de cadastro novo (Enter = diegomns@live.com)"
+    $final.EMAIL_ADMIN = if ($e.Trim()) { $e.Trim() } else { "diegomns@live.com" }
+  }
+
+  # chaves do Supabase: a Vercel não entrega; pega direto do Supabase (login pelo navegador)
+  if (-not $final.NEXT_PUBLIC_SUPABASE_ANON_KEY -or -not $final.SUPABASE_SERVICE_ROLE_KEY) {
+    Write-Host ""
+    Write-Host "Chaves do Supabase: vou pegar direto do Supabase. Se abrir o navegador, clique em Autorizar." -ForegroundColor Yellow
+    $env:SUPABASE_TELEMETRY_DISABLED = "1"
+    cmd /c "npx --yes supabase@latest projects list >nul 2>&1"
+    if ($LASTEXITCODE -ne 0) { cmd /c "npx --yes supabase@latest login" }
+    $arqSb = Join-Path $tmp "sb.json"
+    cmd /c "npx --yes supabase@latest projects api-keys --project-ref bdiefcuoomhtspmktksz -o json > `"$arqSb`" 2>nul"
+    try {
+      $chaves = Get-Content -Raw $arqSb | ConvertFrom-Json
+      $ok = { param($k) $k.api_key -and $k.api_key -notmatch '[·•*]' -and $k.api_key.Length -gt 30 }
+      $pub = $chaves | Where-Object { ($_.type -eq "publishable" -or $_.name -eq "anon") -and (& $ok $_) } | Select-Object -First 1
+      $sec = $chaves | Where-Object { ($_.type -eq "secret" -or $_.name -eq "service_role") -and (& $ok $_) } | Select-Object -First 1
+      if (-not $final.NEXT_PUBLIC_SUPABASE_ANON_KEY -and $pub) { $final.NEXT_PUBLIC_SUPABASE_ANON_KEY = $pub.api_key; Write-Host "   ok: chave pública do Supabase" }
+      if (-not $final.SUPABASE_SERVICE_ROLE_KEY -and $sec) { $final.SUPABASE_SERVICE_ROLE_KEY = $sec.api_key; Write-Host "   ok: chave secreta do Supabase" }
+    } catch {
+      Write-Host "   Não deu pelo Supabase; vou pedir para colar." -ForegroundColor Yellow
+    }
+    if (-not $final.NEXT_PUBLIC_SUPABASE_ANON_KEY -or -not $final.SUPABASE_SERVICE_ROLE_KEY) {
+      Start-Process "https://supabase.com/dashboard/project/bdiefcuoomhtspmktksz/settings/api-keys"
+    }
+  }
 
   Write-Host ""
   Write-Host "PASSO 3 de 3: o que a Vercel não entrega (marcado como secreto), você cola das suas anotações." -ForegroundColor Yellow
@@ -85,7 +123,8 @@ try {
     ASAAS_API_KEY       = "Chave da API do Asaas (conta real, começa com `$aact_)."
     ASAAS_WEBHOOK_TOKEN = "Token do webhook do Asaas (o mesmo cadastrado no webhook)."
     RESEND_API_KEY      = "Chave da API do Resend (começa com re_)."
-    EMAIL_ADMIN         = "Seu e-mail para receber o aviso de cadastro novo."
+    NEXT_PUBLIC_SUPABASE_ANON_KEY = "Supabase (página que abriu no navegador): Publishable key, começa com sb_publishable_."
+    SUPABASE_SERVICE_ROLE_KEY     = "Supabase (página que abriu no navegador): Secret key, clique no olho e copie; começa com sb_secret_."
   }
   foreach ($nome in @($final.Keys)) {
     if (-not $final[$nome]) {
