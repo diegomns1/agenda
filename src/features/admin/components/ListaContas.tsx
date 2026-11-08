@@ -3,6 +3,7 @@ import { ChevronRightIcon } from "lucide-react";
 import { PLANOS } from "@/lib/constantes";
 import { formatarData, formatarDataISO } from "@/lib/datas";
 import { formatarTelefone } from "@/lib/telefone";
+import { nomeDoRamo } from "@/lib/ramos";
 import type { Profile } from "@/types/database";
 import { BadgeStatus } from "./BadgeStatus";
 
@@ -33,6 +34,7 @@ export function ListaContas({ contas }: { contas: Profile[] }) {
                 {c.telefone ? ` · ${formatarTelefone(c.telefone)}` : ""}
               </p>
               <p className="text-xs text-muted-foreground">
+                {c.ramo ? `${nomeDoRamo(c.ramo, c.ramo_outro)} · ` : ""}
                 {PLANOS[c.plano]?.nome ?? c.plano}
                 {c.ativa_ate ? ` até ${formatarDataISO(c.ativa_ate)}` : ""}
                 {" · cadastro em "}

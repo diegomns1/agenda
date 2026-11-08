@@ -37,7 +37,7 @@ export function VagasAbertas({ vagas }: { vagas: Vaga[] }) {
         <CalendarXIcon className="size-4 text-emerald-700 dark:text-emerald-400" />
         {visiveis.length === 1 ? "Vagou um horário" : `Vagaram ${visiveis.length} horários`}
       </h2>
-      <p className="text-xs text-muted-foreground">Uma cliente desmarcou ou remarcou. Que tal divulgar o horário livre?</p>
+      <p className="text-xs text-muted-foreground">Alguém desmarcou ou remarcou. Que tal divulgar o horário livre?</p>
       <ul className="mt-2 divide-y divide-emerald-200 dark:divide-emerald-900">
         {visiveis.map((v) => (
           <li key={v.id} className="flex items-center gap-2 py-2.5">

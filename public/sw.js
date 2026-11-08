@@ -1,7 +1,10 @@
 /* Service worker do app Agenda: notificações push + cache leve para abrir rápido e funcionar
    minimamente sem internet. */
 
-const VERSAO = "vaguinha-v4";
+const VERSAO = "vaguinha-v5";
+// Em desenvolvimento (localhost) os arquivos mudam sem trocar de nome: nada de cache, senão o
+// navegador mostra estilos e telas antigas. Em produção os nomes têm hash e o cache é seguro.
+const DESENVOLVIMENTO = self.location.hostname === "localhost" || self.location.hostname === "127.0.0.1";
 const CACHE_ESTATICO = `${VERSAO}-estatico`;
 const CACHE_PAGINAS = `${VERSAO}-paginas`;
 const PAGINA_OFFLINE = "/offline";
@@ -27,7 +30,7 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  if (request.method !== "GET") return;
+  if (request.method !== "GET" || DESENVOLVIMENTO) return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 

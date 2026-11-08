@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BellIcon, CalendarDaysIcon, CalendarPlusIcon, ChartColumnIcon, ChevronRightIcon, ImagePlusIcon, LockIcon, UserRoundPenIcon } from "lucide-react";
+import { BriefcaseIcon } from "lucide-react";
+import { termosDoRamo } from "@/lib/ramos";
 import { listarVagas } from "@/features/relatorios/vagas";
 import { resumoDoMes } from "@/features/relatorios/dados";
 import { VagasAbertas } from "@/features/relatorios/components/VagasAbertas";
@@ -31,6 +33,8 @@ export default async function PaginaHoje() {
     podeRelatorios ? resumoDoMes().catch(() => null) : Promise.resolve(null),
   ]);
 
+  const termos = termosDoRamo(perfil?.ramo);
+  const semRamo = Boolean(perfil && !perfil.ramo);
   const atendimentosHoje = deHoje.filter((a) => a.tipo === "atendimento" && a.status !== "cancelado");
   const faturamentoHoje = atendimentosHoje.filter((a) => a.status !== "faltou").reduce((s, a) => s + (a.valor ?? 0), 0);
   const perfilIncompleto = !perfil?.nome_negocio || !perfil?.logo_url || !perfil?.telefone;
@@ -51,7 +55,7 @@ export default async function PaginaHoje() {
         </h1>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-white/12 p-3 backdrop-blur-sm">
-            <p className="text-xs text-white/75">Atendimentos hoje</p>
+            <p className="text-xs text-white/75">{termos.Varios} hoje</p>
             <p className="text-3xl font-extrabold tabular-nums">{atendimentosHoje.length}</p>
           </div>
           <div className="rounded-2xl bg-white/12 p-3 backdrop-blur-sm">
@@ -69,6 +73,22 @@ export default async function PaginaHoje() {
       <SolicitacoesPendentes solicitacoes={solicitacoes} />
 
       <VagasAbertas vagas={vagas} />
+
+      {semRamo ? (
+        <Link
+          href="/perfil#ramo"
+          className="cartao-vivo surgir surgir-atraso-1 flex items-center gap-3 rounded-2xl border border-primary/25 bg-card px-4 py-3"
+        >
+          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <BriefcaseIcon className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">Conte qual é o seu ramo</p>
+            <p className="text-sm text-muted-foreground">O painel ajusta as palavras e as sugestões de serviço, e você escolhe as cores.</p>
+          </div>
+          <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+        </Link>
+      ) : null}
 
       {perfilIncompleto ? (
         <Link
@@ -108,7 +128,7 @@ export default async function PaginaHoje() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <CalendarDaysIcon className="size-4 text-primary" />
-            Próximos atendimentos
+            {termos.proximos}
           </CardTitle>
           <CardDescription>{proximos.length === 0 ? "Nada marcado daqui para frente." : "Os próximos na sua agenda."}</CardDescription>
         </CardHeader>
@@ -136,7 +156,7 @@ export default async function PaginaHoje() {
             <Button asChild className="h-10 rounded-xl px-4">
               <Link href="/agenda?novo=atendimento">
                 <CalendarPlusIcon />
-                Marcar atendimento
+                {termos.marcar}
               </Link>
             </Button>
             <Button asChild variant="outline" className="h-10 rounded-xl px-4">

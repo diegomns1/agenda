@@ -6,6 +6,7 @@ import { criarClienteServidor } from "@/lib/supabase/server";
 import { obterUsuario } from "@/lib/auth";
 import { valoresDoForm, type EstadoForm } from "@/components/formulario/tipos";
 import { esquemaServico, SERVICOS_SUGERIDOS } from "./schema";
+import { obterRamo } from "@/lib/ramos";
 
 const CAMPOS = ["nome", "duracao_min", "valor"];
 
@@ -124,11 +125,16 @@ export async function reordenarServicos(ids: string[]): Promise<EstadoForm> {
 /** Cria de uma vez os serviços sugeridos que ainda não existem (pelo nome). */
 export async function adicionarSugeridos(): Promise<EstadoForm> {
   const { usuario, supabase } = await sessao();
-  const { data: existentes } = await supabase.from("servicos").select("nome, ordem").eq("profissional_id", usuario.id);
+  const [{ data: existentes }, { data: perfil }] = await Promise.all([
+    supabase.from("servicos").select("nome, ordem").eq("profissional_id", usuario.id),
+    supabase.from("profiles").select("ramo").eq("id", usuario.id).maybeSingle(),
+  ]);
   const nomes = new Set((existentes ?? []).map((s) => s.nome.toLowerCase()));
   let ordem = Math.max(-1, ...(existentes ?? []).map((s) => s.ordem)) + 1;
+  // sugestões do ramo da profissional; sem ramo (ou "Outros"), a lista genérica
+  const sugeridos = obterRamo(perfil?.ramo)?.sugestoes ?? SERVICOS_SUGERIDOS;
 
-  const novos = SERVICOS_SUGERIDOS.filter((s) => !nomes.has(s.nome.toLowerCase())).map((s) => ({
+  const novos = sugeridos.filter((s) => !nomes.has(s.nome.toLowerCase())).map((s) => ({
     ...s,
     profissional_id: usuario.id,
     ordem: ordem++,

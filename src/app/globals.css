@@ -190,11 +190,17 @@
 }
 
 /* Gradiente da marca para destaques */
+/* tons intermediários calculados a partir do tema (nada fixo: o tema Grafite/Azul/Verde também muda aqui) */
 .gradiente-marca {
-  background-image: linear-gradient(135deg, var(--vinho) 0%, #8d3a63 55%, var(--rosa) 130%);
+  background-image: linear-gradient(
+    135deg,
+    var(--vinho) 0%,
+    color-mix(in oklch, var(--vinho), var(--rosa) 30%) 55%,
+    var(--rosa) 130%
+  );
 }
 .texto-gradiente {
-  background-image: linear-gradient(90deg, var(--vinho), #a9607f);
+  background-image: linear-gradient(90deg, var(--vinho), color-mix(in oklch, var(--vinho), var(--rosa) 45%));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -287,6 +293,56 @@
 @media (prefers-reduced-motion: reduce) {
   .revelar { opacity: 1; transform: none; transition: none; }
   .pulsar-suave { animation: none; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Temas do painel (escolhidos no cadastro/Perfil: profiles.tema).     */
+/* Trocam as cores da marca dentro da área logada; a logo continua.    */
+/* --vinho = cor principal, --rosa = cor de apoio, --creme = fundo.    */
+/* ------------------------------------------------------------------ */
+[data-tema="grafite"] {
+  --vinho: #1f2937; --rosa: #94a3b8; --creme: #f5f6f8;
+  --background: #f5f6f8; --foreground: #111827;
+  --card-foreground: #111827; --popover-foreground: #111827;
+  --primary: #1f2937; --primary-foreground: #f9fafb;
+  --secondary: #e8ebf0; --secondary-foreground: #1f2937;
+  --muted: #eceff3; --muted-foreground: #5b6472;
+  --accent: #e8ebf0; --accent-foreground: #1f2937;
+  --border: #dde1e7; --input: #d5dae1; --ring: #94a3b8;
+  --chart-1: #1f2937; --chart-2: #94a3b8; --chart-3: #475569; --chart-4: #cbd5e1; --chart-5: #0f172a;
+}
+[data-tema="azul"] {
+  --vinho: #1e3a8a; --rosa: #93c5fd; --creme: #f3f7fd;
+  --background: #f3f7fd; --foreground: #0f1b3d;
+  --card-foreground: #0f1b3d; --popover-foreground: #0f1b3d;
+  --primary: #1e3a8a; --primary-foreground: #f5f8ff;
+  --secondary: #e2ebfa; --secondary-foreground: #1e3a8a;
+  --muted: #e8eef8; --muted-foreground: #53607a;
+  --accent: #e2ebfa; --accent-foreground: #1e3a8a;
+  --border: #d6e0f0; --input: #ccd8ec; --ring: #93c5fd;
+  --chart-1: #1e3a8a; --chart-2: #93c5fd; --chart-3: #3b62b8; --chart-4: #c7dcf8; --chart-5: #0f1b3d;
+}
+[data-tema="verde"] {
+  --vinho: #14532d; --rosa: #86c9a0; --creme: #f2f8f4;
+  --background: #f2f8f4; --foreground: #0f2418;
+  --card-foreground: #0f2418; --popover-foreground: #0f2418;
+  --primary: #14532d; --primary-foreground: #f3fbf6;
+  --secondary: #e0f0e6; --secondary-foreground: #14532d;
+  --muted: #e6f0ea; --muted-foreground: #4f6658;
+  --accent: #e0f0e6; --accent-foreground: #14532d;
+  --border: #d3e6da; --input: #c8ded0; --ring: #86c9a0;
+  --chart-1: #14532d; --chart-2: #86c9a0; --chart-3: #2f7a4d; --chart-4: #c3e4cf; --chart-5: #0f2418;
+}
+[data-tema="lavanda"] {
+  --vinho: #4c1d95; --rosa: #c4b5fd; --creme: #f7f5fd;
+  --background: #f7f5fd; --foreground: #1f1240;
+  --card-foreground: #1f1240; --popover-foreground: #1f1240;
+  --primary: #4c1d95; --primary-foreground: #faf8ff;
+  --secondary: #ece6fb; --secondary-foreground: #4c1d95;
+  --muted: #efebfa; --muted-foreground: #63587d;
+  --accent: #ece6fb; --accent-foreground: #4c1d95;
+  --border: #e1d9f5; --input: #d8cff1; --ring: #c4b5fd;
+  --chart-1: #4c1d95; --chart-2: #c4b5fd; --chart-3: #6d3fc0; --chart-4: #ddd3fb; --chart-5: #1f1240;
 }
 
 /* Páginas de texto longo (termos, privacidade) */

@@ -35,12 +35,12 @@ const CONFIG: Record<Chave, Config> = {
   atendimentos: { rotulo: "Atendimentos feitos", Icone: CalendarCheckIcon, subirEhBom: true, ajuda: "Quantos atendimentos já aconteceram no mês." },
   ticket: { rotulo: "Valor médio", Icone: ReceiptIcon, dinheiro: true, subirEhBom: true, ajuda: "Faturamento dividido pelo número de atendimentos." },
   previsto: { rotulo: "Ainda vai entrar", Icone: WalletIcon, dinheiro: true, subirEhBom: true, ajuda: "Atendimentos marcados para os próximos dias do mês." },
-  clientesAtendidas: { rotulo: "Clientes atendidas", Icone: UsersIcon, subirEhBom: true, ajuda: "Clientes diferentes que vieram no mês." },
-  novasClientes: { rotulo: "Clientes novas", Icone: UserPlusIcon, subirEhBom: true, ajuda: "Clientes cadastradas no mês." },
+  clientesAtendidas: { rotulo: "Clientes que vieram", Icone: UsersIcon, subirEhBom: true, ajuda: "Clientes diferentes que vieram no mês." },
+  novasClientes: { rotulo: "Cadastros novos", Icone: UserPlusIcon, subirEhBom: true, ajuda: "Clientes cadastrados no mês." },
   cancelamentos: { rotulo: "Desmarcaram", Icone: CalendarXIcon, subirEhBom: false, ajuda: "Atendimentos cancelados ou apagados no mês." },
   remarcacoes: { rotulo: "Remarcaram", Icone: RepeatIcon, subirEhBom: false, ajuda: "Atendimentos que mudaram de dia ou horário no mês." },
   faltas: { rotulo: "Faltaram", Icone: UserXIcon, subirEhBom: false, ajuda: "Atendimentos do mês marcados como falta." },
-  pedidosLink: { rotulo: "Pedidos pelo link", Icone: Link2Icon, subirEhBom: true, ajuda: "Horários pedidos pelas clientes no seu link de agendamento." },
+  pedidosLink: { rotulo: "Pedidos pelo link", Icone: Link2Icon, subirEhBom: true, ajuda: "Horários pedidos pelo seu link de agendamento." },
 };
 
 const ORDEM: Chave[] = ["atendimentos", "ticket", "clientesAtendidas", "novasClientes", "cancelamentos", "remarcacoes", "faltas", "pedidosLink"];
@@ -165,7 +165,7 @@ export function PainelRelatorio({ relatorio }: { relatorio: Relatorio }) {
 
       <div className="grid gap-5 md:grid-cols-2">
         <Ranking titulo="Serviços que mais faturaram" vazio="Nenhum atendimento feito neste mês." itens={relatorio.servicos} />
-        <Ranking titulo="Clientes que mais gastaram" vazio="Nenhum atendimento feito neste mês." itens={relatorio.topClientes} />
+        <Ranking titulo="Quem mais gastou" vazio="Nenhum atendimento feito neste mês." itens={relatorio.topClientes} />
       </div>
     </div>
   );

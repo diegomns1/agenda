@@ -7,6 +7,7 @@ import { criarClienteServidor } from "@/lib/supabase/server";
 import { normalizarTelefone } from "@/lib/telefone";
 import { URL_APP } from "@/lib/constantes";
 import { VERSAO_TERMOS } from "@/lib/legal";
+import { OUTRO_RAMO, obterRamo, temaPadrao } from "@/lib/ramos";
 import { emailDoAdmin, enviarEmail } from "@/lib/email";
 import { emailCadastroRecebido, emailNovoCadastroAdmin } from "@/features/emails/modelos";
 import { valoresDoForm, type EstadoForm } from "@/components/formulario/tipos";
@@ -65,7 +66,7 @@ export async function entrar(_: EstadoForm, formData: FormData): Promise<EstadoF
 }
 
 export async function cadastrar(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
-  const valores = valoresDoForm(formData, ["nome", "telefone", "email", "aceite"]);
+  const valores = valoresDoForm(formData, ["nome", "telefone", "email", "aceite", "tratamento", "ramo", "ramo_outro"]);
   const r = esquemaCadastro.safeParse(Object.fromEntries(formData));
   if (!r.success) return { erros: z.flattenError(r.error).fieldErrors, valores };
 
@@ -82,6 +83,11 @@ export async function cadastrar(_: EstadoForm, formData: FormData): Promise<Esta
         // gravados em profiles pelo trigger handle_new_user (migração 0012)
         termos_aceitos_em: new Date().toISOString(),
         termos_versao: VERSAO_TERMOS,
+        // ramo/tratamento/tema também vão para profiles pelo trigger (migração 0016)
+        tratamento: r.data.tratamento,
+        tema: temaPadrao(r.data.tratamento),
+        ramo: r.data.ramo === OUTRO_RAMO || obterRamo(r.data.ramo) ? r.data.ramo : OUTRO_RAMO,
+        ramo_outro: r.data.ramo === OUTRO_RAMO ? r.data.ramo_outro : obterRamo(r.data.ramo) ? null : r.data.ramo,
       },
     },
   });

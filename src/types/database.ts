@@ -50,6 +50,10 @@ export type Profile = {
   asaas_subscription_id: string | null;
   plano_assinado: "essencial" | "profissional" | "premium" | null;
   cpf_cnpj: string | null;
+  ramo: string | null;
+  ramo_outro: string | null;
+  tratamento: "ela" | "ele" | "neutro" | null;
+  tema: "rosa" | "grafite" | "azul" | "verde" | "lavanda";
   created_at: string;
   updated_at: string;
 };

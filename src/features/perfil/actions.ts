@@ -12,6 +12,7 @@ const CAMPOS_TEXTO = [
   "nome", "nome_negocio", "telefone", "instagram",
   "cor_primaria", "cor_secundaria", "intervalo_grade_min", "modelo_lembrete",
   "slug", "agendamento_online", "confirmacao_online", "antecedencia_min_horas",
+  "ramo", "ramo_outro", "tratamento", "tema",
 ];
 
 function revalidarPerfil() {
@@ -61,6 +62,10 @@ export async function salvarPerfil(_: EstadoForm, formData: FormData): Promise<E
       agendamento_online: d.agendamento_online,
       confirmacao_online: d.confirmacao_online,
       antecedencia_min_horas: d.antecedencia_min_horas,
+      ramo: d.ramo,
+      ramo_outro: d.ramo === "outro" ? d.ramo_outro : null,
+      tratamento: d.tratamento,
+      tema: d.tema,
     })
     .eq("id", usuario.id);
 

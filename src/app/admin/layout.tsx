@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeftIcon, ShieldCheckIcon } from "lucide-react";
+import { ArrowLeftIcon, ChartPieIcon, ShieldCheckIcon, UsersIcon } from "lucide-react";
 import { ehAdmin, obterUsuario } from "@/lib/auth";
 import { BotaoSair } from "@/features/auth/components/BotaoSair";
 import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
@@ -30,6 +30,20 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
           </div>
         </div>
       </header>
+      <nav className="mx-auto flex w-full max-w-3xl gap-2 px-4 pt-4" aria-label="Seções do admin">
+        <Button asChild variant="outline" size="sm" className="rounded-full">
+          <Link href="/admin/painel">
+            <ChartPieIcon />
+            Painel do dono
+          </Link>
+        </Button>
+        <Button asChild variant="outline" size="sm" className="rounded-full">
+          <Link href="/admin">
+            <UsersIcon />
+            Contas
+          </Link>
+        </Button>
+      </nav>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">{children}</main>
     </div>
   );

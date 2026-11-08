@@ -19,7 +19,8 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
   const lembretesPendentes = podeLembretes ? await contarLembretesPendentes().catch(() => 0) : 0;
 
   return (
-    <div className="flex flex-1 flex-col">
+    // data-tema troca as cores do painel (globals.css); "rosa" é o padrão da marca
+    <div data-tema={perfil.tema ?? "rosa"} className="flex flex-1 flex-col bg-background text-foreground">
       <Cabecalho
         titulo={perfil.nome_negocio ?? perfil.nome}
         logoUrl={perfil.logo_url}

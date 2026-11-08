@@ -17,7 +17,11 @@ import { Expediente } from "./Expediente";
 import { PreviewMarca } from "./PreviewMarca";
 import { LinkAgendamento } from "./LinkAgendamento";
 import { Switch } from "@/components/ui/switch";
-import { LockIcon } from "lucide-react";
+import { LockIcon, PaletteIcon } from "lucide-react";
+import { SeletorRamo } from "@/components/formulario/SeletorRamo";
+import { EscolhaTratamento } from "@/components/formulario/EscolhaTratamento";
+import { obterRamo, TEMAS_PAINEL, type TemaPainel, type Tratamento } from "@/lib/ramos";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 const EXEMPLO = { nome: "Maria", dia: "amanhã (sexta)", hora: "14:30", servico: "manicure" };
@@ -64,6 +68,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
   const [nomeNegocio, setNomeNegocio] = useState(perfil.nome_negocio ?? "");
   const [instagram, setInstagram] = useState(perfil.instagram ?? "");
   const [modelo, setModelo] = useState(perfil.modelo_lembrete);
+  const [tema, setTema] = useState<TemaPainel>(perfil.tema ?? "rosa");
 
   const v = estado.valores;
 
@@ -80,6 +85,47 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
       noValidate
     >
       {estado.erro ? <Aviso>{estado.erro}</Aviso> : null}
+
+      <Card id="ramo">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <PaletteIcon className="size-4 text-primary" />
+            Seu ramo e a cara do painel
+          </CardTitle>
+          <CardDescription>O ramo ajusta as palavras e as sugestões de serviço. O tema troca as cores do seu painel.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <SeletorRamo ramoInicial={v?.ramo ?? perfil.ramo} outroInicial={v?.ramo_outro ?? perfil.ramo_outro} erro={estado.erros?.ramo?.[0]} />
+          <EscolhaTratamento inicial={(v?.tratamento as Tratamento | undefined) ?? perfil.tratamento} erro={estado.erros?.tratamento?.[0]} />
+          <div className="grid gap-1.5">
+            <span className="text-sm font-medium">Tema do painel</span>
+            <input type="hidden" name="tema" value={tema} />
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5" role="radiogroup" aria-label="Tema do painel">
+              {(Object.keys(TEMAS_PAINEL) as TemaPainel[]).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  role="radio"
+                  aria-checked={tema === t}
+                  onClick={() => setTema(t)}
+                  className={cn(
+                    "flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-sm transition-colors",
+                    tema === t ? "border-primary ring-1 ring-primary" : "hover:bg-muted",
+                  )}
+                >
+                  <span className="flex shrink-0 -space-x-1.5">
+                    {TEMAS_PAINEL[t].cores.map((c) => (
+                      <span key={c} className="size-4 rounded-full ring-2 ring-background" style={{ background: c }} />
+                    ))}
+                  </span>
+                  <span className="truncate">{TEMAS_PAINEL[t].nome}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">Vale só para o seu painel. A página que as clientes veem usa as cores da sua marca, logo abaixo.</p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -98,7 +144,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
           <Campo
             rotulo="Nome do negócio"
             nome="nome_negocio"
-            placeholder="Ex.: Studio Ana Nails"
+            placeholder={`Ex.: ${obterRamo(perfil.ramo)?.exemplo ?? "Studio Ana Nails"}`}
             value={nomeNegocio}
             onChange={(e) => setNomeNegocio(e.target.value)}
             erros={estado.erros?.nome_negocio}

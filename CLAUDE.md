@@ -142,6 +142,19 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   `cobrancas` e, uma vez por cobrança paga, aplica `plano` e `ativa_ate = novaValidade()` (1 mês + 3 dias). Página
   `/assinatura` fica no grupo `(conta)`: exige login, não exige validade (é onde a vencida renova). Regras puras em
   `features/assinatura/regras.ts` (CPF/CNPJ, status). Admin manual (plano + ativa_ate) continua valendo.
+- Relatórios (Premium, recurso `relatorios`): histórico em `agendamento_eventos`, gravado SÓ pelo trigger
+  `registrar_evento_agendamento` (migração 0015) — nunca inserir eventos pelo app. Cálculo em
+  `features/relatorios/dados.ts` (faturamento = atendimentos já passados com status agendado/concluído), aviso
+  "vagou um horário" em `features/relatorios/vagas.ts` (eventos remarcado/cancelado/excluido com horário antigo no
+  futuro e ainda livre). Gráficos: `components/graficos/Colunas.tsx` (uma cor, ênfase + tabela) — ver skill dataviz.
+- Ramo, tratamento e tema (migração 0016): catálogo em `src/lib/ramos.ts` (ramos, sinônimos de busca, termo
+  atendimento/sessão/aula/consulta/horário, sugestões de serviço, temas). `data-tema` no layout `(app)`/`(conta)`
+  troca as variáveis de cor (`[data-tema=...]` em globals.css); nada de cor da marca fixa em CSS (usar var/color-mix).
+  `termosDoRamo()` para textos de "atendimento". Ainda há muito "a cliente" (feminino) espalhado: revisão pendente.
+- Painel do dono: `/admin/painel` (`features/admin/painel.ts`, service_role com fallback sem ela).
+- Suporte: `SUPORTE_WHATSAPP` em constantes (env `NEXT_PUBLIC_SUPORTE_WHATSAPP` ou o número do Diego).
+- Service worker não faz cache em localhost (em dev os arquivos mudam sem trocar de nome). Subir `VERSAO` no sw.js
+  quando mudar algo de cache.
 - Funções puras compartilhadas entre servidor e cliente ficam em `src/lib/*` (nunca exportar de um arquivo "use client":
   o servidor não consegue chamá-las e a página quebra com erro 500 — já aconteceu duas vezes).
 - Padrão de lista + diálogo (criar/editar) + menu de opções + confirmação de exclusão: ver `features/servicos/components/ListaServicos.tsx`.

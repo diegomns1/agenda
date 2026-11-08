@@ -7,6 +7,8 @@ import { Campo } from "@/components/formulario/Campo";
 import { BotaoEnviar } from "@/components/formulario/BotaoEnviar";
 import { Aviso } from "@/components/formulario/Aviso";
 import { ESTADO_INICIAL } from "@/components/formulario/tipos";
+import { SeletorRamo } from "@/components/formulario/SeletorRamo";
+import { EscolhaTratamento } from "@/components/formulario/EscolhaTratamento";
 
 export function FormCadastro() {
   const [estado, acao] = useActionState(cadastrar, ESTADO_INICIAL);
@@ -34,6 +36,15 @@ export function FormCadastro() {
         defaultValue={estado.valores?.nome}
         erros={estado.erros?.nome}
         required
+      />
+      <EscolhaTratamento
+        inicial={estado.valores?.tratamento as "ela" | "ele" | "neutro" | undefined}
+        erro={estado.erros?.tratamento?.[0]}
+      />
+      <SeletorRamo
+        ramoInicial={estado.valores?.ramo}
+        outroInicial={estado.valores?.ramo_outro}
+        erro={estado.erros?.ramo?.[0]}
       />
       <Campo
         rotulo="WhatsApp (opcional)"

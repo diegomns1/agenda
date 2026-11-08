@@ -56,10 +56,17 @@ export const esquemaPerfil = z.object({
   agendamento_online: z.string().optional().transform((v) => v === "on"),
   confirmacao_online: z.enum(["automatica", "manual"]),
   antecedencia_min_horas: z.coerce.number().int().min(0).max(72),
+  ramo: z.string().trim().max(40).optional().transform((v) => v || null),
+  ramo_outro: z.string().trim().max(60).optional().transform((v) => v || null),
+  tratamento: z
+    .string()
+    .optional()
+    .transform((v) => (v === "ela" || v === "ele" || v === "neutro" ? v : null)),
+  tema: z.enum(["rosa", "grafite", "azul", "verde", "lavanda"]).catch("rosa"),
   expediente: z.object({
     "0": dia, "1": dia, "2": dia, "3": dia, "4": dia, "5": dia, "6": dia,
   }),
-});
+}).refine((d) => d.ramo !== "outro" || d.ramo_outro, { message: "Escreva qual é o seu ramo", path: ["ramo"] });
 
 export type DadosPerfil = z.infer<typeof esquemaPerfil>;
 

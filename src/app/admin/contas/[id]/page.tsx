@@ -7,6 +7,7 @@ import { AcoesConta } from "@/features/admin/components/AcoesConta";
 import { BadgeStatus } from "@/features/admin/components/BadgeStatus";
 import { formatarData } from "@/lib/datas";
 import { PLANOS } from "@/lib/planos";
+import { nomeDoRamo, TRATAMENTOS } from "@/lib/ramos";
 import { formatarCpfCnpj } from "@/features/assinatura/regras";
 import { formatarTelefone, linkWhatsApp } from "@/lib/telefone";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,6 +33,8 @@ export default async function PaginaConta({ params }: PageProps<"/admin/contas/[
       </a>
     ) : "—"],
     ["Negócio", conta.nome_negocio ?? "—"],
+    ["Ramo", conta.ramo ? nomeDoRamo(conta.ramo, conta.ramo_outro) : "—"],
+    ["Tratamento", conta.tratamento ? TRATAMENTOS[conta.tratamento].rotulo : "—"],
     ["Cadastro", formatarData(conta.created_at, "dd/MM/yyyy 'às' HH:mm")],
     ["Status alterado", conta.status_alterado_em ? formatarData(conta.status_alterado_em, "dd/MM/yyyy 'às' HH:mm") : "—"],
     ["Motivo", conta.status_motivo ?? "—"],

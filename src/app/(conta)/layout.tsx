@@ -17,7 +17,7 @@ export default async function LayoutConta({ children }: { children: React.ReactN
   const aprovada = situacaoDaConta(perfil) === "aprovada";
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div data-tema={perfil.tema ?? "rosa"} className="flex flex-1 flex-col bg-background text-foreground">
       <header className="sticky top-0 z-20 border-b border-border/70 bg-background/85 backdrop-blur-md">
         <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4">
           <Link href={aprovada ? "/" : "/aguardando-aprovacao"} className="inline-flex items-center gap-2 text-sm font-medium">
