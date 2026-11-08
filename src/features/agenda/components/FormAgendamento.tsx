@@ -193,7 +193,7 @@ function CamposAtendimento({
             <Input
               id="nova_cliente_nome"
               name="nova_cliente_nome"
-              placeholder="Nome da nova cliente"
+              placeholder="Nome (novo cadastro)"
               defaultValue={v?.nova_cliente_nome ?? ""}
               className="h-11 text-base"
               autoFocus
@@ -218,7 +218,7 @@ function CamposAtendimento({
             className={selectClass}
             aria-invalid={estado.erros?.cliente_id ? true : undefined}
           >
-            <option value="">Escolha a cliente…</option>
+            <option value="">Escolha na lista…</option>
             {clientes.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nome}

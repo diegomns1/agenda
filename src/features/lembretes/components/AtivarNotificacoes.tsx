@@ -124,7 +124,7 @@ export function AtivarNotificacoes({ aparelhos }: { aparelhos: number }) {
           Notificações no celular
         </CardTitle>
         <CardDescription>
-          Você recebe um aviso 1 dia antes e 1 hora antes de cada atendimento, com um botão para lembrar a cliente.
+          Você recebe um aviso 1 dia antes e 1 hora antes de cada atendimento, com um botão para enviar o lembrete pelo WhatsApp.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">

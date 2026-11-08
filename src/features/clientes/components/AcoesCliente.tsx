@@ -64,7 +64,7 @@ export function AcoesCliente({ cliente, ultimoServicoId }: { cliente: Cliente; u
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir {cliente.nome}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Os dados da cliente serão apagados. Atendimentos passados continuam na agenda, mas sem o nome dela.
+              O cadastro será apagado. Atendimentos passados continuam na agenda, mas sem o nome.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

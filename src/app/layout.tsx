@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     default: NOME_APP,
     template: `%s · ${NOME_APP}`,
   },
-  description: "Vaguinha: agenda de serviços para profissionais autônomas.",
+  description: "Vaguinha: agenda online para quem atende com hora marcada.",
   applicationName: NOME_APP,
   manifest: "/manifest.webmanifest",
   appleWebApp: {

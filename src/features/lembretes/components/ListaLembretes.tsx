@@ -63,7 +63,7 @@ export function ListaLembretes({ pendentes, avisados, modelo, destaqueId }: Prop
         <EstadoVazio
           Icone={BellIcon}
           titulo="Nenhum lembrete pendente"
-          descricao="Os atendimentos das próximas 48 horas aparecem aqui até você avisar a cliente."
+          descricao="Os atendimentos das próximas 48 horas aparecem aqui até você enviar o lembrete."
         />
       ) : (
         [...grupos.entries()].map(([dia, itens]) => (
@@ -86,7 +86,7 @@ export function ListaLembretes({ pendentes, avisados, modelo, destaqueId }: Prop
             className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <ChevronDownIcon className={cn("size-4 transition-transform", mostrarAvisados && "rotate-180")} />
-            {avisados.length} já avisada{avisados.length === 1 ? "" : "s"}
+            {avisados.length} já avisado{avisados.length === 1 ? "" : "s"}
           </button>
           {mostrarAvisados ? (
             <ul className="divide-y overflow-hidden rounded-xl border bg-card opacity-80">

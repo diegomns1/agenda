@@ -50,7 +50,7 @@ export function LinkAgendamento({ url }: { url: string }) {
         <Button asChild type="button" variant="outline" size="sm">
           <a href={url} target="_blank" rel="noopener noreferrer">
             <ExternalLinkIcon />
-            Ver como a cliente vê
+            Ver como fica o link
           </a>
         </Button>
       </div>

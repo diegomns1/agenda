@@ -200,7 +200,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
             <DialogDescription>
               {form?.tipo === "bloqueio" || form?.agendamento?.tipo === "bloqueio"
                 ? "Almoço, folga, férias ou qualquer período em que você não atende."
-                : "Escolha a cliente, o serviço e um horário livre."}
+                : "Escolha quem vem, o serviço e um horário livre."}
             </DialogDescription>
           </DialogHeader>
           {form ? (

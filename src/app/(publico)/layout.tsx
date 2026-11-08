@@ -11,7 +11,7 @@ export default function LayoutPublico({ children }: { children: React.ReactNode 
         {children}
       </div>
       <p className="surgir surgir-atraso-2 mt-6 text-center text-xs text-muted-foreground">
-        Agenda para profissionais autônomas · vaguinha.app
+        Agenda para quem atende com hora marcada · vaguinha.app
         <br />
         <Link href="/termos" className="underline-offset-4 hover:underline">
           Termos de Uso

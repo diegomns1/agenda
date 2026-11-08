@@ -54,7 +54,7 @@ export async function listarVagas(limite = 6): Promise<Vaga[]> {
     vagas.push({
       id: e.id,
       tipo: e.tipo as Vaga["tipo"],
-      clienteNome: e.cliente_nome ?? "Uma cliente",
+      clienteNome: e.cliente_nome ?? "Alguém",
       servicoNome: e.servico_nome,
       inicio: e.inicio_anterior!,
       fim: e.fim_anterior!,

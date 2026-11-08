@@ -104,7 +104,7 @@ export async function salvarAgendamento(_: EstadoForm, formData: FormData): Prom
       .single();
     if (erroCliente) {
       return {
-        erro: erroCliente.code === "23505" ? "Já existe uma cliente com este WhatsApp. Escolha-a na lista." : `Não foi possível cadastrar a cliente: ${erroCliente.message}`,
+        erro: erroCliente.code === "23505" ? "Já existe um cadastro com este WhatsApp. Escolha na lista." : `Não foi possível fazer o cadastro: ${erroCliente.message}`,
         valores,
       };
     }

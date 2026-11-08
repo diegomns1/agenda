@@ -52,15 +52,15 @@ export default function PaginaPrivacidade() {
         </tbody>
       </table>
 
-      <h2>3. Dados das clientes da profissional</h2>
+      <h2>3. Dados dos clientes da profissional</h2>
       <p>
-        A profissional cadastra nome, WhatsApp, observações e histórico de atendimentos das suas clientes. Esses dados
+        A profissional cadastra nome, WhatsApp, observações e histórico de atendimentos dos seus clientes. Esses dados
         pertencem à profissional, que é a controladora deles. O Vaguinha atua como operador: guarda e processa essas
         informações só para a agenda funcionar, e nunca as usa para publicidade, venda ou qualquer outra finalidade.
       </p>
       <p>
-        Quando uma cliente pede um horário pelo link público da profissional, informa nome, WhatsApp e, se quiser, uma
-        observação. Esses dados vão direto para a agenda daquela profissional. O Vaguinha não cria conta nem perfil da cliente.
+        Quando um cliente pede um horário pelo link público da profissional, informa nome, WhatsApp e, se quiser, uma
+        observação. Esses dados vão direto para a agenda daquela profissional. O Vaguinha não cria conta nem perfil do cliente.
       </p>
       <p>
         <strong>Se você é cliente de uma profissional</strong> e quer corrigir ou apagar seus dados, fale diretamente com ela. Se
@@ -71,7 +71,7 @@ export default function PaginaPrivacidade() {
       <ul>
         <li>Não vendemos nem alugamos dados a ninguém.</li>
         <li>Não enviamos mensagens às clientes: o WhatsApp abre no seu aparelho e quem envia é você.</li>
-        <li>Não usamos os dados das suas clientes para contatá-las nem para treinar sistemas.</li>
+        <li>Não usamos os dados dos seus clientes para contatá-los nem para treinar sistemas.</li>
         <li>Não usamos cookies de publicidade. Os cookies do Vaguinha servem só para manter você conectada.</li>
       </ul>
 

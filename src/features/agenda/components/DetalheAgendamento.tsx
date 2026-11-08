@@ -196,8 +196,8 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
             <AlertDialogDescription>
               {confirmando === "cancelar"
                 ? a?.status === "pendente"
-                  ? "O horário volta a ficar livre. Avise a cliente pelo WhatsApp, se puder."
-                  : "O horário volta a ficar livre. O registro continua no histórico da cliente como cancelado."
+                  ? "O horário volta a ficar livre. Se puder, avise pelo WhatsApp."
+                  : "O horário volta a ficar livre. O registro continua no histórico como cancelado."
                 : "O período volta a ficar disponível para marcar atendimentos."}
             </AlertDialogDescription>
           </AlertDialogHeader>

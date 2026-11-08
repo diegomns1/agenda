@@ -29,7 +29,7 @@ export async function marcarClienteAvisada(agendamentoId: string, avisada: boole
     .eq("id", agendamentoId);
   if (error) return { erro: `Não foi possível salvar: ${error.message}` };
   revalidar();
-  return { ok: true, mensagem: avisada ? "Marcado como avisada." : "Desmarcado." };
+  return { ok: true, mensagem: avisada ? "Lembrete marcado como enviado." : "Desmarcado." };
 }
 
 const esquemaInscricao = z.object({

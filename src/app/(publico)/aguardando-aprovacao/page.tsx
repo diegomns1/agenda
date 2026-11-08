@@ -53,7 +53,7 @@ export default async function PaginaAguardandoAprovacao() {
   const { titulo, texto, Icone } = testeAcabou
     ? {
         titulo: "Seu teste grátis terminou",
-        texto: "Gostou? Escolha um plano para continuar usando a agenda. Suas clientes, serviços e horários continuam guardados.",
+        texto: "Gostou? Escolha um plano para continuar usando a agenda. Seus clientes, serviços e horários continuam guardados.",
         Icone: TEXTOS.vencida.Icone,
       }
     : TEXTOS[situacao];

@@ -21,12 +21,12 @@ export default async function PaginaLembretes({ searchParams }: PageProps<"/lemb
         recurso="lembretes"
         planoAtual={perfil.plano}
         titulo="Lembretes"
-        descricao="Avisos automáticos para você e mensagens prontas para suas clientes."
+        descricao="Avisos automáticos para você e mensagens prontas para quem você atende."
         beneficios={[
           "Notificação no celular 1 dia e 1 hora antes de cada atendimento",
-          "Botão que abre o WhatsApp da cliente com a mensagem pronta",
+          "Botão que abre o WhatsApp de quem vem, com a mensagem pronta",
           "Lista do que ainda falta avisar, com check de enviado",
-          "Agendamento pela própria cliente pelo seu link",
+          "Link para marcarem horário sozinhos",
         ]}
       />
     );
@@ -39,7 +39,7 @@ export default async function PaginaLembretes({ searchParams }: PageProps<"/lemb
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Lembretes</h1>
         <p className="text-sm text-muted-foreground">
-          Atendimentos das próximas 48 horas. Toque em <strong>Lembrar cliente</strong> para abrir o WhatsApp com a mensagem pronta.{" "}
+          Atendimentos das próximas 48 horas. Toque em <strong>Enviar lembrete</strong> para abrir o WhatsApp com a mensagem pronta.{" "}
           <Link href="/perfil#modelo_lembrete" className="underline underline-offset-4">
             Editar mensagem
           </Link>

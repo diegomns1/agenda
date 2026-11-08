@@ -23,7 +23,7 @@ export const PLANOS = {
     nome: "Profissional",
     curto: "Profissional",
     preco: 29.9,
-    descricao: "Tudo do Essencial + agendamento pela cliente + lembretes.",
+    descricao: "Tudo do Essencial + link de agendamento + lembretes.",
     nivel: 2,
   },
   premium: {
@@ -42,7 +42,7 @@ export const DIAS_TESTE = 3;
 
 export const RECURSOS = {
   lembretes: { nome: "Lembretes", planoMinimo: "profissional" as Plano },
-  agendamento_online: { nome: "Agendamento pela cliente", planoMinimo: "profissional" as Plano },
+  agendamento_online: { nome: "Link de agendamento", planoMinimo: "profissional" as Plano },
   stories: { nome: "Stories para o Instagram", planoMinimo: "premium" as Plano },
   // relatórios do mês + aviso "vagou um horário" na tela Hoje
   relatorios: { nome: "Relatórios", planoMinimo: "premium" as Plano },

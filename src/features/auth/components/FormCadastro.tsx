@@ -32,7 +32,7 @@ export function FormCadastro() {
         rotulo="Seu nome"
         nome="nome"
         autoComplete="name"
-        placeholder="Como suas clientes te chamam"
+        placeholder="Como seus clientes te chamam"
         defaultValue={estado.valores?.nome}
         erros={estado.erros?.nome}
         required

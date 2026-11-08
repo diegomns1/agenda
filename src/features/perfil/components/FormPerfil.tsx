@@ -122,7 +122,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
                 </button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">Vale só para o seu painel. A página que as clientes veem usa as cores da sua marca, logo abaixo.</p>
+            <p className="text-xs text-muted-foreground">Vale só para o seu painel. A página do seu link usa as cores da sua marca, logo abaixo.</p>
           </div>
         </CardContent>
       </Card>
@@ -130,7 +130,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
       <Card>
         <CardHeader>
           <CardTitle>Seus dados</CardTitle>
-          <CardDescription>Como você e seu negócio aparecem para as clientes.</CardDescription>
+          <CardDescription>Como você e seu negócio aparecem para quem agenda.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <Campo
@@ -193,9 +193,9 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
 
       <Card id="agendamento-online">
         <CardHeader>
-          <CardTitle>Agendamento pela cliente</CardTitle>
+          <CardTitle>Link de agendamento</CardTitle>
           <CardDescription>
-            Um link para colocar na bio do Instagram: a cliente escolhe serviço, dia e horário livre.
+            Um link para colocar na bio do Instagram: quem quer marcar escolhe serviço, dia e horário livre.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -291,7 +291,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
         <CardHeader>
           <CardTitle>Mensagem de lembrete</CardTitle>
           <CardDescription>
-            Texto que vai pronto para o WhatsApp da cliente. Você pode usar{" "}
+            Texto que vai pronto para o WhatsApp de quem você atende. Você pode usar{" "}
             <code className="rounded bg-muted px-1">{"{nome}"}</code>,{" "}
             <code className="rounded bg-muted px-1">{"{dia}"}</code>,{" "}
             <code className="rounded bg-muted px-1">{"{hora}"}</code> e{" "}
@@ -315,7 +315,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
             ) : null}
           </div>
           <div className="rounded-lg bg-[#e7ffdb] px-3 py-2 text-sm text-neutral-900 dark:bg-[#1f3d2a] dark:text-neutral-100">
-            <p className="mb-1 text-xs font-medium opacity-60">Exemplo de como a cliente vê</p>
+            <p className="mb-1 text-xs font-medium opacity-60">Exemplo de como a pessoa recebe</p>
             <p className="whitespace-pre-wrap">{preencherModelo(modelo)}</p>
           </div>
         </CardContent>

@@ -42,7 +42,7 @@ export function FormCliente({ cliente, aoConcluir }: Props) {
       <Campo
         rotulo="Nome"
         nome="nome"
-        placeholder="Nome da cliente"
+        placeholder="Nome completo"
         autoComplete="off"
         defaultValue={v?.nome ?? cliente?.nome ?? ""}
         erros={estado.erros?.nome}

@@ -24,7 +24,7 @@ async function sessao() {
 }
 
 function traduzirErroBanco(mensagem: string, codigo?: string) {
-  if (codigo === "23505") return "Já existe uma cliente com este WhatsApp.";
+  if (codigo === "23505") return "Já existe um cadastro com este WhatsApp.";
   return `Não foi possível salvar: ${mensagem}`;
 }
 
@@ -56,7 +56,7 @@ export async function salvarCliente(_: EstadoForm, formData: FormData): Promise<
   if (error) return { erro: traduzirErroBanco(error.message, error.code), valores };
 
   revalidar(data.id);
-  return { ok: true, mensagem: "Cliente cadastrada.", valores: { id: data.id } };
+  return { ok: true, mensagem: "Cadastro salvo.", valores: { id: data.id } };
 }
 
 export async function excluirCliente(id: string): Promise<EstadoForm> {

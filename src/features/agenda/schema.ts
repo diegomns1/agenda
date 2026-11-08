@@ -17,7 +17,7 @@ export const esquemaAtendimento = z
     observacoes: z.string().trim().max(500, "Máximo de 500 caracteres").optional().transform((v) => v || null),
   })
   .refine((d) => d.cliente_id || d.nova_cliente_nome, {
-    message: "Escolha a cliente ou informe o nome de uma nova",
+    message: "Escolha um cliente da lista ou informe o nome de um novo",
     path: ["cliente_id"],
   });
 

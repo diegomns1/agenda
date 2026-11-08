@@ -111,7 +111,7 @@ async function executar(request: NextRequest) {
     const hora = horaDe(linha.inicio);
     const r = await enviarPush(destinos, {
       title: tipo === "1h" ? `Em 1 hora: ${nome} às ${hora}` : `Amanhã: ${nome} às ${hora}`,
-      body: `${linha.servico_nome ?? "Atendimento"} · ${formatarData(linha.inicio, "EEEE, dd/MM")}. Toque para lembrar a cliente.`,
+      body: `${linha.servico_nome ?? "Atendimento"} · ${formatarData(linha.inicio, "EEEE, dd/MM")}. Toque para enviar o lembrete.`,
       url: `/lembretes?agendamento=${linha.id}`,
       tag: `lembrete-${linha.id}-${tipo}`,
     });

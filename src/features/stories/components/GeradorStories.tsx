@@ -485,7 +485,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
                     Anexar foto
                   </Button>
                 )}
-                <p className="text-xs text-muted-foreground">Uma foto quadrada do resultado fica melhor. Ela não é salva: vale só para esta imagem.</p>
+                <p className="text-xs text-muted-foreground">Uma foto quadrada do resultado fica melhor. A foto não é salva: vale só para esta imagem.</p>
               </div>
             ) : null}
           </section>

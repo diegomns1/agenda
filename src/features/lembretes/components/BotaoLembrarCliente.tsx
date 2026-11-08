@@ -38,7 +38,7 @@ export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "
     return (
       <Button variant="outline" size={tamanho} onClick={() => marcar(false)} disabled={pendente} title="Desmarcar">
         <CheckIcon className="text-emerald-600" />
-        Avisada
+        Lembrete enviado
         <UndoIcon className="opacity-50" />
       </Button>
     );
@@ -48,7 +48,7 @@ export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "
     return (
       <Button variant="outline" size={tamanho} onClick={() => marcar(true)} disabled={pendente} title="Cliente sem WhatsApp cadastrado">
         <CheckIcon />
-        Marcar como avisada
+        Marcar lembrete como enviado
       </Button>
     );
   }
@@ -62,7 +62,7 @@ export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "
         onClick={() => marcar(true)}
       >
         <MessageCircleIcon />
-        Lembrar cliente
+        Enviar lembrete
       </a>
     </Button>
   );

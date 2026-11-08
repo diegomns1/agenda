@@ -19,9 +19,9 @@ export default function PaginaTermos() {
 
       <h2>1. O que é o Vaguinha</h2>
       <p>
-        O Vaguinha é uma agenda online para profissionais autônomas (manicures, designers de sobrancelha, cabeleireiras e
+        O Vaguinha é uma agenda online para profissionais autônomos (manicures, barbeiros, cabeleireiros, tatuadores, personal trainers e
         outras), operada por {OPERADOR} (&quot;nós&quot;). Com ele, a profissional organiza seus horários, cadastra clientes e
-        serviços, recebe lembretes, divulga horários livres e pode oferecer um link para a própria cliente pedir um horário.
+        serviços, recebe lembretes, divulga horários livres e pode oferecer um link para os próprios clientes pedirem um horário.
       </p>
 
       <h2>2. Conta e acesso</h2>
@@ -57,7 +57,7 @@ export default function PaginaTermos() {
         <li>publicar conteúdo ofensivo, ilegal ou que viole direitos de terceiros (por exemplo, fotos sem autorização).</li>
       </ul>
 
-      <h2>5. Dados das suas clientes</h2>
+      <h2>5. Dados dos seus clientes</h2>
       <p>
         As informações de clientes (nome, WhatsApp, observações, histórico) são suas e você é a responsável por elas perante a
         Lei Geral de Proteção de Dados (LGPD). O Vaguinha apenas guarda e processa esses dados em seu nome, seguindo suas
@@ -67,7 +67,7 @@ export default function PaginaTermos() {
       <h2>6. Lembretes, notificações e WhatsApp</h2>
       <p>
         Os lembretes para a profissional chegam por notificação no celular, e dependem de o aparelho e o navegador permitirem.
-        As mensagens para as clientes são abertas no seu WhatsApp já prontas, mas quem envia é você. O Vaguinha não tem
+        As mensagens para os clientes são abertas no seu WhatsApp já prontas, mas quem envia é você. O Vaguinha não tem
         ligação com o WhatsApp nem envia mensagens automaticamente em seu nome.
       </p>
 

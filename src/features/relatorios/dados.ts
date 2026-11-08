@@ -152,7 +152,7 @@ export async function montarRelatorio(mes: Mes): Promise<Relatorio> {
       anterior: clientes.filter((c) => dataDe(c.created_at).slice(0, 7) === anterior).length,
       detalhes: clientes
         .filter((c) => dataDe(c.created_at).slice(0, 7) === mes)
-        .map((c) => ({ id: c.id, titulo: c.nome, subtitulo: `Cadastrada em ${formatarDataISO(dataDe(c.created_at))}` })),
+        .map((c) => ({ id: c.id, titulo: c.nome, subtitulo: `Cadastro em ${formatarDataISO(dataDe(c.created_at))}` })),
     },
     cancelamentos: {
       chave: "cancelamentos",

@@ -23,7 +23,20 @@ import { cn } from "@/lib/utils";
 const CADASTRO = `${URL_APP}/cadastro`;
 const LOGIN = `${URL_APP}/login`;
 
-const PROFISSOES = ["Manicure", "Designer de sobrancelha", "Lash designer", "Cabeleireira", "Esteticista", "Massoterapeuta", "Maquiadora", "Depiladora"];
+const PROFISSOES = [
+  "Manicure",
+  "Barbearia",
+  "Salão de beleza",
+  "Sobrancelha e cílios",
+  "Tatuagem",
+  "Estética",
+  "Massoterapia",
+  "Personal trainer",
+  "Psicologia",
+  "Nutrição",
+  "Banho e tosa",
+  "Aulas particulares",
+];
 
 const RECURSOS = [
   {
@@ -33,18 +46,18 @@ const RECURSOS = [
   },
   {
     Icone: UsersIcon,
-    titulo: "Suas clientes com histórico",
-    texto: "Nome, WhatsApp, observações e tudo o que ela já fez com você. Pra lembrar da cor do esmalte sem perguntar.",
+    titulo: "Seus clientes com histórico",
+    texto: "Nome, WhatsApp, observações e tudo o que já foi feito. Pra lembrar da cor, do corte ou do detalhe sem perguntar.",
   },
   {
     Icone: BellRingIcon,
     titulo: "Lembretes que chegam no seu celular",
-    texto: "Um dia antes e uma hora antes de cada atendimento. Com um toque, abre o WhatsApp da cliente com a mensagem pronta.",
+    texto: "Um dia antes e uma hora antes de cada atendimento. Com um toque, abre o WhatsApp com a mensagem pronta.",
   },
   {
     Icone: Link2Icon,
-    titulo: "Link para a cliente marcar sozinha",
-    texto: "Coloque na bio do Instagram. Ela escolhe o serviço e o horário livre; você confirma (ou deixa confirmar sozinho).",
+    titulo: "Link para marcarem sozinhos",
+    texto: "Coloque na bio do Instagram. A pessoa escolhe o serviço e o horário livre; você confirma (ou deixa confirmar sozinho).",
   },
   {
     Icone: SparklesIcon,
@@ -75,7 +88,7 @@ const PLANOS_SITE = [
     id: "profissional" as const,
     destaque: true,
     para: "Para lotar a agenda sem esforço",
-    itens: ["Tudo do Essencial", "Link para a cliente marcar sozinha", "Lembretes 1 dia e 1 hora antes", "WhatsApp com a mensagem pronta", "Lista do que falta avisar"],
+    itens: ["Tudo do Essencial", "Link para marcarem sozinhos", "Lembretes 1 dia e 1 hora antes", "WhatsApp com a mensagem pronta", "Lista do que falta avisar"],
   },
   {
     id: "premium" as const,
@@ -101,20 +114,20 @@ const DUVIDAS = [
     r: "Sim. No iPhone, adicione à tela de início (Compartilhar → Adicionar à Tela de Início) para receber os lembretes. No Android, basta aceitar o aviso de instalar.",
   },
   {
-    p: "Minhas clientes precisam baixar algo ou criar conta?",
-    r: "Não. Elas abrem o seu link, escolhem o serviço e o horário, e informam o nome e o WhatsApp. Só isso.",
+    p: "Meus clientes precisam baixar algo ou criar conta?",
+    r: "Não. Eles abrem o seu link, escolhem o serviço e o horário, e informam o nome e o WhatsApp. Só isso.",
   },
   {
     p: "O Vaguinha manda mensagem no WhatsApp sozinho?",
-    r: "Não, e isso é de propósito: mensagens automáticas podem bloquear o seu número. O Vaguinha prepara a mensagem e abre o WhatsApp da cliente; você só toca em enviar.",
+    r: "Não, e isso é de propósito: mensagens automáticas podem bloquear o seu número. O Vaguinha prepara a mensagem e abre o WhatsApp da pessoa; você só toca em enviar.",
   },
   {
     p: "Como funciona o pagamento?",
-    r: "Você testa grátis por 3 dias, com a agenda, as clientes e os serviços. Depois, é uma assinatura mensal simples por Pix, boleto ou cartão, sem fidelidade. Você cancela quando quiser e seus dados continuam guardados.",
+    r: "Você testa grátis por 3 dias, com a agenda, os clientes e os serviços. Depois, é uma assinatura mensal simples por Pix, boleto ou cartão, sem fidelidade. Você cancela quando quiser e seus dados continuam guardados.",
   },
   {
-    p: "Meus dados e os das minhas clientes estão seguros?",
-    r: "Sim. Cada profissional só enxerga a própria agenda, com regras aplicadas direto no banco de dados. Não vendemos dados nem entramos em contato com as suas clientes. Veja a Política de Privacidade.",
+    p: "Meus dados e os dos meus clientes estão seguros?",
+    r: "Sim. Cada profissional só enxerga a própria agenda, com regras aplicadas direto no banco de dados. Não vendemos dados nem entramos em contato com os seus clientes. Veja a Política de Privacidade.",
   },
 ];
 
@@ -133,7 +146,7 @@ export default function PaginaSite() {
               Sua agenda cheia, <span className="texto-gradiente">sem bagunça</span> no WhatsApp.
             </h1>
             <p className="surgir surgir-atraso-2 max-w-xl text-lg text-muted-foreground">
-              O Vaguinha organiza horários, clientes e lembretes da profissional autônoma. E ainda deixa a cliente marcar sozinha pelo seu
+              O Vaguinha organiza horários, clientes e lembretes de quem trabalha por conta própria. E ainda deixa seus clientes marcarem sozinhos pelo seu
               link, sem você parar o atendimento para responder.
             </p>
             <div className="surgir surgir-atraso-3 flex flex-wrap items-center gap-3">
@@ -164,7 +177,7 @@ export default function PaginaSite() {
       {/* ------------------------------------------------------- Profissões */}
       <section className="border-y border-vinho/10 bg-card/50">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-4 py-8 sm:px-6">
-          <p className="text-sm font-medium text-muted-foreground">Feito para quem atende sozinha</p>
+          <p className="text-sm font-medium text-muted-foreground">Feito para quem atende com hora marcada</p>
           <ul className="flex flex-wrap justify-center gap-2">
             {PROFISSOES.map((p, i) => (
               <Revelar key={p} atraso={i * 50}>
@@ -205,11 +218,11 @@ export default function PaginaSite() {
             <p className="text-sm font-semibold tracking-wide text-rosa uppercase">Seu link de agendamento</p>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">vaguinha.app/p/seu-nome</h2>
             <p className="mt-4 max-w-lg text-white/85">
-              A cliente abre o link, vê os seus serviços e só os horários realmente livres, e pede o horário com nome e WhatsApp. Você
+              A pessoa abre o link, vê os seus serviços e só os horários realmente livres, e pede o horário com nome e WhatsApp. Você
               recebe uma notificação e confirma com um toque. Ou deixa confirmar sozinho, se preferir.
             </p>
             <ul className="mt-6 grid gap-2 text-sm text-white/90">
-              {["Página com a sua logo e as suas cores", "Nunca mostra o nome de outras clientes", "Antecedência mínima e limite de pedidos por pessoa", "Funciona na bio do Instagram e no status do WhatsApp"].map((t) => (
+              {["Página com a sua logo e as suas cores", "Nunca mostra o nome de outros clientes", "Antecedência mínima e limite de pedidos por pessoa", "Funciona na bio do Instagram e no status do WhatsApp"].map((t) => (
                 <li key={t} className="flex items-start gap-2">
                   <CheckIcon className="mt-0.5 size-4 shrink-0 text-rosa" />
                   {t}
@@ -252,7 +265,7 @@ export default function PaginaSite() {
           <Revelar className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Planos simples, preço de um esmalte</h2>
             <p className="mt-3 text-muted-foreground">
-              Teste <strong className="text-foreground">grátis por 3 dias</strong> com a agenda, as clientes e os serviços. Depois, você escolhe o
+              Teste <strong className="text-foreground">grátis por 3 dias</strong> com a agenda, os clientes e os serviços. Depois, você escolhe o
               plano que faz sentido para o seu momento.
             </p>
           </Revelar>
@@ -392,7 +405,7 @@ function MockCelular() {
           </span>
           <div className="min-w-0">
             <p className="truncate text-xs font-semibold">Amanhã: Juliana às 09:00</p>
-            <p className="truncate text-[11px] text-muted-foreground">Toque para lembrar a cliente</p>
+            <p className="truncate text-[11px] text-muted-foreground">Toque para enviar o lembrete</p>
           </div>
         </div>
       </div>

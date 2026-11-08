@@ -168,7 +168,7 @@ export function emailVencimentoProximo(para: string, nome: string, plano: Plano,
       saudacao: `Oi, ${primeiroNome(nome)}!`,
       paragrafos: [
         `O teste vale até ${formatarDataISO(ativaAte)}. Depois disso a agenda fica em espera até você assinar um plano. Nada é apagado: clientes, serviços e horários continuam lá.`,
-        "Os planos começam em R$ 19,90 por mês, com pagamento por Pix, boleto ou cartão e sem fidelidade. No Profissional você ganha o link para a cliente marcar sozinha e os lembretes; no Premium, os stories prontos para o Instagram.",
+        "Os planos começam em R$ 19,90 por mês, com pagamento por Pix, boleto ou cartão e sem fidelidade. No Profissional você ganha o link de agendamento e os lembretes; no Premium, os stories prontos para o Instagram.",
       ],
       botao: { texto: "Escolher meu plano", url: `${URL_APP}/assinatura` },
     });

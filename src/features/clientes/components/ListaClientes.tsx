@@ -25,18 +25,18 @@ export function ListaClientes({ clientes, total, busca }: Props) {
           {busca
             ? `${clientes.length} resultado${clientes.length === 1 ? "" : "s"} para "${busca}"`
             : total === 0
-              ? "Nenhuma cliente ainda."
+              ? "Nenhum cadastro ainda."
               : `${total} cliente${total === 1 ? "" : "s"}.`}
         </p>
         <Button onClick={() => setAberto(true)}>
           <PlusIcon />
-          Nova cliente
+          Novo cadastro
         </Button>
       </div>
 
       {clientes.length === 0 ? (
         busca ? (
-          <EstadoVazio Icone={UsersIcon} titulo="Ninguém com esse nome" descricao="Confira a grafia ou cadastre uma nova cliente.">
+          <EstadoVazio Icone={UsersIcon} titulo="Ninguém com esse nome" descricao="Confira a grafia ou faça um novo cadastro.">
             <Button onClick={() => setAberto(true)}>
               <PlusIcon />
               Cadastrar &quot;{busca}&quot;
@@ -46,7 +46,7 @@ export function ListaClientes({ clientes, total, busca }: Props) {
           <EstadoVazio
             Icone={UsersIcon}
             titulo="Sua lista de clientes"
-            descricao="Cadastre nome e WhatsApp. Depois, cada atendimento fica registrado no histórico dela."
+            descricao="Cadastre nome e WhatsApp. Depois, cada atendimento fica registrado no histórico."
           >
             <Button onClick={() => setAberto(true)}>
               <PlusIcon />
@@ -85,7 +85,7 @@ export function ListaClientes({ clientes, total, busca }: Props) {
       <Dialog open={aberto} onOpenChange={setAberto}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nova cliente</DialogTitle>
+            <DialogTitle>Novo cadastro</DialogTitle>
             <DialogDescription>Só o nome é obrigatório.</DialogDescription>
           </DialogHeader>
           {aberto ? (

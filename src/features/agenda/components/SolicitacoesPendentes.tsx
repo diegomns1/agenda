@@ -18,7 +18,7 @@ export function SolicitacoesPendentes({ solicitacoes }: { solicitacoes: Agendame
   function decidir(id: string, status: "agendado" | "cancelado") {
     iniciar(async () => {
       const r = await alterarStatusAgendamento(id, status);
-      if (r.ok) toast.success(status === "agendado" ? "Confirmado! A cliente já pode ser avisada." : "Pedido recusado. O horário ficou livre.");
+      if (r.ok) toast.success(status === "agendado" ? "Confirmado! Já dá para avisar pelo WhatsApp." : "Pedido recusado. O horário ficou livre.");
       else if (r.erro) toast.error(r.erro);
     });
   }

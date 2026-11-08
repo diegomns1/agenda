@@ -8,9 +8,9 @@ import { EMAIL_CONTATO } from "@/lib/legal";
 
 export const metadata: Metadata = {
   metadataBase: new URL(URL_SITE),
-  title: { absolute: "Vaguinha · Agenda para profissionais autônomas" },
+  title: { absolute: "Vaguinha · Agenda online para quem atende com hora marcada" },
   description:
-    "Agenda, clientes, lembretes, link para a cliente marcar sozinha e stories prontos para o Instagram. Feito para manicures, designers de sobrancelha, lash, cabeleireiras e outras profissionais autônomas.",
+    "Agenda, clientes, lembretes, link para marcarem sozinhos e stories prontos para o Instagram. Feito para manicures, barbeiros, cabeleireiros, tatuadores, personal trainers e todo profissional que atende com hora marcada.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     url: URL_SITE,
     siteName: "Vaguinha",
     title: "Vaguinha · sua agenda cheia, sem bagunça no WhatsApp",
-    description: "Agenda, clientes, lembretes e link de agendamento para profissionais autônomas.",
+    description: "Agenda, clientes, lembretes e link de agendamento para profissionais autônomos.",
   },
   twitter: { card: "summary_large_image" },
 };
@@ -66,7 +66,7 @@ export default function LayoutSite({ children }: { children: React.ReactNode }) 
           <div className="grid gap-3">
             <LogoVaguinha variante="horizontal" className="h-9 w-auto" />
             <p className="max-w-sm text-sm text-muted-foreground">
-              Agenda online para profissionais autônomas. Feito no Brasil, em português, para caber no seu dia.
+              Agenda online para quem atende com hora marcada. Feito no Brasil, em português, para caber no seu dia.
             </p>
           </div>
           <div className="grid content-start gap-2 text-sm">
