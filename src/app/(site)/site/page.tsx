@@ -86,13 +86,13 @@ const PLANOS_SITE = [
   },
   {
     id: "profissional" as const,
-    destaque: true,
+    destaque: false,
     para: "Para lotar a agenda sem esforço",
     itens: ["Tudo do Essencial", "Link para marcarem sozinhos", "Lembretes 1 dia e 1 hora antes", "WhatsApp com a mensagem pronta", "Lista do que falta avisar"],
   },
   {
     id: "premium" as const,
-    destaque: false,
+    destaque: true,
     para: "Para quem quer uma secretária no bolso",
     itens: [
       "Tudo do Profissional",

@@ -34,6 +34,8 @@ type Props = {
   servicos: ServicoResumo[];
   tipoInicial?: TipoStory;
   dataInicial?: DataISO;
+  /** Horário que vagou ("Divulgar" na tela Hoje): o story do dia abre só com ele marcado. */
+  horaInicial?: string;
 };
 
 const DIAS_CURTOS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
@@ -237,7 +239,7 @@ function Alternador({ ativo, onClick, children, className, disabled }: { ativo: 
   );
 }
 
-export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, intervaloMin, servicos, tipoInicial, dataInicial }: Props) {
+export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, intervaloMin, servicos, tipoInicial, dataInicial, horaInicial }: Props) {
   const [tipo, setTipo] = useState<TipoStory>(tipoInicial ?? "dia");
   const [temaId, setTemaId] = useState("neutro");
   const [dia, setDia] = useState<DataISO>(dataInicial ?? hoje);
@@ -259,13 +261,21 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
   // ---- sugestão da agenda: pré-marca o que está livre sempre que muda o modelo ou a data ----
   const chaveSugestao = `${tipo}|${dataBase}`;
   const [sugestaoDe, setSugestaoDe] = useState<string | null>(null);
+  // Veio do aviso "vagou um horário": na primeira carga do dia, marca só aquele horário
+  const vagaPendente = useRef(horaInicial && dataInicial ? { chave: `dia|${dataInicial}`, hora: horaInicial } : null);
   useEffect(() => {
     if (tipo === "servicos") return;
     let ativo = true;
     sugerirStory(tipo, dataBase)
       .then((s) => {
         if (!ativo) return;
-        setHorarios(s.horarios ?? []);
+        const vaga = vagaPendente.current;
+        if (vaga && vaga.chave === chaveSugestao) {
+          vagaPendente.current = null; // só na primeira vez; depois volta a sugerir pela agenda
+          setHorarios([vaga.hora]);
+        } else {
+          setHorarios(s.horarios ?? []);
+        }
         setDias(s.dias ?? []);
         setSugestaoDe(chaveSugestao);
       })
@@ -424,7 +434,10 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
   // ---- dados derivados para os painéis ----
   const gradeDia = useMemo(() => gradeDoDia(dia, expediente, intervaloMin), [dia, expediente, intervaloMin]);
   const folgaNoDia = gradeDia.length === 0;
-  const gradeExibida = folgaNoDia ? gradeGenerica(intervaloMin) : gradeDia;
+  const gradeBase = folgaNoDia ? gradeGenerica(intervaloMin) : gradeDia;
+  // um horário marcado fora da grade (ex.: vaga às 14:15 com grade de 30 min) também aparece para desmarcar
+  const gradeExibida = horarios.some((h) => !gradeBase.includes(h)) ? [...new Set([...gradeBase, ...horarios])].sort() : gradeBase;
+  const mostrandoVaga = tipo === "dia" && !!horaInicial && dia === dataInicial && horarios.length === 1 && horarios[0] === horaInicial;
   const diasDaSemana = useMemo(() => diasEntre(inicioSemana, somarDias(inicioSemana, 6)), [inicioSemana]);
   const gradeMes = useMemo(() => {
     const { inicio, fim, primeiro, ultimo } = intervaloDoMes(`${mes}-01`);
@@ -480,6 +493,8 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
                   <span className="inline-flex items-center gap-1.5">
                     <Loader2Icon className="size-3.5 animate-spin" /> Conferindo sua agenda…
                   </span>
+                ) : mostrandoVaga ? (
+                  "Só o horário que vagou está marcado. Toque em outros se quiser divulgar mais."
                 ) : folgaNoDia ? (
                   "Pelo seu expediente você não atende nesse dia. Marque os horários que quiser abrir."
                 ) : (

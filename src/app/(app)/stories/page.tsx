@@ -33,6 +33,7 @@ export default async function PaginaStories({ searchParams }: PageProps<"/storie
   }
 
   const servicos = await listarServicos({ somenteAtivos: true });
+  const dataInicial = ehDataISO(sp.data) && sp.data >= hojeISO() ? sp.data : undefined;
 
   return (
     <div className="grid gap-5">
@@ -54,9 +55,10 @@ export default async function PaginaStories({ searchParams }: PageProps<"/storie
         expediente={perfil.expediente}
         intervaloMin={perfil.intervalo_grade_min}
         servicos={servicos.map((s) => ({ id: s.id, nome: s.nome, valor: s.valor }))}
-        // ex.: /stories?tipo=dia&data=2026-11-14 (botão "Divulgar" do aviso de horário que vagou)
+        // ex.: /stories?tipo=dia&data=2026-11-14&hora=15:00 (botão "Divulgar" do aviso de horário que vagou)
         tipoInicial={sp.tipo === "dia" || sp.tipo === "semana" || sp.tipo === "mes" || sp.tipo === "servicos" ? sp.tipo : undefined}
-        dataInicial={ehDataISO(sp.data) && sp.data >= hojeISO() ? sp.data : undefined}
+        dataInicial={dataInicial}
+        horaInicial={dataInicial && typeof sp.hora === "string" && /^\d{2}:\d{2}$/.test(sp.hora) ? sp.hora : undefined}
       />
     </div>
   );

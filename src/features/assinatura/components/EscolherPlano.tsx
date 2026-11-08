@@ -30,7 +30,7 @@ type Props = {
 type Resultado = EstadoForm & { linkPagamento?: string };
 
 export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatura }: Props) {
-  const [plano, setPlano] = useState<PlanoAssinavel>(planoAssinado ?? (planoAtual === "teste" ? "profissional" : (planoAtual as PlanoAssinavel)));
+  const [plano, setPlano] = useState<PlanoAssinavel>(planoAssinado ?? (planoAtual === "teste" ? "premium" : (planoAtual as PlanoAssinavel)));
   const [documento, setDocumento] = useState(formatarCpfCnpj(cpfCnpj));
 
   const [estado, acao] = useActionState(async (prev: Resultado, fd: FormData): Promise<Resultado> => {
@@ -77,7 +77,11 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-semibold">{p.nome}</span>
-                    {planoAssinado === id && temAssinatura ? <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">atual</span> : null}
+                    {planoAssinado === id && temAssinatura ? (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">atual</span>
+                    ) : id === "premium" ? (
+                      <span className="gradiente-marca rounded-full px-2 py-0.5 text-[10px] font-bold text-white">Mais escolhido</span>
+                    ) : null}
                   </div>
                   <span className="text-xl font-extrabold tracking-tight">{formatarPreco(p.preco)}</span>
                   <ul className="grid gap-1 text-xs text-muted-foreground">

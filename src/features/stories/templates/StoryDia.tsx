@@ -23,11 +23,34 @@ export function StoryDia({ tema, marca, dados }: { tema: Tema; marca: Marca; dad
   for (let i = 0; i < textos.length; i += colunas) linhas.push(textos.slice(i, i + colunas));
 
   return (
-    <Base tema={tema} marca={marca} paleta={paleta} titulo="Horários livres" subtitulo={dados.rotuloDia}>
+    <Base tema={tema} marca={marca} paleta={paleta} titulo={total === 1 ? "Vagou um horário!" : "Horários livres"} subtitulo={dados.rotuloDia}>
       {!dados.atende ? (
         <Aviso texto="Hoje não atendo. Veja os próximos dias!" paleta={paleta} />
       ) : total === 0 ? (
         <Aviso texto="Agenda cheia! Me chame para entrar na lista de espera." paleta={paleta} />
+      ) : total === 1 ? (
+        // Um horário só (ex.: alguém desmarcou): a hora em destaque, bem grande
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 30 }}>
+          <div
+            style={{
+              display: "flex",
+              padding: "30px 90px",
+              borderRadius: 999,
+              background: paleta.primaria,
+              color: paleta.sobrePrimaria,
+              fontSize: 110,
+              fontWeight: 800,
+              letterSpacing: 2,
+            }}
+          >
+            {textos[0]}
+          </div>
+          <div style={{ display: "flex", marginTop: 40 }}>
+            <Legivel paleta={paleta} comImagem={Boolean(tema.imagemUrl)} style={{ fontSize: 36, fontWeight: 600 }}>
+              Corre que é só um!
+            </Legivel>
+          </div>
+        </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           <div style={{ display: "flex", flexDirection: "column", width: larguraGrade, gap: ESPACO }}>

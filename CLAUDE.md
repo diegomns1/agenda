@@ -33,8 +33,9 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 
 - `teste` (grátis por `DIAS_TESTE` = 3 dias, contados da aprovação, com os recursos do Essencial: `nivel` 1;
   a validade é gravada em `alterarStatusConta` na primeira aprovação; migração 0014 tirou o teste do agendamento online),
-  `essencial` R$ 19,90 (perfil, serviços, clientes, agenda),
-  `profissional` R$ 29,90 (+ agendamento pela cliente + lembretes), `premium` R$ 39,90 (+ stories).
+  `essencial` R$ 29,90 (perfil, serviços, clientes, agenda),
+  `profissional` R$ 39,90 (+ agendamento pela cliente + lembretes), `premium` R$ 59,90 (+ stories, relatórios,
+  assistente de IA; "Mais escolhido" no site e na assinatura). Preços só em `src/lib/planos.ts` (08/11/2026).
 - Regra única em `src/lib/planos.ts` (`temRecurso(plano, recurso)`); telas travadas usam `components/layout/BloqueioPlano.tsx`.
   Rotas de API também checam (`/api/stories` → 403; cron só envia push para planos com lembretes).
 - A barra inferior só reflete o plano após recarregar a página (layout não re-renderiza em navegação entre páginas irmãs).

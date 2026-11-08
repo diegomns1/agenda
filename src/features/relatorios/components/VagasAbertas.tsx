@@ -49,7 +49,7 @@ export function VagasAbertas({ vagas }: { vagas: Vaga[] }) {
               </p>
             </div>
             <Button asChild size="sm" className="shrink-0 rounded-full">
-              <Link href={`/stories?tipo=dia&data=${dataDe(v.inicio)}`}>
+              <Link href={`/stories?tipo=dia&data=${dataDe(v.inicio)}&hora=${formatarData(v.inicio, "HH:mm")}`}>
                 <MegaphoneIcon />
                 Divulgar
               </Link>
