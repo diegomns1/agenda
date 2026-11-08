@@ -98,7 +98,8 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Ícones em `public/icons/` gerados por `node scripts/gerar-icones.mjs` (sharp). Trocar o desenho = editar o SVG no script.
 - Domínios: painel em `painel.vaguinha.app`; site institucional no apex `vaguinha.app`, servido pelo MESMO projeto:
   `src/proxy.ts` reescreve `/` do apex para `app/(site)/site/page.tsx`, deixa passar `/termos`, `/privacidade` e `/site/*`
-  e redireciona o resto (login, agenda...) para o painel; `www` → apex. `agenda.digstudio.com.br` e
+  e redireciona o resto (login, agenda...) para o painel. `www` e apex servem o site igualmente; o redirecionamento
+  entre eles é configurado na Vercel (hoje apex → www, 308). Nunca redirecionar www → apex no proxy (laço). `agenda.digstudio.com.br` e
   `agenda-murex-five.vercel.app` redirecionam (308) para o painel. Textos do site ficam em listas no topo do page.tsx;
   preços vêm de `src/lib/planos.ts`. Efeito de aparecer ao rolar: `components/site/Revelar.tsx` + `.revelar` no CSS.
 - Sessão: `obterUsuario()` usa `getClaims()` (JWT local). `obterPerfil()` é a única ida ao banco para dados da conta.

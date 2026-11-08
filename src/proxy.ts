@@ -28,15 +28,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  // ---- site institucional (vaguinha.app) ----
-  if (host === `www.${HOST_SITE}`) {
-    const url = request.nextUrl.clone();
-    url.protocol = "https:";
-    url.host = HOST_SITE;
-    url.port = "";
-    return NextResponse.redirect(url, 308);
-  }
-  if (host === HOST_SITE) {
+  // ---- site institucional (vaguinha.app e www.vaguinha.app) ----
+  // Os dois endereços servem o site. Quem decide qual é o principal é a Vercel (Settings → Domains):
+  // hoje o apex redireciona para o www lá. Por isso aqui NÃO redirecionamos www → apex (daria um laço).
+  if (host === HOST_SITE || host === `www.${HOST_SITE}`) {
     const { pathname } = request.nextUrl;
     if (pathname === "/") {
       const url = request.nextUrl.clone();
