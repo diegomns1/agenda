@@ -38,7 +38,7 @@ export function SolicitacoesPendentes({ solicitacoes }: { solicitacoes: Agendame
             <li key={a.id} className="flex flex-wrap items-center gap-3 py-2.5">
               <div className="w-16 shrink-0 rounded-xl bg-pendente py-1 text-center text-pendente-texto">
                 <p className="text-lg font-extrabold tabular-nums leading-tight">{horaDe(a.inicio)}</p>
-                <p className="text-mini text-muted-foreground capitalize">{rotuloRelativo(dataDe(a.inicio))}</p>
+                <p className="text-mini text-muted-foreground first-letter:uppercase">{rotuloRelativo(dataDe(a.inicio))}</p>
               </div>
               <div className="min-w-0 flex-1">
                 <Link href={`/agenda?visao=dia&data=${dataDe(a.inicio)}`} className="block truncate font-semibold hover:underline">

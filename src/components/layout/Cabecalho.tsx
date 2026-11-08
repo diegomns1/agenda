@@ -47,7 +47,7 @@ export function Cabecalho({ titulo, logoUrl, admin, lembretesPendentes = 0, most
             </Link>
           </Button>
           {mostrarSino ? (
-            <Button asChild variant="ghost" size="icon" className="size-toque">
+            <Button asChild variant="ghost" size="icon" className="size-toque sm:size-toque">
               <Link href="/lembretes" className="relative" aria-label={`Lembretes${lembretesPendentes ? `: ${lembretesPendentes} para avisar` : ""}`}>
                 <BellIcon className="size-5" />
                 {lembretesPendentes > 0 ? (

@@ -290,7 +290,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
               Usa o Google Agenda? <span className="font-semibold text-primary">Importar agenda</span>
             </span>
           </Link>
-          <Button variant="ghost" size="icon" className="size-toque" aria-label="Fechar aviso de importar agenda" onClick={fecharAvisoImportar}>
+          <Button variant="ghost" size="icon" className="size-toque sm:size-toque" aria-label="Fechar aviso de importar agenda" onClick={fecharAvisoImportar}>
             <XIcon />
           </Button>
         </div>

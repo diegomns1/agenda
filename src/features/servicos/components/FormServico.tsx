@@ -59,7 +59,7 @@ export function FormServico({ servico, aoConcluir }: Props) {
               type="button"
               onClick={() => setDuracao(String(d))}
               className={cn(
-                "rounded-full border px-3 py-1 text-sm transition-colors",
+                "min-h-toque sm:min-h-0 rounded-full border px-3 py-1 text-sm transition-colors",
                 duracao === String(d)
                   ? "border-primary bg-primary text-primary-foreground"
                   : "bg-background hover:bg-muted",
@@ -80,7 +80,7 @@ export function FormServico({ servico, aoConcluir }: Props) {
             step={5}
             value={duracao}
             onChange={(e) => setDuracao(e.target.value)}
-            className="h-toque w-28 text-base"
+            className="h-toque w-28 text-base sm:h-toque"
             aria-invalid={estado.erros?.duracao_min ? true : undefined}
           />
           <span className="text-sm text-muted-foreground">minutos</span>
@@ -102,7 +102,7 @@ export function FormServico({ servico, aoConcluir }: Props) {
             inputMode="decimal"
             placeholder="0,00"
             defaultValue={v?.valor ?? (servico ? moedaParaCampo(servico.valor) : "")}
-            className="h-toque pl-9 text-base"
+            className="h-toque pl-9 text-base sm:h-toque"
             aria-invalid={estado.erros?.valor ? true : undefined}
           />
         </div>

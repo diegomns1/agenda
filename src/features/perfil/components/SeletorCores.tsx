@@ -79,7 +79,7 @@ function CampoCor({
       <Label htmlFor={id}>{rotulo}</Label>
       <label
         htmlFor={id}
-        className="flex h-toque cursor-pointer items-center gap-3 rounded-lg border border-input bg-background px-3"
+        className="flex h-toque cursor-pointer items-center gap-3 rounded-lg border border-input bg-background px-3 sm:h-toque"
       >
         <span className="size-6 shrink-0 rounded-full ring-1 ring-black/10" style={{ background: valor }} />
         <span className="font-mono text-sm uppercase">{valor}</span>

@@ -50,7 +50,7 @@ export function SeletorRamo({ ramoInicial, outroInicial, erro, rotulo = "Seu ram
         <button
           type="button"
           onClick={() => setAberto(true)}
-          className="flex h-toque items-center justify-between gap-2 rounded-lg border border-input bg-background px-3 text-left text-base"
+          className="flex h-toque items-center justify-between gap-2 rounded-lg border border-input bg-background px-3 text-left text-base sm:h-toque"
         >
           <span className="truncate">{escolhido?.nome ?? (outro || "Outros")}</span>
           <span className="shrink-0 text-xs font-semibold text-primary">Trocar</span>
@@ -65,7 +65,7 @@ export function SeletorRamo({ ramoInicial, outroInicial, erro, rotulo = "Seu ram
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Busque: unha, cabelo, tatuagem, personal..."
               autoComplete="off"
-              className="h-toque pl-9 text-base"
+              className="h-toque pl-9 text-base sm:h-toque"
             />
           </div>
           <div className="max-h-64 overflow-y-auto pr-1" role="listbox" aria-label="Ramos">
@@ -80,7 +80,7 @@ export function SeletorRamo({ ramoInicial, outroInicial, erro, rotulo = "Seu ram
                     aria-selected={ramo === r.id}
                     onClick={() => escolher(r.id)}
                     className={cn(
-                      "flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm hover:bg-muted",
+                      "min-h-toque sm:min-h-0 flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm hover:bg-muted",
                       ramo === r.id && "bg-primary/10 font-semibold text-primary",
                     )}
                   >
@@ -97,7 +97,7 @@ export function SeletorRamo({ ramoInicial, outroInicial, erro, rotulo = "Seu ram
               aria-selected={ramo === OUTRO_RAMO}
               onClick={() => escolher(OUTRO_RAMO)}
               className={cn(
-                "mt-1 flex w-full items-center gap-2 rounded-lg border border-dashed px-2 py-2 text-left text-sm hover:bg-muted",
+                "min-h-toque sm:min-h-0 mt-1 flex w-full items-center gap-2 rounded-lg border border-dashed px-2 py-2 text-left text-sm hover:bg-muted",
                 ramo === OUTRO_RAMO && "border-primary bg-primary/10 font-semibold text-primary",
               )}
             >
@@ -110,7 +110,7 @@ export function SeletorRamo({ ramoInicial, outroInicial, erro, rotulo = "Seu ram
               value={outro}
               onChange={(e) => setOutro(e.target.value.slice(0, 60))}
               placeholder="Qual é o seu ramo? Ex.: Fotografia de pets"
-              className="h-toque text-base"
+              className="h-toque text-base sm:h-toque"
               autoFocus
             />
           ) : null}

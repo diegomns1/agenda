@@ -46,7 +46,7 @@ export function FormLogin({ proximo, mensagem }: { proximo?: string; mensagem?: 
           onClick={() => setVerSenha((v) => !v)}
           aria-label={verSenha ? "Esconder senha" : "Mostrar senha"}
           aria-pressed={verSenha}
-          className="absolute top-[26px] right-0 flex size-toque items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="absolute top-[26px] right-0 flex size-toque items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:size-toque"
         >
           {verSenha ? <EyeOffIcon className="size-5" /> : <EyeIcon className="size-5" />}
         </button>

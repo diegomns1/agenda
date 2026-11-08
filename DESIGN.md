@@ -61,6 +61,11 @@ aguardando sempre âmbar tracejado, feriado sempre azul. "Agendado" é a cor do 
 
 ## Regras
 
+- **Botões e campos do kit já nascem com 44px no celular** (`components/ui/button.tsx`, `input.tsx`,
+  `select.tsx`; o `switch` tem área de toque invisível maior). A partir de `sm` voltam ao tamanho compacto.
+  Para manter 44px também no computador, use `h-toque sm:h-toque` (é o que `Campo` e `BotaoEnviar` fazem).
+- **`cn` do projeto** (`src/lib/utils.ts`) conhece os tokens (toque, mini, destaque, suave/media/alta,
+  chip/gaveta). Criou token novo no `@theme`? Acrescente lá, senão a junção de classes não resolve o conflito.
 - **Celular primeiro.** Tudo que se toca tem ≥44px no celular. Ação principal da tela fica ao alcance do
   polegar (ex.: "+ Marcar" flutuante na agenda, via `<Flutuante>`).
 - **Texto ≥11px** e contraste ≥4,5:1 (texto) / ≥3:1 (ícones). Pares conferidos em 08/11/2026: todos os

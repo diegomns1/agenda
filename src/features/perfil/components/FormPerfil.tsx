@@ -109,7 +109,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
                   aria-checked={tema === t}
                   onClick={() => setTema(t)}
                   className={cn(
-                    "flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-sm transition-colors",
+                    "min-h-toque sm:min-h-0 flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-sm transition-colors",
                     tema === t ? "border-primary ring-1 ring-primary" : "hover:bg-muted",
                   )}
                 >
@@ -227,7 +227,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
                 name="slug"
                 value={slug}
                 onChange={(e) => setSlug(slugDe(e.target.value.replace(/\s/g, "-")))}
-                className="h-toque min-w-0 flex-1 bg-transparent px-3 text-base outline-none"
+                className="h-toque min-w-0 flex-1 bg-transparent px-3 text-base outline-none sm:h-toque"
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -248,7 +248,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
                 id="confirmacao_online"
                 name="confirmacao_online"
                 defaultValue={perfil.confirmacao_online}
-                className="h-toque rounded-lg border border-input bg-background px-3 text-base"
+                className="h-toque rounded-lg border border-input bg-background px-3 text-base sm:h-toque"
               >
                 <option value="manual">Eu confirmo cada pedido</option>
                 <option value="automatica">Confirmar automaticamente</option>
@@ -260,7 +260,7 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
                 id="antecedencia_min_horas"
                 name="antecedencia_min_horas"
                 defaultValue={perfil.antecedencia_min_horas}
-                className="h-toque rounded-lg border border-input bg-background px-3 text-base"
+                className="h-toque rounded-lg border border-input bg-background px-3 text-base sm:h-toque"
               >
                 {[0, 1, 2, 3, 6, 12, 24, 48].map((h) => (
                   <option key={h} value={h}>

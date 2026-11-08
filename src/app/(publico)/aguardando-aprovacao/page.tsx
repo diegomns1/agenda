@@ -89,12 +89,12 @@ export default async function PaginaAguardandoAprovacao() {
 
       <div className="grid gap-2">
         {situacao === "vencida" ? (
-          <Button asChild size="lg" className="h-toque">
+          <Button asChild size="lg" className="h-toque sm:h-toque">
             <Link href="/assinatura">{testeAcabou ? "Escolher meu plano" : "Renovar agora"}</Link>
           </Button>
         ) : null}
         {suporte ? (
-          <Button asChild size="lg" variant={situacao === "vencida" ? "outline" : "default"} className="h-toque">
+          <Button asChild size="lg" variant={situacao === "vencida" ? "outline" : "default"} className="h-toque sm:h-toque">
             <a
               href={linkWhatsApp(suporte, `Olá! Sou ${perfil?.nome ?? ""} e preciso de ajuda com minha conta.`)}
               target="_blank"

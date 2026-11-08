@@ -40,7 +40,7 @@ type Props = {
 };
 
 const selectClass =
-  "h-toque w-full rounded-lg border border-input bg-background px-3 text-base disabled:opacity-50";
+  "h-toque w-full rounded-lg border border-input bg-background px-3 text-base disabled:opacity-50 sm:h-toque";
 
 export function FormAgendamento({ clientes, servicos, inicial, aoConcluir }: Props) {
   const ag = inicial?.agendamento ?? null;
@@ -70,7 +70,7 @@ export function FormAgendamento({ clientes, servicos, inicial, aoConcluir }: Pro
               type="button"
               onClick={() => setTipo(t)}
               className={cn(
-                "rounded-md py-2 transition-colors",
+                "min-h-toque sm:min-h-0 rounded-md py-2 transition-colors",
                 tipo === t ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -195,7 +195,7 @@ function CamposAtendimento({
               name="nova_cliente_nome"
               placeholder="Nome (novo cadastro)"
               defaultValue={v?.nova_cliente_nome ?? ""}
-              className="h-toque text-base"
+              className="h-toque text-base sm:h-toque"
               autoFocus
             />
             <Input
@@ -206,7 +206,7 @@ function CamposAtendimento({
               placeholder="WhatsApp (opcional)"
               value={telefoneNova}
               onChange={(e) => setTelefoneNova(mascararTelefone(e.target.value))}
-              className="h-toque text-base"
+              className="h-toque text-base sm:h-toque"
             />
           </div>
         ) : (
@@ -265,7 +265,7 @@ function CamposAtendimento({
               step={5}
               value={duracao}
               onChange={(e) => setDuracao(e.target.value)}
-              className="h-toque w-20 text-base"
+              className="h-toque w-20 text-base sm:h-toque"
             />
             <span className="text-sm text-muted-foreground">min</span>
           </div>
@@ -294,7 +294,7 @@ function CamposAtendimento({
             step={300}
             value={hora}
             onChange={(e) => setHora(e.target.value)}
-            className="h-toque w-40 text-base"
+            className="h-toque w-40 text-base sm:h-toque"
           />
         ) : (
           <>
@@ -319,7 +319,7 @@ function CamposAtendimento({
                     type="button"
                     onClick={() => setHora(h)}
                     className={cn(
-                      "rounded-full border px-3 py-1.5 text-sm tabular-nums transition-colors",
+                      "min-h-toque sm:min-h-0 rounded-full border px-3 py-1.5 text-sm tabular-nums transition-colors",
                       hora === h ? "border-primary bg-primary text-primary-foreground" : "bg-background hover:bg-muted",
                     )}
                   >
@@ -400,7 +400,7 @@ function CamposBloqueio({ inicial, estado }: { inicial?: InicialForm; estado: Es
         <div className="grid gap-1.5">
           <Label htmlFor="dias">Quantos dias seguidos</Label>
           <div className="flex items-center gap-2">
-            <Input id="dias" name="dias" type="number" min={1} max={60} defaultValue={v?.dias ?? diasInicial} className="h-toque w-24 text-base" />
+            <Input id="dias" name="dias" type="number" min={1} max={60} defaultValue={v?.dias ?? diasInicial} className="h-toque w-24 text-base sm:h-toque" />
             <span className="text-sm text-muted-foreground">dia(s), contando a data acima</span>
           </div>
         </div>

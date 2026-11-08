@@ -38,7 +38,7 @@ export function ListaClientes({ clientes, total, busca }: Props) {
       {clientes.length === 0 ? (
         busca ? (
           <EstadoVazio Icone={UsersIcon} titulo="Ninguém com esse nome" descricao="Confira a grafia ou faça um novo cadastro.">
-            <Button onClick={() => setAberto(true)} className="h-toque px-4">
+            <Button onClick={() => setAberto(true)} className="h-toque px-4 sm:h-toque">
               <PlusIcon />
               Cadastrar &quot;{busca}&quot;
             </Button>
@@ -49,7 +49,7 @@ export function ListaClientes({ clientes, total, busca }: Props) {
             titulo="Sua lista de clientes"
             descricao="Cadastre nome e WhatsApp. Depois, cada atendimento fica registrado no histórico."
           >
-            <Button onClick={() => setAberto(true)} className="h-toque px-4">
+            <Button onClick={() => setAberto(true)} className="h-toque px-4 sm:h-toque">
               <PlusIcon />
               Fazer o primeiro cadastro
             </Button>
@@ -72,7 +72,7 @@ export function ListaClientes({ clientes, total, busca }: Props) {
                 <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
               </Link>
               {c.telefone ? (
-                <Button asChild variant="ghost" size="icon" className="size-toque text-whatsapp" aria-label={`Abrir WhatsApp de ${c.nome}`}>
+                <Button asChild variant="ghost" size="icon" className="size-toque text-whatsapp sm:size-toque" aria-label={`Abrir WhatsApp de ${c.nome}`}>
                   <a href={linkWhatsApp(c.telefone)} target="_blank" rel="noopener noreferrer">
                     <IconeWhatsApp className="size-5" />
                   </a>

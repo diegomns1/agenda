@@ -191,7 +191,7 @@ export function ImportarAgenda() {
           </span>
         </label>
         <input ref={inputRef} type="file" accept=".zip,.ics,text/calendar,application/zip" className="hidden" onChange={aoEscolher} />
-        <Button className="h-toque w-fit" onClick={() => inputRef.current?.click()} disabled={lendo || enviando}>
+        <Button className="h-toque w-fit sm:h-toque" onClick={() => inputRef.current?.click()} disabled={lendo || enviando}>
           {lendo ? <Loader2Icon className="animate-spin" /> : <FileUpIcon />}
           {agendas ? "Escolher outro arquivo" : "Escolher arquivo (.zip ou .ics)"}
         </Button>
@@ -238,7 +238,7 @@ export function ImportarAgenda() {
                       setFiltro(f);
                       setMostrar(POR_PAGINA);
                     }}
-                    className={cn("rounded-full border px-3 py-1 font-medium", filtro === f ? "border-primary bg-primary text-primary-foreground" : "bg-background text-muted-foreground")}
+                    className={cn("min-h-toque sm:min-h-0 rounded-full border px-3 py-1 font-medium", filtro === f ? "border-primary bg-primary text-primary-foreground" : "bg-background text-muted-foreground")}
                   >
                     {f === "todos" ? `Todos ${linhas.length}` : `${ROTULO_TIPO[f]} ${contagem[f]}`}
                   </button>
@@ -291,7 +291,7 @@ export function ImportarAgenda() {
                 </span>
               </label>
 
-              <Button className="h-toque" onClick={importar} disabled={enviando || aImportar === 0}>
+              <Button className="h-toque sm:h-toque" onClick={importar} disabled={enviando || aImportar === 0}>
                 {enviando ? <Loader2Icon className="animate-spin" /> : <CalendarCheckIcon />}
                 {enviando ? "Trazendo para a agenda…" : `Trazer ${aImportar} para a agenda`}
               </Button>

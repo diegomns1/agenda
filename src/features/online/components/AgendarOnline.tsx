@@ -162,7 +162,7 @@ export function AgendarOnline({ perfil }: Props) {
                       type="button"
                       onClick={() => setHora(h)}
                       className={cn(
-                        "rounded-full border px-4 py-2 text-sm font-semibold tabular-nums transition-colors",
+                        "min-h-toque sm:min-h-0 rounded-full border px-4 py-2 text-sm font-semibold tabular-nums transition-colors",
                         hora === h ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted",
                       )}
                     >
@@ -300,7 +300,7 @@ function Confirmacao({ perfil, pedido, aoNovo }: { perfil: PerfilPublico; pedido
           </Button>
         ) : null}
         {confirmado ? (
-          <Button asChild variant="outline" className="h-toque rounded-xl">
+          <Button asChild variant="outline" className="h-toque rounded-xl sm:h-toque">
             <a href={google} target="_blank" rel="noopener noreferrer">
               <CalendarPlusIcon />
               Adicionar ao Google Agenda

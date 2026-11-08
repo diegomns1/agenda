@@ -21,7 +21,7 @@ function Item({ a, modelo, destaque }: { a: LembreteItem; modelo: string; destaq
     <li className={cn("flex flex-wrap items-center gap-3 px-4 py-3", destaque && "bg-primary/5")}>
       <div className="w-16 shrink-0 text-center">
         <p className="text-lg font-semibold tabular-nums leading-tight">{horaDe(a.inicio)}</p>
-        <p className="text-mini text-muted-foreground capitalize">{rotuloRelativo(dataDe(a.inicio))}</p>
+        <p className="text-mini text-muted-foreground first-letter:uppercase">{rotuloRelativo(dataDe(a.inicio))}</p>
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">
@@ -42,7 +42,8 @@ function Item({ a, modelo, destaque }: { a: LembreteItem; modelo: string; destaq
           ) : null}
         </p>
       </div>
-      <BotaoLembrarCliente agendamento={a} telefone={a.telefone} modelo={modelo} tamanho="sm" />
+      {/* no celular o botão vai para uma linha própria, largo: o nome aparece inteiro e o toque fica fácil */}
+      <BotaoLembrarCliente agendamento={a} telefone={a.telefone} modelo={modelo} tamanho="sm" className="w-full sm:w-auto" />
     </li>
   );
 }
@@ -68,7 +69,7 @@ export function ListaLembretes({ pendentes, avisados, modelo, destaqueId }: Prop
       ) : (
         [...grupos.entries()].map(([dia, itens]) => (
           <section key={dia} className="grid gap-2">
-            <h2 className="text-sm font-semibold capitalize">{formatarData(itens[0].inicio, "EEEE, dd/MM")}</h2>
+            <h2 className="text-sm font-semibold first-letter:uppercase">{formatarData(itens[0].inicio, "EEEE, dd/MM")}</h2>
             <ul className="divide-y overflow-hidden rounded-xl border bg-card">
               {itens.map((a) => (
                 <Item key={a.id} a={a} modelo={modelo} destaque={a.id === destaqueId} />

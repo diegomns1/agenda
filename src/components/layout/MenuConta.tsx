@@ -29,7 +29,7 @@ export function MenuConta({ admin, linkSuporte }: Props) {
       <form ref={formSair} action={sair} className="hidden" />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-toque" aria-label="Abrir menu">
+          <Button variant="ghost" size="icon" className="size-toque sm:size-toque" aria-label="Abrir menu">
             <MenuIcon className="size-5" />
           </Button>
         </DropdownMenuTrigger>

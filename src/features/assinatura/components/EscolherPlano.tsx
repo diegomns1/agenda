@@ -147,7 +147,7 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
               placeholder="000.000.000-00"
               value={documento}
               onChange={(e) => setDocumento(formatarCpfCnpj(e.target.value) || e.target.value.replace(/[^\d.\-/]/g, ""))}
-              className="h-toque max-w-xs text-base"
+              className="h-toque max-w-xs text-base sm:h-toque"
               aria-invalid={estado.erros?.cpf_cnpj ? true : undefined}
             />
             {estado.erros?.cpf_cnpj?.[0] ? (

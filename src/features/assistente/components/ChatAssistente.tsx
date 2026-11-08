@@ -99,7 +99,7 @@ export function ChatAssistente({ nome }: { nome: string }) {
             </div>
             <div className="flex flex-wrap justify-center gap-2">
               {SUGESTOES_ASSISTENTE.map((s) => (
-                <button key={s} type="button" onClick={() => enviar(s)} className="rounded-full border bg-background px-3 py-1.5 text-sm hover:bg-muted">
+                <button key={s} type="button" onClick={() => enviar(s)} className="min-h-toque sm:min-h-0 rounded-full border bg-background px-3 py-1.5 text-sm hover:bg-muted">
                   {s}
                 </button>
               ))}
@@ -183,7 +183,7 @@ export function ChatAssistente({ nome }: { nome: string }) {
           className="max-h-32 min-h-toque flex-1 resize-none rounded-2xl border border-input bg-background px-3.5 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           aria-label="Mensagem para o assistente"
         />
-        <Button type="submit" size="icon" className="size-toque shrink-0 rounded-full" disabled={enviando || !texto.trim()} aria-label="Enviar">
+        <Button type="submit" size="icon" className="size-toque shrink-0 rounded-full sm:size-toque" disabled={enviando || !texto.trim()} aria-label="Enviar">
           {enviando ? <Loader2Icon className="animate-spin" /> : <SendHorizontalIcon />}
         </Button>
       </form>

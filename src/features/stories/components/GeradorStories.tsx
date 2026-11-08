@@ -229,7 +229,7 @@ function Alternador({ ativo, onClick, children, className, disabled }: { ativo: 
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "rounded-full border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-40",
+        "min-h-toque sm:min-h-0 rounded-full border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-40",
         ativo ? "border-primary bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted",
         className,
       )}
@@ -485,7 +485,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
           <section className="grid gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="data-story">Dia</Label>
-              <Input id="data-story" type="date" value={dia} onChange={(e) => e.target.value && setDia(e.target.value)} className="h-toque w-48 text-base" />
+              <Input id="data-story" type="date" value={dia} onChange={(e) => e.target.value && setDia(e.target.value)} className="h-toque w-48 text-base sm:h-toque" />
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm text-muted-foreground">
@@ -528,7 +528,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
           <section className="grid gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="inicio-semana">A partir de</Label>
-              <Input id="inicio-semana" type="date" value={inicioSemana} onChange={(e) => e.target.value && setInicioSemana(e.target.value)} className="h-toque w-48 text-base" />
+              <Input id="inicio-semana" type="date" value={inicioSemana} onChange={(e) => e.target.value && setInicioSemana(e.target.value)} className="h-toque w-48 text-base sm:h-toque" />
             </div>
             <p className="text-sm text-muted-foreground">
               {sugerindo ? (
@@ -567,7 +567,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
           <section className="grid gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="mes-story">Mês</Label>
-              <Input id="mes-story" type="month" value={mes} onChange={(e) => /^\d{4}-\d{2}$/.test(e.target.value) && setMes(e.target.value)} className="h-toque w-48 text-base" />
+              <Input id="mes-story" type="month" value={mes} onChange={(e) => /^\d{4}-\d{2}$/.test(e.target.value) && setMes(e.target.value)} className="h-toque w-48 text-base sm:h-toque" />
             </div>
             <p className="text-sm text-muted-foreground">
               {sugerindo ? (
@@ -695,15 +695,15 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
         ) : null}
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={compartilhar} disabled={ocupado !== null || carregandoPrevia} className="h-toque">
+          <Button onClick={compartilhar} disabled={ocupado !== null || carregandoPrevia} className="h-toque sm:h-toque">
             {ocupado === "compartilhar" ? <Loader2Icon className="animate-spin" /> : <Share2Icon />}
             Compartilhar
           </Button>
-          <Button variant="outline" onClick={baixar} disabled={ocupado !== null || carregandoPrevia} className="h-toque">
+          <Button variant="outline" onClick={baixar} disabled={ocupado !== null || carregandoPrevia} className="h-toque sm:h-toque">
             {ocupado === "baixar" ? <Loader2Icon className="animate-spin" /> : <DownloadIcon />}
             Baixar imagem
           </Button>
-          <Button variant="ghost" onClick={() => setVersao((v) => v + 1)} className="h-toque" aria-label="Atualizar prévia">
+          <Button variant="ghost" onClick={() => setVersao((v) => v + 1)} className="h-toque sm:h-toque" aria-label="Atualizar prévia">
             <RefreshCwIcon />
             Atualizar
           </Button>

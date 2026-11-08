@@ -142,7 +142,7 @@ export function ListaServicos({ servicos }: { servicos: Servico[] }) {
         <p className="text-sm text-muted-foreground">
           {servicos.length === 0
             ? "Nenhum serviço ainda."
-            : `${ativos} ativo${ativos === 1 ? "" : "s"} de ${servicos.length}.`}
+            : `${ativos} ativo${ativos === 1 ? "" : "s"} de ${servicos.length}`}
         </p>
         <Button onClick={() => setDialogo({ modo: "novo" })}>
           <PlusIcon />
@@ -186,7 +186,7 @@ export function ListaServicos({ servicos }: { servicos: Servico[] }) {
                 onPointerUp={soltarArrasto}
                 onPointerCancel={soltarArrasto}
                 className={cn(
-                  "flex h-toque w-8 shrink-0 touch-none items-center justify-center rounded-md text-muted-foreground",
+                  "flex h-toque w-8 shrink-0 touch-none items-center justify-center rounded-md text-muted-foreground sm:h-toque",
                   "cursor-grab select-none hover:bg-muted hover:text-foreground active:cursor-grabbing disabled:opacity-50",
                 )}
               >
