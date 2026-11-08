@@ -93,10 +93,9 @@ export async function conversarComAssistente(historico: MensagemChat[], mensagem
       const msg = await cliente.beta.messages.create({
         model: MODELO_ASSISTENTE,
         max_tokens: 4096,
-        betas: ["server-side-fallback-2026-07-01"],
-        // se o modelo recusar por engano, a própria API tenta outro modelo na mesma chamada
-        fallbacks: "default",
-        output_config: { effort: "low" },
+        // Haiku 5.5: "medium" (o padrão) erra menos nas ferramentas que "low" e continua barato.
+        // Este modelo não tem reserva automática na API; a recusa é tratada logo abaixo.
+        output_config: { effort: "medium" },
         system,
         tools: FERRAMENTAS,
         messages,
