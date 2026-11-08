@@ -14,7 +14,7 @@ import {
   marcaDoPerfil,
 } from "@/features/stories/dados";
 import { esquemaSelecaoStory, type SelecaoStory } from "@/features/stories/selecao";
-import { ALTURA_STORY, LARGURA_STORY, obterTema, type TipoStory } from "@/features/stories/temas";
+import { ALTURA_STORY, caminhoFundo, LARGURA_STORY, obterTema, type TipoStory } from "@/features/stories/temas";
 import { StoryDia } from "@/features/stories/templates/StoryDia";
 import { StorySemana } from "@/features/stories/templates/StorySemana";
 import { StoryMes } from "@/features/stories/templates/StoryMes";
@@ -36,10 +36,31 @@ async function autorizar(tipo: string) {
   return { perfil };
 }
 
+const cacheFundos = new Map<string, string>();
+
+/** Papel de parede do tema como data URL (guardado em memória enquanto o servidor estiver de pé). */
+async function papelDeParede(origem: string, id: string): Promise<string | null> {
+  const guardado = cacheFundos.get(id);
+  if (guardado) return guardado;
+  try {
+    const r = await fetch(`${origem}${caminhoFundo(id)}`, { cache: "force-cache" });
+    if (!r.ok) return null;
+    const dataUrl = `data:image/jpeg;base64,${Buffer.from(await r.arrayBuffer()).toString("base64")}`;
+    cacheFundos.set(id, dataUrl);
+    return dataUrl;
+  } catch {
+    return null; // sem o papel de parede, o story sai com o fundo em cores do tema
+  }
+}
+
 /** Monta a imagem: com seleção manual usa o que a profissional marcou; sem, lê a agenda. */
-async function gerar(perfil: Profile, tipo: TipoStory, sel: SelecaoStory, baixar: boolean) {
+async function gerar(perfil: Profile, tipo: TipoStory, sel: SelecaoStory, baixar: boolean, origem: string) {
   const data = sel.data && ehDataISO(sel.data) ? sel.data : hojeISO();
-  const tema = obterTema(sel.tema);
+  const base = obterTema(sel.tema);
+  // papel de parede: baixado do próprio site (public/stories/temas) e embutido como data URL
+  // (o satori recusa baixar de localhost; assim funciona igual no computador e na Vercel)
+  const fundo = base.imagem ? await papelDeParede(origem, base.id) : null;
+  const tema = fundo ? { ...base, imagemUrl: fundo } : base;
   const marca = marcaDoPerfil(perfil);
 
   let elemento: React.ReactElement;
@@ -78,7 +99,7 @@ export async function GET(request: NextRequest, { params }: Contexto) {
   if ("erro" in r) return r.erro;
 
   const sp = request.nextUrl.searchParams;
-  return gerar(r.perfil, tipo as TipoStory, { data: sp.get("data") ?? undefined, tema: sp.get("tema") ?? undefined }, sp.get("baixar") === "1");
+  return gerar(r.perfil, tipo as TipoStory, { data: sp.get("data") ?? undefined, tema: sp.get("tema") ?? undefined }, sp.get("baixar") === "1", request.nextUrl.origin);
 }
 
 /**
@@ -99,5 +120,5 @@ export async function POST(request: NextRequest, { params }: Contexto) {
   const sel = esquemaSelecaoStory.safeParse(corpo);
   if (!sel.success) return NextResponse.json({ erro: "Seleção inválida" }, { status: 400 });
 
-  return gerar(r.perfil, tipo as TipoStory, sel.data, false);
+  return gerar(r.perfil, tipo as TipoStory, sel.data, false, request.nextUrl.origin);
 }

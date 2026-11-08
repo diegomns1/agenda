@@ -33,7 +33,7 @@ export function StoryServicos({ tema, marca, dados }: { tema: Tema; marca: Marca
                 justifyContent: "center",
               }}
             >
-              <div style={{ display: "flex", fontSize: 230, fontWeight: 800, color: paleta.primaria, opacity: 0.35 }}>
+              <div style={{ display: "flex", fontSize: 230, fontWeight: 800, color: paleta.primariaNoClaro, opacity: 0.35 }}>
                 {(s.nome.trim()[0] ?? "V").toUpperCase()}
               </div>
             </div>
@@ -43,7 +43,7 @@ export function StoryServicos({ tema, marca, dados }: { tema: Tema; marca: Marca
             <div style={{ display: "flex", fontSize: 30, opacity: 0.7, letterSpacing: 4, textTransform: "uppercase" }}>
               {s.valor === "consulte" ? "valor" : "por apenas"}
             </div>
-            <div style={{ display: "flex", fontSize: s.valor === "consulte" ? 96 : 124, fontWeight: 900, color: paleta.primaria, lineHeight: 1.1 }}>
+            <div style={{ display: "flex", fontSize: s.valor === "consulte" ? 96 : 124, fontWeight: 900, color: paleta.titulo, lineHeight: 1.1 }}>
               {s.valor === "consulte" ? "Consulte" : s.valor}
             </div>
           </div>
@@ -75,7 +75,7 @@ export function StoryServicos({ tema, marca, dados }: { tema: Tema; marca: Marca
               }}
             >
               <div style={{ display: "flex", flex: 1, fontSize: fonte, fontWeight: 700, paddingRight: 24 }}>{s.nome}</div>
-              <div style={{ display: "flex", fontSize: fonte, fontWeight: 800, color: paleta.primaria, whiteSpace: "nowrap" }}>{s.valor}</div>
+              <div style={{ display: "flex", fontSize: fonte, fontWeight: 800, color: paleta.primariaNoClaro, whiteSpace: "nowrap" }}>{s.valor}</div>
             </div>
           ))}
           {dados.itens.length > itens.length ? (

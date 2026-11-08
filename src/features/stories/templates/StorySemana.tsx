@@ -18,12 +18,12 @@ export function StorySemana({ tema, marca, dados }: { tema: Tema; marca: Marca; 
               alignItems: "center",
               padding: "20px 30px",
               borderRadius: 26,
-              background: d.disponivel ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.32)",
-              opacity: d.disponivel ? 1 : 0.7,
+              background: d.disponivel ? "rgba(255,255,255,0.86)" : "rgba(255,255,255,0.55)",
+              opacity: d.disponivel ? 1 : 0.8,
             }}
           >
             <div style={{ display: "flex", flexDirection: "column", width: 190 }}>
-              <div style={{ display: "flex", fontSize: 36, fontWeight: 800, color: d.disponivel ? paleta.primaria : "#1F1F23", textTransform: "capitalize" }}>
+              <div style={{ display: "flex", fontSize: 36, fontWeight: 800, color: d.disponivel ? paleta.primariaNoClaro : "#1F1F23", textTransform: "capitalize" }}>
                 {d.semana}
               </div>
               <div style={{ display: "flex", fontSize: 26, opacity: 0.7, color: "#1F1F23" }}>{d.numero}</div>
@@ -36,7 +36,7 @@ export function StorySemana({ tema, marca, dados }: { tema: Tema; marca: Marca; 
                     padding: "14px 30px",
                     borderRadius: 999,
                     background: paleta.primaria,
-                    color: "#FFFFFF",
+                    color: paleta.sobrePrimaria,
                     fontSize: 30,
                     fontWeight: 700,
                   }}

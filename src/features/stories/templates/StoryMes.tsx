@@ -37,8 +37,8 @@ export function StoryMes({ tema, marca, dados }: { tema: Tema; marca: Marca; dad
                     justifyContent: "center",
                     fontSize: 40,
                     fontWeight: 700,
-                    background: !c ? "transparent" : c.disponivel ? paleta.primaria : "rgba(255,255,255,0.45)",
-                    color: !c ? "transparent" : c.disponivel ? "#FFFFFF" : "#1F1F23",
+                    background: !c ? "transparent" : c.disponivel ? paleta.primaria : "rgba(255,255,255,0.7)",
+                    color: !c ? "transparent" : c.disponivel ? paleta.sobrePrimaria : "#1F1F23",
                     opacity: c && !c.disponivel ? (c.passado ? 0.35 : 0.6) : 1,
                     textDecoration: c && !c.disponivel && !c.passado ? "line-through" : "none",
                   }}

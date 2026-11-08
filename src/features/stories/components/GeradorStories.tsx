@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   CheckIcon,
+  ChevronDownIcon,
   DownloadIcon,
   ImagePlusIcon,
   Loader2Icon,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import { sugerirStory } from "@/features/stories/actions";
 import { gradeDoDia, gradeGenerica } from "@/features/stories/selecao";
-import { TEMAS, TIPOS_STORY, type TipoStory } from "@/features/stories/temas";
+import { caminhoFundo, obterTema, TEMAS, TIPOS_STORY, type Tema, type TipoStory } from "@/features/stories/temas";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,80 @@ async function reduzirFoto(arquivo: File): Promise<string> {
   ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
   return canvas.toDataURL("image/jpeg", 0.85);
+}
+
+/** Miniatura de um tema: o papel de parede, ou as cores (tema "Minhas cores"). */
+function MiniaturaTema({ tema, corPrimaria, corSecundaria, className }: { tema: Tema; corPrimaria: string; corSecundaria: string; className?: string }) {
+  if (tema.imagem) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={caminhoFundo(tema.id, true)} alt="" loading="lazy" className={cn("aspect-[9/16] w-full rounded-lg object-cover ring-1 ring-black/10", className)} />
+    );
+  }
+  return (
+    <span
+      className={cn("flex aspect-[9/16] w-full items-center justify-center rounded-lg ring-1 ring-black/10", className)}
+      style={{ background: `linear-gradient(160deg, ${corSecundaria} 0%, #FFFFFF 100%)` }}
+    >
+      <span className="size-1/3 rounded-full" style={{ background: corPrimaria, opacity: 0.85 }} />
+    </span>
+  );
+}
+
+function SeletorTema({ temaId, aoEscolher, corPrimaria, corSecundaria }: { temaId: string; aoEscolher: (id: string) => void; corPrimaria: string; corSecundaria: string }) {
+  const [aberto, setAberto] = useState(false);
+  const atual = obterTema(temaId);
+  const grupos: { titulo: string; temas: Tema[] }[] = [
+    { titulo: "Para qualquer época", temas: TEMAS.filter((t) => t.grupo === "sempre") },
+    { titulo: "Datas especiais", temas: TEMAS.filter((t) => t.grupo === "datas") },
+  ];
+
+  return (
+    <section className="grid gap-2">
+      <h2 className="text-sm font-medium text-muted-foreground">Tema</h2>
+      <button
+        type="button"
+        aria-expanded={aberto}
+        onClick={() => setAberto((a) => !a)}
+        className="flex items-center gap-3 rounded-xl border bg-background p-2 pr-3 text-left transition-colors hover:bg-muted/50"
+      >
+        <MiniaturaTema tema={atual} corPrimaria={corPrimaria} corSecundaria={corSecundaria} className="w-9 shrink-0" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs text-muted-foreground">Selecionar tema</span>
+          <span className="block truncate font-medium">{atual.nome}</span>
+        </span>
+        <ChevronDownIcon className={cn("size-4 shrink-0 text-muted-foreground transition-transform", aberto && "rotate-180")} />
+      </button>
+
+      {aberto ? (
+        <div className="surgir grid gap-4 rounded-xl border bg-card p-3">
+          {grupos.map((g) => (
+            <div key={g.titulo} className="grid gap-2">
+              <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{g.titulo}</p>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                {g.temas.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    aria-pressed={temaId === t.id}
+                    onClick={() => {
+                      aoEscolher(t.id);
+                      setAberto(false);
+                    }}
+                    className={cn("grid gap-1 rounded-xl p-1 text-left transition-colors hover:bg-muted", temaId === t.id && "bg-primary/10 ring-2 ring-primary")}
+                  >
+                    <MiniaturaTema tema={t} corPrimaria={corPrimaria} corSecundaria={corSecundaria} />
+                    <span className="truncate text-[11px] leading-tight font-medium">{t.nome}</span>
+                    {t.quando ? <span className="truncate text-[10px] leading-tight text-muted-foreground">{t.quando}</span> : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
 }
 
 function Alternador({ ativo, onClick, children, className, disabled }: { ativo: boolean; onClick: () => void; children: React.ReactNode; className?: string; disabled?: boolean }) {
@@ -254,30 +329,8 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
           </div>
         </section>
 
-        {/* Tema */}
-        <section className="grid gap-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Tema</h2>
-          <div className="flex flex-wrap gap-2">
-            {TEMAS.map((t) => {
-              const cor = t.id === "neutro" ? corPrimaria : (t.primaria ?? corPrimaria);
-              const fundo = t.id === "neutro" ? corSecundaria : t.fundo[1];
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTemaId(t.id)}
-                  className={cn(
-                    "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors",
-                    temaId === t.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/60",
-                  )}
-                >
-                  <span className="size-4 rounded-full ring-1 ring-black/10" style={{ background: `linear-gradient(135deg, ${cor} 50%, ${fundo} 50%)` }} />
-                  {t.nome}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        {/* Tema: caixinha que abre e fecha */}
+        <SeletorTema temaId={temaId} aoEscolher={setTemaId} corPrimaria={corPrimaria} corSecundaria={corSecundaria} />
 
         {/* ---------------- Dia ---------------- */}
         {tipo === "dia" ? (

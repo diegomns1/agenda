@@ -6,16 +6,43 @@
 import type { Marca } from "@/features/stories/dados";
 import { ALTURA_STORY, LARGURA_STORY, type Tema } from "@/features/stories/temas";
 
-export type Paleta = { primaria: string; secundaria: string; texto: string; fundo: [string, string]; decoracao: string };
+export type Paleta = {
+  primaria: string;
+  secundaria: string;
+  /** Cor do texto sobre a primária (chips, faixa, botão do rodapé). */
+  sobrePrimaria: string;
+  /** Cor do título principal. */
+  titulo: string;
+  /** Cor de destaque para texto dentro de cartões brancos (a primária, ou escuro se ela for clara). */
+  primariaNoClaro: string;
+  texto: string;
+  fundo: [string, string];
+  decoracao: string;
+};
 
 export function paletaDe(tema: Tema, marca: Marca): Paleta {
   return {
     primaria: tema.primaria ?? marca.primaria,
     secundaria: tema.secundaria ?? marca.secundaria,
+    sobrePrimaria: tema.sobrePrimaria ?? "#FFFFFF",
+    titulo: tema.titulo ?? tema.primaria ?? marca.primaria,
+    primariaNoClaro: tema.primariaClara ? "#1F1F23" : (tema.primaria ?? marca.primaria),
     texto: tema.texto,
     fundo: tema.id === "neutro" ? [marca.secundaria, "#FFFFFF"] : tema.fundo,
     decoracao: tema.id === "neutro" ? `${marca.primaria}1F` : tema.decoracao,
   };
+}
+
+/** "terça-feira, 10 de novembro" → "Terça-feira, 10 de novembro" (só a primeira letra). */
+export function primeiraMaiuscula(t: string) {
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+/** "#RRGGBB" + opacidade → "rgba(r,g,b,a)" (para o painel por cima do papel de parede). */
+export function rgba(hex: string, alfa: number) {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h.slice(0, 6), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alfa})`;
 }
 
 type PropsBase = {
@@ -31,6 +58,11 @@ type PropsBase = {
 export function Base({ tema, marca, paleta, titulo, subtitulo, rodape, children }: PropsBase) {
   const logoEhSvg = marca.logoUrl?.split("?")[0].toLowerCase().endsWith(".svg");
   const inicial = (marca.nome.trim()[0] ?? "V").toUpperCase();
+  const comImagem = Boolean(tema.imagemUrl);
+  // Com papel de parede, o cabeçalho fica num painel translúcido para o texto não brigar com o desenho.
+  const painel = comImagem
+    ? { background: rgba(paleta.fundo[0], 0.86), borderRadius: 56, padding: "40px 48px", margin: "0 70px" }
+    : {};
 
   return (
     <div
@@ -46,20 +78,26 @@ export function Base({ tema, marca, paleta, titulo, subtitulo, rodape, children 
         overflow: "hidden",
       }}
     >
-      {/* decoração */}
-      <div style={{ position: "absolute", top: -220, right: -220, width: 620, height: 620, borderRadius: 310, background: paleta.decoracao, display: "flex" }} />
-      <div style={{ position: "absolute", bottom: -260, left: -200, width: 560, height: 560, borderRadius: 280, background: paleta.decoracao, display: "flex" }} />
+      {comImagem ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={tema.imagemUrl} width={LARGURA_STORY} height={ALTURA_STORY} alt="" style={{ position: "absolute", top: 0, left: 0, width: LARGURA_STORY, height: ALTURA_STORY, objectFit: "cover" }} />
+      ) : (
+        <>
+          <div style={{ position: "absolute", top: -220, right: -220, width: 620, height: 620, borderRadius: 310, background: paleta.decoracao, display: "flex" }} />
+          <div style={{ position: "absolute", bottom: -260, left: -200, width: 560, height: 560, borderRadius: 280, background: paleta.decoracao, display: "flex" }} />
+        </>
+      )}
 
       {/* faixa do tema */}
       {tema.faixa ? (
-        <div style={{ display: "flex", justifyContent: "center", paddingTop: 70 }}>
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: comImagem ? 150 : 70 }}>
           <div
             style={{
               display: "flex",
               padding: "16px 44px",
               borderRadius: 999,
               background: paleta.primaria,
-              color: "#FFFFFF",
+              color: paleta.sobrePrimaria,
               fontSize: 34,
               fontWeight: 700,
               letterSpacing: 2,
@@ -70,64 +108,63 @@ export function Base({ tema, marca, paleta, titulo, subtitulo, rodape, children 
           </div>
         </div>
       ) : (
-        <div style={{ display: "flex", height: 70 }} />
+        <div style={{ display: "flex", height: comImagem ? 150 : 70 }} />
       )}
 
-      {/* cabeçalho: logo + nome */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 50 }}>
-        <div
-          style={{
-            width: 200,
-            height: 200,
-            borderRadius: 100,
-            background: "#FFFFFF",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: `8px solid ${paleta.primaria}`,
-            overflow: "hidden",
-          }}
-        >
-          {marca.logoUrl && !logoEhSvg ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={marca.logoUrl} width={184} height={184} alt="" style={{ objectFit: "contain" }} />
-          ) : (
-            <div style={{ display: "flex", fontSize: 96, fontWeight: 800, color: paleta.primaria }}>{inicial}</div>
-          )}
+      {/* cabeçalho (logo, nome, título) */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: comImagem ? 30 : 0, ...painel }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: comImagem ? 0 : 50 }}>
+          <div
+            style={{
+              width: comImagem ? 170 : 200,
+              height: comImagem ? 170 : 200,
+              borderRadius: 100,
+              background: "#FFFFFF",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: `8px solid ${paleta.primaria}`,
+              overflow: "hidden",
+            }}
+          >
+            {marca.logoUrl && !logoEhSvg ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={marca.logoUrl} width={comImagem ? 154 : 184} height={comImagem ? 154 : 184} alt="" style={{ objectFit: "contain" }} />
+            ) : (
+              <div style={{ display: "flex", fontSize: 90, fontWeight: 800, color: paleta.primaria }}>{inicial}</div>
+            )}
+          </div>
+          <div style={{ display: "flex", fontSize: 56, fontWeight: 800, marginTop: 24, textAlign: "center", padding: comImagem ? 0 : "0 80px" }}>{marca.nome}</div>
+          {marca.instagram ? <div style={{ display: "flex", fontSize: 32, opacity: 0.75, marginTop: 6 }}>@{marca.instagram}</div> : null}
         </div>
-        <div style={{ display: "flex", fontSize: 58, fontWeight: 800, marginTop: 28, textAlign: "center", padding: "0 80px" }}>{marca.nome}</div>
-        {marca.instagram ? (
-          <div style={{ display: "flex", fontSize: 32, opacity: 0.75, marginTop: 6 }}>@{marca.instagram}</div>
-        ) : null}
-      </div>
 
-      {/* título */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 70, padding: "0 80px" }}>
-        <div style={{ display: "flex", fontSize: 64, fontWeight: 800, color: paleta.primaria, textAlign: "center" }}>{titulo}</div>
-        {subtitulo ? (
-          <div style={{ display: "flex", fontSize: 36, opacity: 0.8, marginTop: 10, textAlign: "center", textTransform: "capitalize" }}>{subtitulo}</div>
-        ) : null}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: comImagem ? 36 : 70, padding: comImagem ? 0 : "0 80px" }}>
+          <div style={{ display: "flex", fontSize: 64, fontWeight: 800, color: paleta.titulo, textAlign: "center" }}>{titulo}</div>
+          {subtitulo ? (
+            <div style={{ display: "flex", fontSize: 36, opacity: 0.85, marginTop: 10, textAlign: "center" }}>{primeiraMaiuscula(subtitulo)}</div>
+          ) : null}
+        </div>
       </div>
 
       {/* conteúdo */}
-      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, padding: "60px 80px 0 80px" }}>{children}</div>
+      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, padding: comImagem ? "44px 90px 0 90px" : "60px 80px 0 80px" }}>{children}</div>
 
       {/* rodapé */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 90 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: comImagem ? 170 : 90 }}>
         <div
           style={{
             display: "flex",
             padding: "22px 54px",
             borderRadius: 999,
             background: paleta.primaria,
-            color: "#FFFFFF",
+            color: paleta.sobrePrimaria,
             fontSize: 36,
             fontWeight: 700,
           }}
         >
           {rodape ?? "Chame no WhatsApp para agendar"}
         </div>
-        <div style={{ display: "flex", fontSize: 24, opacity: 0.45, marginTop: 26 }}>vaguinha.app</div>
+        <div style={{ display: "flex", fontSize: 24, opacity: comImagem ? 0.7 : 0.45, marginTop: 20 }}>vaguinha.app</div>
       </div>
     </div>
   );
@@ -142,7 +179,7 @@ export function Chip({ texto, paleta, grande = false }: { texto: string; paleta:
         padding: grande ? "18px 34px" : "10px 22px",
         borderRadius: 999,
         background: paleta.primaria,
-        color: "#FFFFFF",
+        color: paleta.sobrePrimaria,
         fontSize: grande ? 44 : 30,
         fontWeight: 700,
         letterSpacing: 1,
@@ -162,7 +199,7 @@ export function Aviso({ texto, paleta }: { texto: string; paleta: Paleta }) {
         justifyContent: "center",
         padding: "40px",
         borderRadius: 32,
-        background: "rgba(255,255,255,0.55)",
+        background: rgba(paleta.fundo[0], 0.86),
         color: paleta.texto,
         fontSize: 40,
         fontWeight: 600,
