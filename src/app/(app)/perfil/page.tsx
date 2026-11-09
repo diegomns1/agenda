@@ -11,12 +11,21 @@ import { FalarComSuporte } from "@/components/layout/FalarComSuporte";
 import { FormPerfil } from "@/features/perfil/components/FormPerfil";
 import { UploadLogo } from "@/features/perfil/components/UploadLogo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { criarClienteServidor } from "@/lib/supabase/server";
+import { ConectarWhatsApp } from "@/features/whatsapp/components/ConectarWhatsApp";
+import { descreverNumero, NUMERO_ASSISTENTE } from "@/features/whatsapp/numero";
 
 export const metadata: Metadata = { title: "Perfil" };
 
 export default async function PaginaPerfil() {
   const perfil = await obterPerfil();
   if (!perfil) redirect("/aguardando-aprovacao");
+
+  // assistente no WhatsApp: o quadro só aparece depois que o número da Vaguinha estiver configurado
+  const whatsappLigado = Boolean(NUMERO_ASSISTENTE);
+  const { data: vinculo } = whatsappLigado
+    ? await (await criarClienteServidor()).from("whatsapp_vinculos").select("telefone").eq("profissional_id", perfil.id).maybeSingle()
+    : { data: null };
 
   return (
     <div className="grid gap-5">
@@ -36,6 +45,10 @@ export default async function PaginaPerfil() {
       </Card>
 
       <FormPerfil perfil={perfil} urlBase={URL_APP} podeAgendamentoOnline={temRecurso(perfil.plano, "agendamento_online")} />
+
+      {whatsappLigado ? (
+        <ConectarWhatsApp conectado={vinculo ? descreverNumero(vinculo.telefone) : null} permitido={temRecurso(perfil.plano, "assistente")} />
+      ) : null}
 
       <Card>
         <CardHeader>

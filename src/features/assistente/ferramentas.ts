@@ -1,6 +1,6 @@
 import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
-import { criarClienteServidor } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { horariosDisponiveis, janelaDoDia } from "@/features/agenda/disponibilidade";
 import { montarRelatorio, ehMes, mesAtual } from "@/features/relatorios/dados";
 import {
@@ -18,7 +18,7 @@ import {
   somarDias,
 } from "@/lib/datas";
 import { formatarTelefone, normalizarTelefone } from "@/lib/telefone";
-import type { Profile } from "@/types/database";
+import type { Database, Profile } from "@/types/database";
 import type { Proposta } from "./tipos";
 
 /* Ferramentas do Assistente de IA.
@@ -26,7 +26,8 @@ import type { Proposta } from "./tipos";
    - Ferramentas "propor_*" NÃO mudam nada: montam uma proposta que aparece na tela com "Confirmar".
    Todas com `strict: true` (o modelo sempre manda os campos no formato do schema). */
 
-type Supabase = Awaited<ReturnType<typeof criarClienteServidor>>;
+/** Sessão do navegador (RLS) no app, ou o cliente escopado da profissional no WhatsApp. */
+type Supabase = SupabaseClient<Database>;
 export type Contexto = { supabase: Supabase; perfil: Profile; propostas: Proposta[] };
 
 const texto = (descricao: string) => ({ type: "string", description: descricao });
@@ -264,7 +265,7 @@ export async function executarFerramenta(ctx: Contexto, nome: string, entrada: R
 
       case "resumo_do_mes": {
         const mes = ehMes(entrada.mes) ? entrada.mes : mesAtual();
-        const r = await montarRelatorio(mes);
+        const r = await montarRelatorio(mes, ctx.supabase);
         const i = r.indicadores;
         const linha = (k: keyof typeof i) => ({ este_mes: i[k].valor, mes_anterior: i[k].anterior });
         return JSON.stringify({

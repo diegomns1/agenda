@@ -118,7 +118,7 @@ async function proximo(ctx: Contexto) {
 
 async function faturamento(ctx: Contexto, c: Extract<Comando, { tipo: "faturamento" }>) {
   const mes = c.mesesAtras === 1 ? somarMes(mesAtual(), -1) : mesAtual();
-  const r = await montarRelatorio(mes);
+  const r = await montarRelatorio(mes, ctx.supabase);
   const i = r.indicadores;
   const termos = termosDoRamo(ctx.perfil.ramo);
   const base = `Em ${r.rotuloMes} entraram ${reais(i.faturamento.valor)} em ${i.atendimentos.valor} ${i.atendimentos.valor === 1 ? termos.um : termos.varios}.`;

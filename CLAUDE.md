@@ -45,9 +45,20 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Fase de testes gratuita. Cadastro nasce com `status = 'pendente'`; só o admin aprova/recusa/suspende.
 - Admin = usuário com `app_metadata.role = 'admin'` no JWT (SQL em `supabase/migrations/0001_base.sql`).
 - `plano` e `ativa_ate` controlam pagamento manual via Pix. Asaas/Mercado Pago é futuro.
-- **Sem API do WhatsApp.** Lembretes: push para a profissional 1 dia e 1 h antes; botão "Lembrar cliente"
+- **WhatsApp para as clientes finais: sem API** (decisão mantida). Lembretes: push para a profissional 1 dia e 1 h antes; botão "Lembrar cliente"
   abre `wa.me` com mensagem do `modelo_lembrete` (`{nome}`, `{dia}`, `{hora}`, `{servico}`);
   lista de pendentes com check (`cliente_avisada_em`).
+- **Assistente no WhatsApp (API oficial da Meta, só para a profissional; decisão de 09/11/2026, plano em
+  PLANO-ASSISTENTE-WHATSAPP.md na pasta do Drive).** Webhook `app/api/webhooks/whatsapp` (assinatura
+  X-Hub-Signature-256 com WHATSAPP_APP_SECRET; responde 200 e trata depois com `after`). `features/whatsapp/`:
+  `meta.ts` (envio; sem WHATSAPP_TOKEN só loga "[whatsapp simulado]"), `processar.ts` (conectar por código
+  "Conectar Vaguinha código XXXX-XXXX" de 8 caracteres e 15 min, gerado no Perfil; botões sim:/nao:<id>; "sim"/"não"
+  respondem a última proposta pendente; histórico de 24 h), migração 0019 (tabelas whatsapp_* só com service_role).
+  O "cérebro" é o mesmo do app: `features/assistente/nucleo.ts` (`processarMensagem`, `aplicarProposta`).
+  Sem sessão de navegador, os dados da profissional são lidos com `lib/supabase/escopado.ts`
+  (`clienteDaProfissional`: força profissional_id em todo select/update/delete/insert; só tabelas de negócio).
+  NUNCA usar o cliente admin direto em código da assistente. Quadro "Assistente no WhatsApp" no Perfil só aparece
+  com NEXT_PUBLIC_WHATSAPP_ASSISTENTE configurado. Fase 2 (áudio) e 3 (avisos automáticos) ainda não feitas.
 - Agenda sem conflito garantido no banco por `EXCLUDE` (btree_gist) sobre `tstzrange(inicio, fim)`,
   cobrindo atendimentos **e** bloqueios (mesma tabela `agendamentos`, coluna `tipo`).
 - /agenda abre no mês (estilo Google: "8h Nome"); dia/semana com rolagem própria (`GradeHoraria`, overscroll-contain).

@@ -1,5 +1,7 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { criarClienteServidor } from "@/lib/supabase/server";
+import type { Database } from "@/types/database";
 import { dataDe, fimDoDia, formatarDataISO, hojeISO, inicioDoDia, intervaloDoMes, somarMeses, type DataISO } from "@/lib/datas";
 
 /* Relatório do mês (Premium). Tudo calculado aqui, no servidor, a partir de:
@@ -75,8 +77,9 @@ function quando(iso: string | null) {
   return iso ? formatarDataISO(dataDe(iso), "EEE dd/MM") + " às " + new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) : "";
 }
 
-export async function montarRelatorio(mes: Mes): Promise<Relatorio> {
-  const supabase = await criarClienteServidor();
+/** `cliente`: opcional; sem ele usa a sessão do navegador (a assistente no WhatsApp passa o cliente escopado). */
+export async function montarRelatorio(mes: Mes, cliente?: SupabaseClient<Database>): Promise<Relatorio> {
+  const supabase = cliente ?? (await criarClienteServidor());
   const anterior = somarMes(mes, -1);
   const primeiroDaSerie = somarMes(mes, -5);
   const atual = limitesDoMes(mes);

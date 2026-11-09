@@ -247,6 +247,36 @@ export type Database = {
         Update: Partial<{ mensagens: number; tokens_entrada: number; tokens_saida: number; custo_usd: number; updated_at: string }>;
         Relationships: [];
       };
+      whatsapp_vinculos: {
+        Row: { profissional_id: string; telefone: string; conectado_em: string };
+        Insert: { profissional_id: string; telefone: string; conectado_em?: string };
+        Update: Partial<{ telefone: string; conectado_em: string }>;
+        Relationships: [];
+      };
+      whatsapp_codigos: {
+        Row: { profissional_id: string; codigo: string; expira_em: string };
+        Insert: { profissional_id: string; codigo: string; expira_em: string };
+        Update: Partial<{ codigo: string; expira_em: string }>;
+        Relationships: [];
+      };
+      whatsapp_conversa: {
+        Row: { id: number; profissional_id: string; papel: "voce" | "assistente"; texto: string; criado_em: string };
+        Insert: { profissional_id: string; papel: "voce" | "assistente"; texto: string; criado_em?: string };
+        Update: Partial<{ texto: string }>;
+        Relationships: [];
+      };
+      whatsapp_propostas: {
+        Row: { id: string; profissional_id: string; dados: Json; situacao: "pendente" | "confirmada" | "recusada" | "erro" | "vencida"; criada_em: string };
+        Insert: { id?: string; profissional_id: string; dados: Json; situacao?: "pendente" | "confirmada" | "recusada" | "erro" | "vencida"; criada_em?: string };
+        Update: Partial<{ situacao: "pendente" | "confirmada" | "recusada" | "erro" | "vencida" }>;
+        Relationships: [];
+      };
+      whatsapp_recebidas: {
+        Row: { wamid: string; recebida_em: string };
+        Insert: { wamid: string; recebida_em?: string };
+        Update: Partial<{ recebida_em: string }>;
+        Relationships: [];
+      };
       agendamento_eventos: {
         Row: AgendamentoEvento;
         Insert: Pick<AgendamentoEvento, "profissional_id" | "tipo"> & Partial<AgendamentoEvento>;
