@@ -66,8 +66,12 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 - Assistente (Premium): IA = claude-haiku-5-5 (`lib/anthropic.ts`). ANTES da IA, `features/assistente/comandos.ts`
   responde sem custo os pedidos de consulta que `interpretar.ts` reconhece (agenda de um dia/semana, horários livres,
   próximo cliente, quanto entrou). Pedido de mudança ou com nome de cliente vai sempre para a IA. "sim"/"não" para uma
-  proposta pendente é resolvido na tela. Voz: `useVoz.ts` (SpeechRecognition + speechSynthesis do navegador, grátis);
-  o botão de microfone some onde não há suporte (Firefox). Testar frases novas com um script tsx chamando `interpretar`.
+  proposta pendente é resolvido na tela. Voz: `useVoz.ts` só OUVE (SpeechRecognition do navegador, grátis); a
+  assistente responde só por escrito (Diego, 09/11/2026). O microfone some onde não há suporte (Firefox).
+  Dia/hora: `pistasDaFrase` (interpretar.ts) lê dia e horário SEM IA ("sexta às 11h" → 2026-11-13, 11:00; número depois
+  de às/h ou logo depois do dia é hora) e vai junto da mensagem como "[Leitura automática da frase: ...]"; o contexto
+  traz um calendário de 14 dias. Effort "high". Botão fixo `BotaoAssistente` em todas as telas do painel.
+  Testar frases novas com um script tsx chamando `interpretar` / `pistasDaFrase`.
 - Mensagens do WhatsApp (sugestão da Layara, 09/11/2026): `features/mensagens/modelos.ts` (5 situações: lembrete,
   confirmacao, remarcacao, cancelamento, agradecimento; campos {nome} {nome_completo} {dia} {data} {hora} {servico} {valor}
   {duracao} {endereco} {negocio} {link}, aceitos também com acento; linha com campo vazio some). Textos em

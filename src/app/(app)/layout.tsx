@@ -7,6 +7,7 @@ import { BarraInferior } from "@/components/layout/BarraInferior";
 import { AplicarTema } from "@/components/layout/AplicarTema";
 import { RegistroSW } from "@/components/pwa/RegistroSW";
 import { AvisoInstalar } from "@/components/pwa/AvisoInstalar";
+import { BotaoAssistente } from "@/features/assistente/components/BotaoAssistente";
 
 /** Área da profissional: exige conta aprovada e dentro da validade. */
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
       <AvisoInstalar />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-24">{children}</main>
       <BarraInferior bloqueados={{ "/stories": !podeStories }} />
+      <BotaoAssistente />
       <RegistroSW />
     </div>
   );

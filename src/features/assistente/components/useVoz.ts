@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 
 /*
  * Voz do assistente usando o que o próprio navegador/celular já tem (custo zero):
- * - ouvir: SpeechRecognition (Chrome/Android, Safari/iPhone, Edge). Firefox não tem: o botão some.
- * - falar: speechSynthesis, com voz em português do Brasil.
+ * só OUVIR, com SpeechRecognition (Chrome/Android, Safari/iPhone, Edge). Firefox não tem: o botão some.
+ * A assistente responde só por escrito (decisão do Diego em 09/11/2026: "só eu falo por voz").
  */
 
 type ResultadoFala = { isFinal: boolean; 0: { transcript: string } };
@@ -39,20 +39,8 @@ const MENSAGENS_ERRO: Record<string, string> = {
   network: "Sem internet para entender a voz. Tente de novo ou escreva.",
 };
 
-/** Deixa o texto bom de ouvir: "09:00–10:00" → "09:00 até 10:00", tira símbolos. */
-function paraFala(texto: string) {
-  return texto
-    .replace(/(\d{2}:\d{2})\s*[–-]\s*(\d{2}:\d{2})/g, "$1 até $2")
-    .replace(/(\d{2}:\d{2}) a (\d{2}:\d{2})/g, "$1 até $2")
-    .replace(/·/g, ",")
-    .replace(/\bmin\b/g, "minutos")
-    .replace(/[*_#]/g, "")
-    .replace(/\n+/g, ". ");
-}
-
 export function useVoz({ aoTerminarDeOuvir }: { aoTerminarDeOuvir: (texto: string) => void }) {
   const podeOuvir = useSyncExternalStore(nada, () => construtor() !== null, () => false);
-  const podeFalar = useSyncExternalStore(nada, () => typeof window !== "undefined" && "speechSynthesis" in window, () => false);
   const [ouvindo, setOuvindo] = useState(false);
   const [parcial, setParcial] = useState("");
   const [erroVoz, setErroVoz] = useState<string | null>(null);
@@ -63,14 +51,9 @@ export function useVoz({ aoTerminarDeOuvir }: { aoTerminarDeOuvir: (texto: strin
     callback.current = aoTerminarDeOuvir;
   }, [aoTerminarDeOuvir]);
 
-  const pararDeFalar = useCallback(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
-  }, []);
-
   const ouvir = useCallback(() => {
     const C = construtor();
     if (!C) return;
-    pararDeFalar();
     reconhecedor.current?.abort();
     const r = new C();
     r.lang = "pt-BR";
@@ -108,35 +91,12 @@ export function useVoz({ aoTerminarDeOuvir }: { aoTerminarDeOuvir: (texto: strin
     } catch {
       setErroVoz("Não consegui ligar o microfone. Tente de novo.");
     }
-  }, [pararDeFalar]);
+  }, []);
 
   const pararDeOuvir = useCallback(() => reconhecedor.current?.stop(), []);
 
-  /** Lê o texto em voz alta. `depois` roda quando termina de falar (ex.: voltar a ouvir para o "sim"). */
-  const falar = useCallback(
-    (texto: string, depois?: () => void) => {
-      if (!podeFalar) return depois?.();
-      const s = window.speechSynthesis;
-      s.cancel();
-      const u = new SpeechSynthesisUtterance(paraFala(texto));
-      u.lang = "pt-BR";
-      const voz = s.getVoices().find((v) => v.lang === "pt-BR") ?? s.getVoices().find((v) => v.lang.startsWith("pt"));
-      if (voz) u.voice = voz;
-      u.rate = 1.05;
-      if (depois) u.onend = () => depois();
-      s.speak(u);
-    },
-    [podeFalar],
-  );
+  // ao sair da tela: para de ouvir
+  useEffect(() => () => reconhecedor.current?.abort(), []);
 
-  // ao sair da tela: para de ouvir e de falar
-  useEffect(
-    () => () => {
-      reconhecedor.current?.abort();
-      if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
-    },
-    [],
-  );
-
-  return { podeOuvir, podeFalar, ouvindo, parcial, erroVoz, limparErroVoz: () => setErroVoz(null), ouvir, pararDeOuvir, falar, pararDeFalar };
+  return { podeOuvir, ouvindo, parcial, erroVoz, limparErroVoz: () => setErroVoz(null), ouvir, pararDeOuvir };
 }

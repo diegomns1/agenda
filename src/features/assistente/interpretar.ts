@@ -131,3 +131,71 @@ export function interpretar(texto: string, hoje: DataISO): Comando | null {
 
 /** Atalhos que aparecem como botões na tela (todos resolvidos sem IA). */
 export const ATALHOS = ["Agenda de hoje", "Agenda de amanhã", "Próximo cliente", "Horários livres amanhã", "Quanto entrou este mês"];
+
+// ---------------------------------------------------------------------------
+// Pistas para a IA: dia e horário lidos da frase SEM IA (contas de calendário não ficam com o modelo).
+// Ex.: "marcar Duda sexta às 11h alongamento" → dia 2026-11-13, horário 11:00.
+// O "11" de "às 11" é hora; só vira dia com "dia 11" ou "11/12".
+// ---------------------------------------------------------------------------
+
+const DIAS_EXTENSO = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
+
+function hhmm(h: number, m: number) {
+  return h >= 0 && h <= 23 && m >= 0 && m <= 59 ? `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}` : null;
+}
+
+/** Horários citados na frase, na ordem em que aparecem ("das 14 às 16h" → 14:00, 16:00). */
+export function acharHorarios(texto: string): string[] {
+  // minúsculas e sem acento, mas mantendo ":" (normalizar() tira)
+  const t = ` ${texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9:/ ]+/g, " ").replace(/\s+/g, " ")} `;
+  const achados: { pos: number; hora: string }[] = [];
+  const add = (pos: number, h: number, m: number, periodo?: string) => {
+    if (periodo && /tarde|noite/.test(periodo) && h < 12) h += 12;
+    const v = hhmm(h, m);
+    if (v && !achados.some((a) => Math.abs(a.pos - pos) < 3)) achados.push({ pos, hora: v });
+  };
+  const minutos = (m?: string, meia?: string) => (meia ? 30 : m ? Number(m) : 0);
+
+  for (const r of t.matchAll(/\bmeio ?dia( e meia)?\b/g)) add(r.index!, 12, r[1] ? 30 : 0);
+  // 11:30 / 11h / 11h30 / 11 horas / 11hs (com "e meia" e "da tarde" opcionais)
+  for (const r of t.matchAll(/\b(\d{1,2})(?::(\d{2})|\s?(?:h|hs|hrs?|horas?)(?:\s?(\d{2})\b|\b))( e meia)?( da (?:manha|tarde|noite))?/g)) {
+    add(r.index!, Number(r[1]), minutos(r[2] ?? r[3], r[4]), r[5]);
+  }
+  // "às 11", "as 11", "pras 3 da tarde", "a partir das 14" (número solto depois de às/as/das/pras/ate)
+  for (const r of t.matchAll(/\b(?:as|a|das|pras?|para as|ate as|ate)\s(\d{1,2})(?![\d/:])( e meia)?( da (?:manha|tarde|noite))?/g)) {
+    add(r.index! + r[0].indexOf(r[1]), Number(r[1]), minutos(undefined, r[2]), r[3]);
+  }
+  // "sexta 11", "amanhã 9 e meia": número logo depois do dia é horário (a voz costuma tirar o "às")
+  for (const r of t.matchAll(/\b(?:hoje|amanha|segunda|terca|quarta|quinta|sexta|sabado|domingo)(?: feira)? (\d{1,2})(?![\d/:])( e meia)?( da (?:manha|tarde|noite))?/g)) {
+    add(r.index! + r[0].lastIndexOf(r[1]), Number(r[1]), minutos(undefined, r[2]), r[3]);
+  }
+  // "3 da tarde" sem "às"
+  for (const r of t.matchAll(/\b(\d{1,2})( e meia)? (da (?:manha|tarde|noite))/g)) add(r.index!, Number(r[1]), minutos(undefined, r[2]), r[3]);
+
+  return achados.sort((a, b) => a.pos - b.pos).map((a) => a.hora);
+}
+
+/** Todos os dias citados, na ordem ("de hoje para sexta" → hoje, sexta). */
+export function acharDias(texto: string, hoje: DataISO): { dia: DataISO; rotulo: string }[] {
+  const t = normalizar(texto);
+  const dias: { dia: DataISO; rotulo: string }[] = [];
+  const RE = /\b(?:depois de amanha|amanha|hoje|domingo|segunda|terca|quarta|quinta|sexta|sabado)\b|\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b|\bdia \d{1,2}\b/g;
+  for (const r of t.matchAll(RE)) {
+    const d = acharDia(r[0], hoje);
+    if (d && !dias.some((x) => x.dia === d.dia)) dias.push(d);
+  }
+  return dias;
+}
+
+/** Texto curto com o dia e o horário entendidos, para ir junto da mensagem para a IA. null se não achou nada. */
+export function pistasDaFrase(texto: string, hoje: DataISO): string | null {
+  const partes: string[] = [];
+  const dias = acharDias(texto, hoje).map(({ dia }) => {
+    const [ano, mes, d] = dia.split("-");
+    return `${DIAS_EXTENSO[diaDaSemana(dia)]} ${d}/${mes}/${ano} (${dia})`;
+  });
+  if (dias.length) partes.push(`${dias.length > 1 ? "dias citados, na ordem" : "dia citado"} = ${dias.join(" e depois ")}`);
+  const horas = acharHorarios(texto);
+  if (horas.length) partes.push(`${horas.length > 1 ? "horários citados, na ordem" : "horário citado"} = ${horas.join(", ")}`);
+  return partes.length ? partes.join("; ") : null;
+}

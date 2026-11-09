@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { BotMessageSquareIcon, CheckIcon, Loader2Icon, MicIcon, SendHorizontalIcon, SquareIcon, Volume2Icon, VolumeXIcon, XIcon, ZapIcon } from "lucide-react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { BotMessageSquareIcon, CheckIcon, Loader2Icon, MicIcon, SendHorizontalIcon, SquareIcon, XIcon, ZapIcon } from "lucide-react";
 import { conversarComAssistente, executarProposta } from "@/features/assistente/actions";
 import { ATALHOS, interpretar } from "@/features/assistente/interpretar";
 import { SUGESTOES_ASSISTENTE, type MensagemChat, type Proposta } from "@/features/assistente/tipos";
@@ -22,8 +22,6 @@ type Fala = {
 };
 
 const CHAVE = "vaguinha-assistente-conversa";
-const CHAVE_VOZ = "vaguinha-assistente-ler-em-voz";
-const PEDIR_CONFIRMACAO = "Diga sim para confirmar, ou não para deixar como está.";
 
 /** Primeira proposta ainda sem resposta, na fala mais recente que tiver alguma. */
 function propostaPendente(falas: Fala[]) {
@@ -40,17 +38,15 @@ export function ChatAssistente({ nome, iaAtiva }: { nome: string; iaAtiva: boole
   const [restantes, setRestantes] = useState<number | null>(null);
   const [enviando, iniciar] = useTransition();
   const [executando, setExecutando] = useState<string | null>(null);
-  const [lerSempre, setLerSempre] = useState(false);
   const fimRef = useRef<HTMLDivElement>(null);
   const falasRef = useRef<Fala[]>([]);
 
-  // conversa guardada só nesta aba (some ao fechar o navegador); preferência de voz guardada no aparelho
+  // conversa guardada só nesta aba (some ao fechar o navegador)
   useEffect(() => {
     try {
       const salvo = sessionStorage.getItem(CHAVE);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- restaura a conversa salva uma única vez
       if (salvo) setFalas(JSON.parse(salvo));
-      setLerSempre(localStorage.getItem(CHAVE_VOZ) === "1");
     } catch {
       /* sem armazenamento: começa vazio */
     }
@@ -68,24 +64,14 @@ export function ChatAssistente({ nome, iaAtiva }: { nome: string; iaAtiva: boole
     fimRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [falas]);
 
-  const enviarRef = useRef<(m: string, porVoz?: boolean) => void>(() => {});
-  const voz = useVoz({ aoTerminarDeOuvir: (t) => enviarRef.current(t, true) });
-
-  /** Responde em voz alta quando a pessoa falou (ou ligou "ler respostas"). Se houver algo a confirmar, volta a ouvir. */
-  const responderEmVoz = useCallback(
-    (resposta: string, porVoz: boolean, temConfirmacao: boolean) => {
-      if (!voz.podeFalar || !(porVoz || lerSempre)) return;
-      const fala = temConfirmacao ? `${resposta} ${PEDIR_CONFIRMACAO}` : resposta;
-      voz.falar(fala, porVoz && temConfirmacao && voz.podeOuvir ? () => voz.ouvir() : undefined);
-    },
-    [voz, lerSempre],
-  );
+  const enviarRef = useRef<(m: string) => void>(() => {});
+  const voz = useVoz({ aoTerminarDeOuvir: (t) => enviarRef.current(t) });
 
   function historico(): MensagemChat[] {
     return falasRef.current.filter((f) => !f.erro).map((f) => ({ papel: f.papel, texto: f.texto.slice(0, 4000) }));
   }
 
-  async function decidir(falaId: string, proposta: Proposta, confirmar: boolean, porVoz = false) {
+  async function decidir(falaId: string, proposta: Proposta, confirmar: boolean) {
     const marcar = (situacao: "confirmada" | "recusada" | "erro", retorno: string) =>
       setFalas((l) =>
         l.map((f) => (f.id === falaId ? { ...f, propostas: f.propostas?.map((p) => (p.id === proposta.id ? { ...p, situacao, retorno } : p)) } : f)),
@@ -94,7 +80,6 @@ export function ChatAssistente({ nome, iaAtiva }: { nome: string; iaAtiva: boole
       marcar("recusada", "Não alterei nada.");
       const t = `Ok, não fiz: ${proposta.resumo}.`;
       setFalas((l) => [...l, { id: crypto.randomUUID(), papel: "assistente", texto: t, semIA: true }]);
-      responderEmVoz("Ok, deixei como estava.", porVoz, false);
       return;
     }
     setExecutando(proposta.id);
@@ -102,10 +87,9 @@ export function ChatAssistente({ nome, iaAtiva }: { nome: string; iaAtiva: boole
     setExecutando(null);
     marcar(r.ok ? "confirmada" : "erro", r.mensagem);
     setFalas((l) => [...l, { id: crypto.randomUUID(), papel: "assistente", texto: r.mensagem, erro: !r.ok, semIA: true }]);
-    responderEmVoz(r.mensagem, porVoz, false);
   }
 
-  function enviar(mensagem: string, porVoz = false) {
+  function enviar(mensagem: string) {
     const limpo = mensagem.trim();
     if (!limpo || enviando) return;
     voz.limparErroVoz();
@@ -116,7 +100,7 @@ export function ChatAssistente({ nome, iaAtiva }: { nome: string; iaAtiva: boole
     const comando = interpretar(limpo, hojeISO());
     if (pendente && (comando?.tipo === "confirmar" || comando?.tipo === "recusar")) {
       setFalas((l) => [...l, { id: crypto.randomUUID(), papel: "voce", texto: limpo }]);
-      void decidir(pendente.falaId, pendente.proposta, comando.tipo === "confirmar", porVoz);
+      void decidir(pendente.falaId, pendente.proposta, comando.tipo === "confirmar");
       return;
     }
 
@@ -132,7 +116,6 @@ export function ChatAssistente({ nome, iaAtiva }: { nome: string; iaAtiva: boole
           ? { id: crypto.randomUUID(), papel: "assistente", texto: resposta, propostas: r.propostas, semIA: r.semIA }
           : { id: crypto.randomUUID(), papel: "assistente", texto: resposta, erro: true },
       ]);
-      responderEmVoz(resposta, porVoz, Boolean(r.ok && r.propostas?.length));
     });
   }
   // a voz chama sempre a versão mais nova de enviar (com as falas atuais)
@@ -140,36 +123,10 @@ export function ChatAssistente({ nome, iaAtiva }: { nome: string; iaAtiva: boole
     enviarRef.current = enviar;
   });
 
-  function alternarLeitura() {
-    const novo = !lerSempre;
-    setLerSempre(novo);
-    if (!novo) voz.pararDeFalar();
-    try {
-      localStorage.setItem(CHAVE_VOZ, novo ? "1" : "0");
-    } catch {
-      /* ignora */
-    }
-  }
-
   const mostrarMicrofone = voz.podeOuvir && !texto.trim() && !enviando;
 
   return (
     <div className="flex min-h-[60vh] min-w-0 flex-col rounded-3xl border bg-card">
-      <div className="flex items-center justify-between gap-2 border-b px-4 py-2">
-        <p className="text-sm font-semibold">Conversa</p>
-        {voz.podeFalar ? (
-          <button
-            type="button"
-            onClick={alternarLeitura}
-            aria-pressed={lerSempre}
-            className="inline-flex min-h-toque items-center gap-1.5 rounded-full px-2 text-sm text-muted-foreground hover:text-foreground"
-          >
-            {lerSempre ? <Volume2Icon className="size-4" /> : <VolumeXIcon className="size-4" />}
-            {lerSempre ? "Lendo respostas em voz alta" : "Ler respostas em voz alta"}
-          </button>
-        ) : null}
-      </div>
-
       <div className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
         {falas.length === 0 ? (
           <div className="grid gap-4 py-6 text-center">
@@ -332,7 +289,6 @@ export function ChatAssistente({ nome, iaAtiva }: { nome: string; iaAtiva: boole
         {falas.length > 0 ? (
           <button type="button" className="inline-flex min-h-toque items-center underline underline-offset-2" onClick={() => {
                 setFalas([]);
-                voz.pararDeFalar();
                 try {
                   sessionStorage.removeItem(CHAVE);
                 } catch {

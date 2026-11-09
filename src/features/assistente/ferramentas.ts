@@ -4,16 +4,18 @@ import { criarClienteServidor } from "@/lib/supabase/server";
 import { horariosDisponiveis, janelaDoDia } from "@/features/agenda/disponibilidade";
 import { montarRelatorio, ehMes, mesAtual } from "@/features/relatorios/dados";
 import {
-  dataDe,
+  diaDaSemana,
   diasEntre,
   ehDataISO,
   fimDoDia,
   formatarData,
+  formatarDataISO,
   hojeISO,
   horaParaMinutos,
   inicioDoDia,
   instanteEmSP,
   minutosDoDia,
+  somarDias,
 } from "@/lib/datas";
 import { formatarTelefone } from "@/lib/telefone";
 import type { Profile } from "@/types/database";
@@ -336,10 +338,17 @@ export function contextoDoDia(perfil: Profile) {
     })
     .join("; ");
   const agora = new Date();
+  const hoje = hojeISO();
+  // dia da semana → data, já pronto (o modelo erra conta de calendário)
+  const calendario = Array.from({ length: 14 }, (_, i) => {
+    const d = somarDias(hoje, i);
+    const rotulo = i === 0 ? " (hoje)" : i === 1 ? " (amanhã)" : "";
+    return `${dias[diaDaSemana(d)]} ${formatarDataISO(d, "dd/MM")} = ${d}${rotulo}`;
+  }).join("; ");
   return [
-    `Agora: ${formatarData(agora, "EEEE, dd/MM/yyyy 'às' HH:mm")} (horário de Brasília). Hoje = ${hojeISO()}.`,
+    `Agora: ${formatarData(agora, "EEEE, dd/MM/yyyy 'às' HH:mm")} (horário de Brasília). Hoje = ${hoje}.`,
     `Profissional: ${perfil.nome}${perfil.nome_negocio ? ` (${perfil.nome_negocio})` : ""}.`,
     `Expediente: ${expediente}. Intervalo da agenda: ${perfil.intervalo_grade_min} min.`,
-    `Data de amanhã para referência: ${dataDe(new Date(agora.getTime() + 24 * 3_600_000))}.`,
+    `CALENDÁRIO dos próximos 14 dias: ${calendario}.`,
   ].join("\n");
 }
