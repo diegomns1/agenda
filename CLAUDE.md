@@ -71,6 +71,9 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   Dia/hora: `pistasDaFrase` (interpretar.ts) lê dia e horário SEM IA ("sexta às 11h" → 2026-11-13, 11:00; número depois
   de às/h ou logo depois do dia é hora) e vai junto da mensagem como "[Leitura automática da frase: ...]"; o contexto
   traz um calendário de 14 dias. Effort "high". Botão fixo `BotaoAssistente` em todas as telas do painel.
+  Clientes: `propor_cadastrar_cliente` / `propor_editar_cliente` (09/11/2026). Mesmo WhatsApp (com ou sem o 9) bloqueia;
+  nome parecido só avisa (a IA conta e a profissional decide no Confirmar). `propor_marcar` com cadastro novo também
+  recusa WhatsApp repetido.
   Testar frases novas com um script tsx chamando `interpretar` / `pistasDaFrase`.
 - Mensagens do WhatsApp (sugestão da Layara, 09/11/2026): `features/mensagens/modelos.ts` (5 situações: lembrete,
   confirmacao, remarcacao, cancelamento, agradecimento; campos {nome} {nome_completo} {dia} {data} {hora} {servico} {valor}

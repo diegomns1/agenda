@@ -17,7 +17,7 @@ import {
   minutosDoDia,
   somarDias,
 } from "@/lib/datas";
-import { formatarTelefone } from "@/lib/telefone";
+import { formatarTelefone, normalizarTelefone } from "@/lib/telefone";
 import type { Profile } from "@/types/database";
 import type { Proposta } from "./tipos";
 
@@ -82,6 +82,25 @@ export const FERRAMENTAS: Anthropic.Beta.BetaTool[] = [
     hora_inicio: textoOuNulo(`${HORA}; null se dia_inteiro`),
     hora_fim: textoOuNulo(`${HORA}; null se dia_inteiro`),
   }),
+  ferramenta(
+    "propor_cadastrar_cliente",
+    "Propõe cadastrar uma cliente nova (sem marcar horário). Confere sozinha se já existe alguém com o mesmo WhatsApp ou nome parecido e avisa no resultado. A profissional confirma na tela.",
+    {
+      nome: texto("Nome como a profissional falou (ex.: Duda, Maria Eduarda)"),
+      telefone: textoOuNulo("WhatsApp com DDD, como foi dito (ex.: 14999998888); null se não informado"),
+      observacoes: textoOuNulo("Observação curta se a profissional pediu (ex.: alérgica a acetona); null se não"),
+    },
+  ),
+  ferramenta(
+    "propor_editar_cliente",
+    "Propõe mudar o nome, o WhatsApp ou a observação de uma cliente que já existe. Campo null = não muda. A profissional confirma na tela.",
+    {
+      cliente_id: texto("id da cliente (de buscar_cliente)"),
+      nome: textoOuNulo("Nome novo; null para manter"),
+      telefone: textoOuNulo("WhatsApp novo com DDD; null para manter"),
+      observacoes: textoOuNulo("Observação nova (substitui a anterior); null para manter"),
+    },
+  ),
   ferramenta("propor_status", "Propõe marcar um atendimento como concluído ou como falta. A profissional confirma na tela.", {
     agendamento_id: texto("id do atendimento (de ver_agenda)"),
     status: { type: "string", enum: ["concluido", "faltou"] },
@@ -113,6 +132,55 @@ async function conflito(ctx: Contexto, inicio: Date, fim: Date, ignorarId?: stri
   if (ignorarId) q = q.neq("id", ignorarId);
   const { data } = await q.limit(1);
   return data?.[0] ?? null;
+}
+
+/** Variações do mesmo celular (com e sem o 9 da frente), para achar cadastro repetido. */
+function variacoesTelefone(numero: string) {
+  const v = new Set([numero]);
+  const m = numero.match(/^55(\d{2})(\d{8,9})$/);
+  if (m) {
+    const [, ddd, n] = m;
+    if (n.length === 9 && n.startsWith("9")) v.add(`55${ddd}${n.slice(1)}`);
+    if (n.length === 8) v.add(`55${ddd}9${n}`);
+  }
+  return [...v];
+}
+
+/** Valida o WhatsApp dito pela profissional. Devolve o número normalizado ou uma mensagem de erro. */
+function lerTelefone(bruto: unknown): { numero: string | null } | { erro: string } {
+  if (bruto == null || String(bruto).trim() === "") return { numero: null };
+  const numero = normalizarTelefone(String(bruto));
+  if (!numero || !/^55\d{10,11}$/.test(numero)) return { erro: `O WhatsApp "${String(bruto)}" parece incompleto. Peça o número com DDD (ex.: 14 99999-8888).` };
+  return { numero };
+}
+
+const semAcento = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+/**
+ * Procura cadastros que podem ser a mesma pessoa: mesmo WhatsApp (bloqueia) ou nome parecido (só avisa).
+ * `ignorarId`: o próprio cadastro em edição.
+ */
+async function procurarDuplicidade(ctx: Contexto, nome: string | null, telefone: string | null, ignorarId?: string) {
+  let mesmoTelefone: { id: string; nome: string } | null = null;
+  if (telefone) {
+    let q = ctx.supabase.from("clientes").select("id, nome").in("telefone", variacoesTelefone(telefone));
+    if (ignorarId) q = q.neq("id", ignorarId);
+    const { data } = await q.limit(1);
+    mesmoTelefone = data?.[0] ?? null;
+  }
+  let parecidos: { id: string; nome: string; whatsapp: string | null }[] = [];
+  const completo = nome ? semAcento(nome) : "";
+  const primeiro = completo.split(/\s+/)[0] ?? "";
+  if (primeiro.length >= 2) {
+    // busca larga pelo primeiro nome e compara sem acento aqui (o banco não ignora acento)
+    const { data } = await ctx.supabase.from("clientes").select("id, nome, telefone").ilike("nome", `%${primeiro.replace(/[%_,]/g, " ")}%`).limit(20);
+    parecidos = (data ?? [])
+      .filter((c) => c.id !== ignorarId && c.id !== mesmoTelefone?.id)
+      .filter((c) => semAcento(c.nome).split(/\s+/).includes(primeiro) || semAcento(c.nome) === completo)
+      .slice(0, 5)
+      .map((c) => ({ id: c.id, nome: c.nome, whatsapp: c.telefone ? formatarTelefone(c.telefone) : null }));
+  }
+  return { mesmoTelefone, parecidos };
 }
 
 /** Executa uma ferramenta e devolve o texto do tool_result (JSON). Nunca lança: erros viram { erro }. */
@@ -260,6 +328,12 @@ export async function executarFerramenta(ctx: Contexto, nome: string, entrada: R
           nome = c.nome;
         } else if (!nome) {
           return erro("Informe cliente_id ou o nome de um cadastro novo.");
+        } else {
+          // cadastro novo junto com o horário: não duplica quem já tem o mesmo WhatsApp
+          const tel = lerTelefone(entrada.nova_cliente_telefone);
+          if ("erro" in tel) return erro(tel.erro);
+          const { mesmoTelefone } = await procurarDuplicidade(ctx, null, tel.numero);
+          if (mesmoTelefone) return erro(`Esse WhatsApp já é de ${mesmoTelefone.nome} (cliente_id ${mesmoTelefone.id}). Use esse cadastro em vez de criar outro.`);
         }
         const dia = String(entrada.data);
         const hora = String(entrada.hora);
@@ -300,6 +374,69 @@ export async function executarFerramenta(ctx: Contexto, nome: string, entrada: R
           hora_inicio: diaInteiro ? null : hi,
           hora_fim: diaInteiro ? null : hf,
           resumo: `Bloquear ${formatarData(instanteEmSP(dia, "12:00"), "EEEE, dd/MM")} ${diaInteiro ? "o dia todo" : `das ${hi} às ${hf}`} (${titulo})`,
+        };
+        ctx.propostas.push(p);
+        return JSON.stringify({ proposta_criada: p.resumo, aguardando_confirmacao: true });
+      }
+
+      case "propor_cadastrar_cliente": {
+        const nome = String(entrada.nome ?? "").trim().replace(/\s+/g, " ").slice(0, 80);
+        if (nome.length < 2) return erro("Falta o nome da cliente.");
+        const tel = lerTelefone(entrada.telefone);
+        if ("erro" in tel) return erro(tel.erro);
+        const observacoes = entrada.observacoes ? String(entrada.observacoes).trim().slice(0, 500) : null;
+        const { mesmoTelefone, parecidos } = await procurarDuplicidade(ctx, nome, tel.numero);
+        if (mesmoTelefone) {
+          return JSON.stringify({
+            erro: `Já existe um cadastro com esse WhatsApp: ${mesmoTelefone.nome}. Não criei outro. Pergunte se é a mesma pessoa; se for, ofereça usar esse cadastro (ou mudar o nome dele com propor_editar_cliente).`,
+            cadastro_existente: mesmoTelefone,
+          });
+        }
+        const p: Proposta = {
+          id: novoId(),
+          tipo: "cadastrar_cliente",
+          nome,
+          telefone: tel.numero,
+          observacoes,
+          resumo: `Cadastrar ${nome}${tel.numero ? ` · WhatsApp ${formatarTelefone(tel.numero)}` : " (sem WhatsApp)"}`,
+        };
+        ctx.propostas.push(p);
+        return JSON.stringify({
+          proposta_criada: p.resumo,
+          aguardando_confirmacao: true,
+          ...(parecidos.length
+            ? { aviso: "Já existe(m) cadastro(s) com nome parecido. Conte isso à profissional numa frase, para ela ver se não é a mesma pessoa antes de confirmar.", nomes_parecidos: parecidos }
+            : {}),
+        });
+      }
+
+      case "propor_editar_cliente": {
+        const id = String(entrada.cliente_id ?? "");
+        const { data: atual } = await ctx.supabase.from("clientes").select("id, nome, telefone, observacoes").eq("id", id).maybeSingle();
+        if (!atual) return erro("Cliente não encontrada. Use buscar_cliente.");
+        const nome = entrada.nome ? String(entrada.nome).trim().replace(/\s+/g, " ").slice(0, 80) : null;
+        const tel = lerTelefone(entrada.telefone);
+        if ("erro" in tel) return erro(tel.erro);
+        const observacoes = entrada.observacoes ? String(entrada.observacoes).trim().slice(0, 500) : null;
+        if (!nome && !tel.numero && !observacoes) return erro("Diga o que mudar: nome, WhatsApp ou observação.");
+        if (tel.numero) {
+          const { mesmoTelefone } = await procurarDuplicidade(ctx, null, tel.numero, atual.id);
+          if (mesmoTelefone) return erro(`Esse WhatsApp já está no cadastro de ${mesmoTelefone.nome}. Não mudei nada.`);
+        }
+        const mudancas = [
+          nome && nome !== atual.nome ? `nome para ${nome}` : null,
+          tel.numero && tel.numero !== atual.telefone ? `WhatsApp para ${formatarTelefone(tel.numero)}` : null,
+          observacoes ? "observação" : null,
+        ].filter(Boolean);
+        if (!mudancas.length) return erro("Os dados já estão assim no cadastro. Nada para mudar.");
+        const p: Proposta = {
+          id: novoId(),
+          tipo: "editar_cliente",
+          cliente_id: atual.id,
+          nome,
+          telefone: tel.numero,
+          observacoes,
+          resumo: `Mudar no cadastro de ${atual.nome}: ${mudancas.join(", ")}`,
         };
         ctx.propostas.push(p);
         return JSON.stringify({ proposta_criada: p.resumo, aguardando_confirmacao: true });

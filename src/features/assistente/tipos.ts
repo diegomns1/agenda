@@ -34,6 +34,23 @@ export const esquemaProposta = z.discriminatedUnion("tipo", [
     hora_fim: hora.nullable(),
   }),
   z.object({ id: z.string(), tipo: z.literal("status"), resumo: z.string(), agendamento_id: z.uuid(), status: z.enum(["concluido", "faltou"]) }),
+  z.object({
+    id: z.string(),
+    tipo: z.literal("cadastrar_cliente"),
+    resumo: z.string(),
+    nome: z.string().min(2).max(80),
+    telefone: z.string().regex(/^55\d{10,11}$/).nullable(),
+    observacoes: z.string().max(500).nullable(),
+  }),
+  z.object({
+    id: z.string(),
+    tipo: z.literal("editar_cliente"),
+    resumo: z.string(),
+    cliente_id: z.uuid(),
+    nome: z.string().min(2).max(80).nullable(),
+    telefone: z.string().regex(/^55\d{10,11}$/).nullable(),
+    observacoes: z.string().max(500).nullable(),
+  }),
 ]);
 
 export type Proposta = z.infer<typeof esquemaProposta>;
