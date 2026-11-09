@@ -39,6 +39,10 @@ export type Profile = {
   expediente: Expediente;
   intervalo_grade_min: number;
   modelo_lembrete: string;
+  /** Endereço do atendimento (campo {endereco} das mensagens). Migração 0018. */
+  endereco: string | null;
+  /** Textos do WhatsApp por situação (lembrete, confirmacao...). Vazio = padrão. Migração 0018. */
+  modelos_mensagem: Partial<Record<"lembrete" | "confirmacao" | "remarcacao" | "cancelamento" | "agradecimento", string>>;
   slug: string | null;
   agendamento_online: boolean;
   confirmacao_online: "automatica" | "manual";

@@ -15,9 +15,10 @@ import {
 } from "lucide-react";
 import { alterarStatusAgendamento, excluirAgendamento } from "@/features/agenda/actions";
 import { BotaoLembrarCliente } from "@/features/lembretes/components/BotaoLembrarCliente";
+import { MenuMensagens } from "@/features/mensagens/components/MenuMensagens";
+import type { Mensagens } from "@/features/mensagens/modelos";
 import { STATUS_AGENDAMENTO } from "@/features/agenda/schema";
 import { VISUAL_STATUS } from "@/features/agenda/visual";
-import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -32,7 +33,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatarData, horaDe } from "@/lib/datas";
 import { formatarMoeda } from "@/lib/moeda";
-import { linkWhatsApp } from "@/lib/telefone";
 import { cn } from "@/lib/utils";
 import type { EstadoForm } from "@/components/formulario/tipos";
 import type { Agendamento, StatusAgendamento } from "@/types/database";
@@ -41,12 +41,12 @@ import type { ClienteResumo } from "./FormAgendamento";
 type Props = {
   agendamento: Agendamento | null;
   clientes: ClienteResumo[];
-  modeloLembrete: string;
+  mensagens: Mensagens;
   aoFechar: () => void;
   aoEditar: (a: Agendamento) => void;
 };
 
-export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, aoFechar, aoEditar }: Props) {
+export function DetalheAgendamento({ agendamento: a, clientes, mensagens, aoFechar, aoEditar }: Props) {
   const [confirmando, setConfirmando] = useState<"cancelar" | "excluir" | null>(null);
   const [pendente, iniciar] = useTransition();
 
@@ -122,22 +122,18 @@ export function DetalheAgendamento({ agendamento: a, clientes, modeloLembrete, a
               <div className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:flex-wrap">
                 {a.tipo === "atendimento" ? (
                   <>
-                    {a.status === "agendado" ? (
+                    {cliente?.telefone ? (
+                      <MenuMensagens agendamento={a} telefone={cliente.telefone} mensagens={mensagens} className={cn(botao, "col-span-2")} />
+                    ) : a.status === "agendado" ? (
+                      // sem WhatsApp cadastrado: só dá para marcar o lembrete como feito
                       <BotaoLembrarCliente
                         agendamento={a}
-                        telefone={cliente?.telefone ?? null}
-                        modelo={modeloLembrete}
+                        telefone={null}
+                        mensagens={mensagens}
                         tamanho="sm"
                         destaque={false}
                         className={cn(botao, "col-span-2")}
                       />
-                    ) : cliente?.telefone ? (
-                      <Button asChild variant="outline" className={botao}>
-                        <a href={linkWhatsApp(cliente.telefone)} target="_blank" rel="noopener noreferrer">
-                          <IconeWhatsApp className="size-4 text-whatsapp" />
-                          WhatsApp
-                        </a>
-                      </Button>
                     ) : null}
                     {a.cliente_id ? (
                       <Button asChild variant="outline" className={botao}>

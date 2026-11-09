@@ -4,14 +4,15 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { CheckIcon, MessageCircleIcon, UndoIcon } from "lucide-react";
 import { marcarClienteAvisada } from "@/features/lembretes/actions";
-import { linkLembrete } from "@/features/lembretes/mensagem";
+import { linkMensagem } from "@/features/lembretes/mensagem";
+import type { Mensagens } from "@/features/mensagens/modelos";
 import { Button } from "@/components/ui/button";
 import type { Agendamento } from "@/types/database";
 
 type Props = {
-  agendamento: Pick<Agendamento, "id" | "inicio" | "cliente_nome" | "servico_nome" | "cliente_avisada_em">;
+  agendamento: Pick<Agendamento, "id" | "inicio" | "fim" | "valor" | "cliente_nome" | "servico_nome" | "cliente_avisada_em">;
   telefone: string | null;
-  modelo: string;
+  mensagens: Mensagens;
   tamanho?: "sm" | "default";
   /** Botão cheio (padrão, na lista de lembretes) ou contornado (no detalhe, onde a ação principal é outra). */
   destaque?: boolean;
@@ -23,7 +24,7 @@ type Props = {
  * Abre o WhatsApp da cliente com a mensagem pronta e marca o atendimento como "avisada".
  * Se não houver telefone, só permite marcar manualmente.
  */
-export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "default", destaque = true, className, aoConcluir }: Props) {
+export function BotaoLembrarCliente({ agendamento, telefone, mensagens, tamanho = "default", destaque = true, className, aoConcluir }: Props) {
   const [pendente, iniciar] = useTransition();
   const avisada = Boolean(agendamento.cliente_avisada_em);
 
@@ -59,7 +60,7 @@ export function BotaoLembrarCliente({ agendamento, telefone, modelo, tamanho = "
   return (
     <Button asChild size={tamanho} variant={destaque ? "default" : "outline"} className={className} disabled={pendente}>
       <a
-        href={linkLembrete(telefone, modelo, agendamento)}
+        href={linkMensagem(telefone, mensagens.modelos.lembrete, agendamento, mensagens.contexto)}
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => marcar(true)}

@@ -47,7 +47,7 @@ export const esquemaPerfil = z.object({
   cor_primaria: hex,
   cor_secundaria: hex,
   intervalo_grade_min: z.coerce.number().refine((n) => (INTERVALOS_GRADE as readonly number[]).includes(n), "Intervalo inválido"),
-  modelo_lembrete: z.string().trim().min(10, "Mensagem muito curta").max(400, "Máximo de 400 caracteres"),
+  endereco: z.string().trim().max(200, "Máximo de 200 caracteres").optional().transform((v) => v || null),
   slug: z
     .string()
     .trim()

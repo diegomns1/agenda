@@ -9,7 +9,7 @@ import { Aviso } from "@/components/formulario/Aviso";
 import { ESTADO_INICIAL, type EstadoForm } from "@/components/formulario/tipos";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { formatarTelefone } from "@/lib/telefone";
 import type { Profile } from "@/types/database";
 import { SeletorCores, type Cores } from "./SeletorCores";
@@ -24,15 +24,6 @@ import { obterRamo, TEMAS_PAINEL, type TemaPainel, type Tratamento } from "@/lib
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-const EXEMPLO = { nome: "Maria", dia: "amanhã (sexta)", hora: "14:30", servico: "manicure" };
-
-function preencherModelo(modelo: string) {
-  return modelo
-    .replaceAll("{nome}", EXEMPLO.nome)
-    .replaceAll("{dia}", EXEMPLO.dia)
-    .replaceAll("{hora}", EXEMPLO.hora)
-    .replaceAll("{servico}", EXEMPLO.servico);
-}
 
 async function salvarComToast(estado: EstadoForm, formData: FormData) {
   const r = await salvarPerfil(estado, formData);
@@ -67,7 +58,6 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
   const [nome, setNome] = useState(perfil.nome);
   const [nomeNegocio, setNomeNegocio] = useState(perfil.nome_negocio ?? "");
   const [instagram, setInstagram] = useState(perfil.instagram ?? "");
-  const [modelo, setModelo] = useState(perfil.modelo_lembrete);
   const [tema, setTema] = useState<TemaPainel>(perfil.tema ?? "rosa");
 
   const v = estado.valores;
@@ -166,6 +156,15 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
             onChange={(e) => setInstagram(e.target.value)}
             dica="Só o nome de usuário, sem @"
             erros={estado.erros?.instagram}
+          />
+          <Campo
+            rotulo="Endereço do atendimento (opcional)"
+            nome="endereco"
+            placeholder="Rua, número - bairro"
+            defaultValue={v?.endereco ?? perfil.endereco ?? ""}
+            maxLength={200}
+            dica="Vai nas mensagens do WhatsApp no campo {endereco}. Vazio, a linha do endereço não aparece."
+            erros={estado.erros?.endereco}
           />
         </CardContent>
       </Card>
@@ -287,37 +286,18 @@ export function FormPerfil({ perfil, urlBase, podeAgendamentoOnline }: PropsForm
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="modelo_lembrete">
         <CardHeader>
-          <CardTitle>Mensagem de lembrete</CardTitle>
+          <CardTitle>Mensagens do WhatsApp</CardTitle>
           <CardDescription>
-            Texto que vai pronto para o WhatsApp de quem você atende. Você pode usar{" "}
-            <code className="rounded bg-muted px-1">{"{nome}"}</code>,{" "}
-            <code className="rounded bg-muted px-1">{"{dia}"}</code>,{" "}
-            <code className="rounded bg-muted px-1">{"{hora}"}</code> e{" "}
-            <code className="rounded bg-muted px-1">{"{servico}"}</code>.
+            Lembrete, confirmação, remarcação, cancelamento e agradecimento, com nome, dia, hora, serviço, valor e endereço
+            preenchidos sozinhos.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3">
-          <div className="grid gap-1.5">
-            <Label htmlFor="modelo_lembrete">Modelo</Label>
-            <Textarea
-              id="modelo_lembrete"
-              name="modelo_lembrete"
-              rows={3}
-              maxLength={400}
-              value={modelo}
-              onChange={(e) => setModelo(e.target.value)}
-              className="text-base"
-            />
-            {estado.erros?.modelo_lembrete?.[0] ? (
-              <p className="text-sm text-destructive">{estado.erros.modelo_lembrete[0]}</p>
-            ) : null}
-          </div>
-          <div className="rounded-lg bg-[#e7ffdb] px-3 py-2 text-sm text-neutral-900 dark:bg-[#1f3d2a] dark:text-neutral-100">
-            <p className="mb-1 text-xs font-medium opacity-60">Exemplo de como a pessoa recebe</p>
-            <p className="whitespace-pre-wrap">{preencherModelo(modelo)}</p>
-          </div>
+        <CardContent>
+          <Button asChild variant="outline" className="h-toque sm:h-toque">
+            <Link href="/mensagens">Editar mensagens</Link>
+          </Button>
         </CardContent>
       </Card>
 

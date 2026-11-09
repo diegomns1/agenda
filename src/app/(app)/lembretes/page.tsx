@@ -7,6 +7,8 @@ import { contarInscricoesPush, listarLembretes } from "@/features/lembretes/quer
 import { ListaLembretes } from "@/features/lembretes/components/ListaLembretes";
 import { AtivarNotificacoes } from "@/features/lembretes/components/AtivarNotificacoes";
 import { BloqueioPlano } from "@/components/layout/BloqueioPlano";
+import { mensagensDoPerfil } from "@/features/mensagens/modelos";
+import { URL_APP } from "@/lib/constantes";
 
 export const metadata: Metadata = { title: "Lembretes" };
 
@@ -40,8 +42,8 @@ export default async function PaginaLembretes({ searchParams }: PageProps<"/lemb
         <h1 className="text-2xl font-semibold tracking-tight">Lembretes</h1>
         <p className="text-sm text-muted-foreground">
           Atendimentos das próximas 48 horas. Toque em <strong>Enviar lembrete</strong> para abrir o WhatsApp com a mensagem pronta.{" "}
-          <Link href="/perfil#modelo_lembrete" className="underline underline-offset-4">
-            Editar mensagem
+          <Link href="/mensagens" className="underline underline-offset-4">
+            Editar mensagens
           </Link>
         </p>
       </div>
@@ -49,7 +51,7 @@ export default async function PaginaLembretes({ searchParams }: PageProps<"/lemb
       <ListaLembretes
         pendentes={pendentes}
         avisados={avisados}
-        modelo={perfil.modelo_lembrete}
+        mensagens={mensagensDoPerfil(perfil, URL_APP)}
         destaqueId={typeof agendamento === "string" ? agendamento : null}
       />
 

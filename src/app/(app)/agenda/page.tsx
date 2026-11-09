@@ -6,6 +6,8 @@ import { listarAgendamentosDias } from "@/features/agenda/queries";
 import { listarClientes } from "@/features/clientes/queries";
 import { listarServicos } from "@/features/servicos/queries";
 import { AgendaCliente } from "@/features/agenda/components/AgendaCliente";
+import { mensagensDoPerfil } from "@/features/mensagens/modelos";
+import { URL_APP } from "@/lib/constantes";
 import type { Visao } from "@/features/agenda/components/BarraAgenda";
 import type { InicialForm } from "@/features/agenda/components/FormAgendamento";
 
@@ -64,7 +66,7 @@ export default async function PaginaAgenda({ searchParams }: PageProps<"/agenda"
         servicos={servicos}
         expediente={perfil.expediente}
         intervaloMin={perfil.intervalo_grade_min}
-        modeloLembrete={perfil.modelo_lembrete}
+        mensagens={mensagensDoPerfil(perfil, URL_APP)}
         abrirInicial={abrirInicial}
       />
     </div>

@@ -10,7 +10,7 @@ import { esquemaPerfil, expedienteDoForm } from "./schema";
 
 const CAMPOS_TEXTO = [
   "nome", "nome_negocio", "telefone", "instagram",
-  "cor_primaria", "cor_secundaria", "intervalo_grade_min", "modelo_lembrete",
+  "cor_primaria", "cor_secundaria", "intervalo_grade_min", "endereco",
   "slug", "agendamento_online", "confirmacao_online", "antecedencia_min_horas",
   "ramo", "ramo_outro", "tratamento", "tema",
 ];
@@ -56,7 +56,7 @@ export async function salvarPerfil(_: EstadoForm, formData: FormData): Promise<E
       cor_primaria: d.cor_primaria,
       cor_secundaria: d.cor_secundaria,
       intervalo_grade_min: d.intervalo_grade_min,
-      modelo_lembrete: d.modelo_lembrete,
+      endereco: d.endereco,
       expediente: d.expediente,
       slug: d.slug,
       agendamento_online: d.agendamento_online,

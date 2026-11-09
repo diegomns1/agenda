@@ -18,6 +18,7 @@ import {
 } from "@/lib/datas";
 import { datasDoDia } from "@/lib/feriados";
 import { cn } from "@/lib/utils";
+import type { Mensagens } from "@/features/mensagens/modelos";
 import type { Agendamento, Expediente, Servico } from "@/types/database";
 import { janelaDoDia } from "@/features/agenda/disponibilidade";
 import { BarraAgenda, type Visao } from "./BarraAgenda";
@@ -40,7 +41,7 @@ type Props = {
   servicos: Servico[];
   expediente: Expediente;
   intervaloMin: number;
-  modeloLembrete: string;
+  mensagens: Mensagens;
   abrirInicial?: InicialForm | null; // vindo de ?novo=atendimento&cliente=...
 };
 
@@ -66,7 +67,7 @@ function diaEmSP(iso: string) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(iso));
 }
 
-export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, expediente, intervaloMin, modeloLembrete, abrirInicial }: Props) {
+export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, expediente, intervaloMin, mensagens, abrirInicial }: Props) {
   const router = useRouter();
 
   // Navegação entre períodos dentro de uma transição: "navegando" esmaece o conteúdo até o próximo chegar
@@ -373,7 +374,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
       <DetalheAgendamento
         agendamento={selecionado}
         clientes={clientes}
-        modeloLembrete={modeloLembrete}
+        mensagens={mensagens}
         aoFechar={() => setSelecionado(null)}
         aoEditar={(a) => {
           setSelecionado(null);

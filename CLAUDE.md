@@ -68,6 +68,12 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   próximo cliente, quanto entrou). Pedido de mudança ou com nome de cliente vai sempre para a IA. "sim"/"não" para uma
   proposta pendente é resolvido na tela. Voz: `useVoz.ts` (SpeechRecognition + speechSynthesis do navegador, grátis);
   o botão de microfone some onde não há suporte (Firefox). Testar frases novas com um script tsx chamando `interpretar`.
+- Mensagens do WhatsApp (sugestão da Layara, 09/11/2026): `features/mensagens/modelos.ts` (5 situações: lembrete,
+  confirmacao, remarcacao, cancelamento, agradecimento; campos {nome} {nome_completo} {dia} {data} {hora} {servico} {valor}
+  {duracao} {endereco} {negocio} {link}, aceitos também com acento; linha com campo vazio some). Textos em
+  `profiles.modelos_mensagem` (jsonb; texto igual ao padrão não é guardado) + `profiles.endereco` (migração 0018);
+  `modelo_lembrete` continua sendo gravado com o lembrete (compatibilidade). Editor em /mensagens; envio pelo
+  `MenuMensagens` no detalhe do atendimento e pelo `BotaoLembrarCliente` na lista de Lembretes.
 - Site público (`app/(site)/site`): ver seção "Site público" do DESIGN.md. E-mails têm `previa` (linha ao lado do
   assunto na caixa de entrada); o de conta aprovada leva direto para /servicos.
 - Importar do Google Agenda em /agenda/importar: .zip/.ics lido no navegador (`features/importar/ical.ts`, ical.js +

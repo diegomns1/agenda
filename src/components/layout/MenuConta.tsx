@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRef } from "react";
-import { BotMessageSquareIcon, ChartColumnIcon, LifeBuoyIcon, LogOutIcon, MenuIcon, ShieldCheckIcon } from "lucide-react";
+import { BotMessageSquareIcon, ChartColumnIcon, LifeBuoyIcon, LogOutIcon, MenuIcon, MessageSquareTextIcon, ShieldCheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -37,6 +37,12 @@ export function MenuConta({ admin, linkSuporte }: Props) {
             <Link href="/assistente">
               <BotMessageSquareIcon />
               Assistente de IA
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className={ITEM}>
+            <Link href="/mensagens">
+              <MessageSquareTextIcon />
+              Mensagens do WhatsApp
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className={ITEM}>

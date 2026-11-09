@@ -8,15 +8,16 @@ import { EstadoVazio } from "@/components/layout/EstadoVazio";
 import { dataDe, formatarData, horaDe, rotuloRelativo } from "@/lib/datas";
 import { cn } from "@/lib/utils";
 import type { LembreteItem } from "@/features/lembretes/queries";
+import type { Mensagens } from "@/features/mensagens/modelos";
 
 type Props = {
   pendentes: LembreteItem[];
   avisados: LembreteItem[];
-  modelo: string;
+  mensagens: Mensagens;
   destaqueId?: string | null;
 };
 
-function Item({ a, modelo, destaque }: { a: LembreteItem; modelo: string; destaque?: boolean }) {
+function Item({ a, mensagens, destaque }: { a: LembreteItem; mensagens: Mensagens; destaque?: boolean }) {
   return (
     <li className={cn("flex flex-wrap items-center gap-3 px-4 py-3", destaque && "bg-primary/5")}>
       <div className="w-16 shrink-0 text-center">
@@ -43,12 +44,12 @@ function Item({ a, modelo, destaque }: { a: LembreteItem; modelo: string; destaq
         </p>
       </div>
       {/* no celular o botão vai para uma linha própria, largo: o nome aparece inteiro e o toque fica fácil */}
-      <BotaoLembrarCliente agendamento={a} telefone={a.telefone} modelo={modelo} tamanho="sm" className="w-full sm:w-auto" />
+      <BotaoLembrarCliente agendamento={a} telefone={a.telefone} mensagens={mensagens} tamanho="sm" className="w-full sm:w-auto" />
     </li>
   );
 }
 
-export function ListaLembretes({ pendentes, avisados, modelo, destaqueId }: Props) {
+export function ListaLembretes({ pendentes, avisados, mensagens, destaqueId }: Props) {
   const [mostrarAvisados, setMostrarAvisados] = useState(false);
 
   // Agrupa pendentes por dia
@@ -72,7 +73,7 @@ export function ListaLembretes({ pendentes, avisados, modelo, destaqueId }: Prop
             <h2 className="text-sm font-semibold first-letter:uppercase">{formatarData(itens[0].inicio, "EEEE, dd/MM")}</h2>
             <ul className="divide-y overflow-hidden rounded-xl border bg-card">
               {itens.map((a) => (
-                <Item key={a.id} a={a} modelo={modelo} destaque={a.id === destaqueId} />
+                <Item key={a.id} a={a} mensagens={mensagens} destaque={a.id === destaqueId} />
               ))}
             </ul>
           </section>
@@ -92,7 +93,7 @@ export function ListaLembretes({ pendentes, avisados, modelo, destaqueId }: Prop
           {mostrarAvisados ? (
             <ul className="divide-y overflow-hidden rounded-xl border bg-card opacity-80">
               {avisados.map((a) => (
-                <Item key={a.id} a={a} modelo={modelo} destaque={a.id === destaqueId} />
+                <Item key={a.id} a={a} mensagens={mensagens} destaque={a.id === destaqueId} />
               ))}
             </ul>
           ) : null}
