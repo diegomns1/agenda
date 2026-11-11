@@ -11,6 +11,8 @@ import { enviarEmail } from "@/lib/email";
 import { emailContaAprovada, emailContaRecusada, emailContaSuspensa } from "@/features/emails/modelos";
 import type { EstadoForm } from "@/components/formulario/tipos";
 import { esquemaAlterarPlano, esquemaAlterarStatus } from "./schema";
+import { after } from "next/server";
+import { registrarAprovacao } from "@/features/rastreio/servidor";
 
 async function exigirAdmin() {
   const usuario = await obterUsuario();
@@ -49,6 +51,11 @@ export async function alterarStatusConta(_: EstadoForm, formData: FormData): Pro
     .eq("id", id);
 
   if (error) return { erro: `Não foi possível alterar o status: ${error.message}` };
+
+  // Anúncios: conta aprovada pela primeira vez = lead qualificado (StartTrial na Meta)
+  if (status === "aprovada" && antes?.status === "pendente") {
+    after(() => registrarAprovacao(id).catch((e) => console.error("[meta] aprovação", e)));
+  }
 
   // Avisa a profissional por e-mail (se o envio estiver configurado)
   let aviso = "";

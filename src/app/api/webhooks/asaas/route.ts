@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
+import { registrarPrimeiroPagamento } from "@/features/rastreio/servidor";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { hojeISO } from "@/lib/datas";
 import { obterPagamento, type AsaasPagamento } from "@/lib/asaas";
@@ -89,6 +90,9 @@ export async function POST(request: NextRequest) {
     if (erroPerfil) return NextResponse.json({ erro: erroPerfil.message }, { status: 500 });
     await admin.from("cobrancas").update({ liberou_acesso: true }).eq("id", cobranca.id);
     liberado = true;
+    // Anúncios: primeiro pagamento = virou cliente (Subscribe com o valor; só manda uma vez por profissional)
+    const valorPago = Number(pagamento.value) || 0;
+    after(() => registrarPrimeiroPagamento(perfil.id, valorPago).catch((e) => console.error("[meta] pagamento", e)));
   }
 
   return NextResponse.json({ ok: true, evento: tipo, pagamento: pagamento.id, liberado });

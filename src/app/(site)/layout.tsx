@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { RastreioMeta } from "@/features/rastreio/components/RastreioMeta";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
@@ -99,6 +100,8 @@ export default function LayoutSite({ children }: { children: React.ReactNode }) 
           © {new Date().getFullYear()} Vaguinha · {EMPRESA.razaoSocial} · CNPJ {EMPRESA.cnpj} · {EMPRESA.cidade}
         </p>
       </footer>
+      {/* aviso de cookies + Pixel da Meta (só carrega depois do "Aceitar") */}
+      <RastreioMeta pixelId={process.env.META_PIXEL_ID ?? null} />
     </div>
   );
 }

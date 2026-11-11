@@ -64,6 +64,13 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   `features/whatsapp/estado.ts` decide o botão fixo, o cartão da tela inicial e o aviso na tela Assistente
   (conectada → wa.me da Vaguinha; Premium sem conexão → /perfil#whatsapp; resto → /assistente). O chat do painel
   ficou como reserva ("Assistente no painel" no menu); só remover depois do áudio (Fase 2) e olhando o uso.
+- **Anúncios da Meta (11/11/2026).** Pixel "Vaguinha Site" 2307852893116834 (BM Vaguinha App, conta Vaguinha CA),
+  domínio vaguinha.app verificado por meta tag (`features/rastreio/comum.ts`). `RastreioMeta` (site, telas públicas e
+  legais; nunca no painel): aviso de cookies (vg_consent em .vaguinha.app) e pixel só depois do "Aceitar"; guarda utm_* e
+  fbclid no cookie vg_origem. `rastreio/servidor.ts` (API de Conversões, META_CAPI_TOKEN): Lead no cadastro (mesmo
+  evento_id do navegador), StartTrial quando o admin aprova (= lead qualificado), Subscribe no 1º pagamento (Asaas);
+  uma vez cada (profiles.eventos_meta) e só com consentimento (profiles.origem_anuncio, migração 0021). Funil por
+  campanha/anúncio no Painel do dono. Chave na VPS: `ssh -t root@179.198.107.151 bash /root/vaguinha/definir-meta.sh`.
 - **Central do WhatsApp (11/11/2026, PLANO-CENTRAL-WHATSAPP.md no Drive).** O (14) 99802-3550 é o WhatsApp oficial:
   a IA responde tudo. `processar.ts` guarda cada pessoa em `whatsapp_contatos` (card: etapa robo/link/cadastrou/assinou/
   sem_resposta + atendimento robo/precisa/humano) e cada mensagem em `whatsapp_mensagens` (migração 0020). Roteia:

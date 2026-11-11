@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RastreioMeta } from "@/features/rastreio/components/RastreioMeta";
 import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
 
 export default function LayoutPublico({ children }: { children: React.ReactNode }) {
@@ -21,6 +22,8 @@ export default function LayoutPublico({ children }: { children: React.ReactNode 
           Privacidade
         </Link>
       </p>
+      {/* aviso de cookies + Pixel da Meta (só carrega depois do "Aceitar") */}
+      <RastreioMeta pixelId={process.env.META_PIXEL_ID ?? null} />
     </div>
   );
 }

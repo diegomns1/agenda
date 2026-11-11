@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RastreioMeta } from "@/features/rastreio/components/RastreioMeta";
 import { ArrowLeftIcon } from "lucide-react";
 import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
 
@@ -34,6 +35,8 @@ export default function LayoutLegal({ children }: { children: React.ReactNode })
         </Link>
         {" · vaguinha.app"}
       </footer>
+      {/* aviso de cookies + Pixel da Meta (só carrega depois do "Aceitar") */}
+      <RastreioMeta pixelId={process.env.META_PIXEL_ID ?? null} />
     </div>
   );
 }

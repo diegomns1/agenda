@@ -1,6 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { origemDoPedido, registrarCadastro } from "@/features/rastreio/servidor";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { criarClienteServidor } from "@/lib/supabase/server";
@@ -92,6 +94,14 @@ export async function cadastrar(_: EstadoForm, formData: FormData): Promise<Esta
     },
   });
   if (error) return { erro: traduzirErroAuth(error.message), valores };
+
+  // Anúncios: guarda de onde veio e manda o Lead à Meta (depois de responder, sem atrasar o cadastro)
+  const novoId = data.user?.id;
+  if (novoId) {
+    const origem = await origemDoPedido();
+    const eventoId = String(formData.get("evento_id") ?? "").slice(0, 64) || null;
+    after(() => registrarCadastro(novoId, origem, eventoId).catch((e) => console.error("[meta] cadastro", e)));
+  }
 
   // E-mails de aviso (não bloqueiam o cadastro se falharem ou não estiverem configurados)
   const admin = emailDoAdmin();

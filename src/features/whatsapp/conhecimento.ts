@@ -9,7 +9,8 @@ import { URL_APP } from "@/lib/constantes";
  */
 
 const preco = (p: keyof typeof PLANOS) => formatarPreco(PLANOS[p].preco);
-export const LINK_CADASTRO = `${URL_APP.replace(/^https?:\/\//, "")}/cadastro`;
+// com utm: o Painel do dono mostra quantos cadastros vieram da conversa com a IA no WhatsApp
+export const LINK_CADASTRO = `${URL_APP.replace(/^https?:\/\//, "")}/cadastro?utm_source=whatsapp&utm_medium=ia`;
 export const LINK_SITE = "vaguinha.app";
 
 export const CONHECIMENTO = `

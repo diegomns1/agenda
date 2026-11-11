@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowRightIcon, BellRingIcon, CheckIcon, ChevronDownIcon, FileTextIcon, Link2Icon, MailIcon } from "lucide-react";
+import { ArrowRightIcon, BellRingIcon, CheckIcon, ChevronDownIcon, FileTextIcon, Link2Icon } from "lucide-react";
 import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
+import { LinkWhatsAppSite } from "@/features/rastreio/components/LinkWhatsAppSite";
 import { Button } from "@/components/ui/button";
 import { ACAO_PRINCIPAL_SITE as ACAO_PRINCIPAL, URL_APP } from "@/lib/constantes";
 import { EMAIL_CONTATO } from "@/lib/legal";
@@ -351,8 +352,10 @@ export default function PaginaSite() {
             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Perguntas frequentes</h2>
             <p className="mt-3 text-muted-foreground">
               Não achou a sua?{" "}
+              <LinkWhatsAppSite className="font-semibold text-vinho underline underline-offset-4">Pergunte para a Vaguinha no WhatsApp</LinkWhatsAppSite>{" "}
+              ou escreva para{" "}
               <a href={`mailto:${EMAIL_CONTATO}`} className="font-semibold text-vinho underline underline-offset-4">
-                Escreva para {EMAIL_CONTATO}
+                {EMAIL_CONTATO}
               </a>
               .
             </p>
@@ -399,10 +402,10 @@ export default function PaginaSite() {
               </a>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 rounded-full px-6 text-base sm:h-12">
-              <a href={`mailto:${EMAIL_CONTATO}`}>
-                <MailIcon />
-                Enviar um e-mail
-              </a>
+              <LinkWhatsAppSite>
+                <IconeWhatsApp className="size-5" />
+                Tirar dúvidas no WhatsApp
+              </LinkWhatsAppSite>
             </Button>
           </div>
         </div>

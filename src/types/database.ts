@@ -21,6 +21,25 @@ export type ExpedienteDia = {
 /** Chave = dia da semana (0 = domingo ... 6 = sábado) */
 export type Expediente = Record<"0" | "1" | "2" | "3" | "4" | "5" | "6", ExpedienteDia>;
 
+/** Origem do cadastro (anúncio da Meta, utm, consentimento de cookies). */
+export type OrigemAnuncio = {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+  fbclid?: string;
+  /** cookies da Meta (_fbc, _fbp) */
+  fbc?: string;
+  fbp?: string;
+  /** aceitou os cookies de medição (sem isso nada vai para a Meta) */
+  consentiu?: boolean;
+  ip?: string;
+  navegador?: string;
+  pagina?: string;
+  capturado_em?: string;
+};
+
 export type Profile = {
   id: string;
   email: string | null;
@@ -43,6 +62,10 @@ export type Profile = {
   endereco: string | null;
   /** Textos do WhatsApp por situação (lembrete, confirmacao...). Vazio = padrão. Migração 0018. */
   modelos_mensagem: Partial<Record<"lembrete" | "confirmacao" | "remarcacao" | "cancelamento" | "agradecimento", string>>;
+  /** de onde veio (anúncio, utm, consentimento) — migração 0021 */
+  origem_anuncio: OrigemAnuncio | null;
+  /** eventos já enviados à Meta: { lead?: data, start_trial?: data, subscribe?: data } */
+  eventos_meta: Partial<Record<"lead" | "start_trial" | "subscribe", string>>;
   slug: string | null;
   agendamento_online: boolean;
   confirmacao_online: "automatica" | "manual";

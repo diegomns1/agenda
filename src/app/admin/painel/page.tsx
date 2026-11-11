@@ -48,6 +48,56 @@ export default async function PaginaPainelDono() {
       </section>
 
       <section className="rounded-2xl border bg-card p-4">
+        <h2 className="font-semibold">Funil dos anúncios (últimos 30 dias)</h2>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Aprovado = você liberou a conta (lead qualificado, vai para a Meta como StartTrial). Pagou = está num plano pago.
+        </p>
+        {p.porOrigem.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum cadastro nos últimos 30 dias.</p>
+        ) : (
+          <div className="-mx-4 overflow-x-auto px-4">
+            <table className="w-full min-w-[34rem] text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="py-2 pr-3 font-medium">Campanha / anúncio</th>
+                  <th className="px-2 py-2 text-right font-medium">Cadastros</th>
+                  <th className="px-2 py-2 text-right font-medium">Aprovados</th>
+                  <th className="px-2 py-2 text-right font-medium">Recusados</th>
+                  <th className="px-2 py-2 text-right font-medium">Pagaram</th>
+                  <th className="py-2 pl-2 text-right font-medium">Qualificação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {p.porOrigem.map((l) => {
+                  const decididos = l.aprovados + l.recusados;
+                  return (
+                    <tr key={`${l.campanha}|${l.anuncio}`} className="border-b last:border-0">
+                      <td className="py-2 pr-3">
+                        <p className="font-medium">{l.campanha}</p>
+                        {l.anuncio ? <p className="text-xs text-muted-foreground">{l.anuncio}</p> : null}
+                      </td>
+                      <td className="px-2 py-2 text-right tabular-nums">
+                        {l.cadastros}
+                        {l.pendentes ? <span className="block text-xs text-muted-foreground">{l.pendentes} esperando</span> : null}
+                      </td>
+                      <td className="px-2 py-2 text-right tabular-nums">{l.aprovados}</td>
+                      <td className="px-2 py-2 text-right tabular-nums">{l.recusados}</td>
+                      <td className="px-2 py-2 text-right font-semibold tabular-nums">{l.pagaram}</td>
+                      <td className="py-2 pl-2 text-right tabular-nums">{decididos ? `${Math.round((l.aprovados / decididos) * 100)}%` : "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p className="mt-3 rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+          Nos anúncios, em <b>Parâmetros de URL</b>, use:{" "}
+          <code className="break-all font-mono text-foreground">utm_source=meta&amp;utm_medium=pago&amp;utm_campaign={"{{campaign.name}}"}&amp;utm_content={"{{ad.name}}"}</code>
+        </p>
+      </section>
+
+      <section className="rounded-2xl border bg-card p-4">
         <h2 className="font-semibold">Cadastros por mês</h2>
         <p className="mb-3 text-xs text-muted-foreground">Toque numa coluna para ver o número.</p>
         <Colunas pontos={p.cadastrosPorMes} destaque={mesAtual} />

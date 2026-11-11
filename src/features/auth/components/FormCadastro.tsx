@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { cadastrar } from "@/features/auth/actions";
 import { Campo } from "@/components/formulario/Campo";
@@ -11,6 +11,7 @@ import { ESTADO_INICIAL } from "@/components/formulario/tipos";
 import { SeletorRamo } from "@/components/formulario/SeletorRamo";
 import { EscolhaTratamento } from "@/components/formulario/EscolhaTratamento";
 import { sugerirEmail } from "@/features/auth/sugerir-email";
+import { rastrear } from "@/features/rastreio/navegador";
 
 /*
  * Cadastro (etapa 5): o fácil primeiro (nome, e-mail, senha), depois o que personaliza o painel.
@@ -22,6 +23,15 @@ export function FormCadastro() {
   const [verSenha, setVerSenha] = useState(false);
   const [email, setEmail] = useState(estado.valores?.email ?? "");
   const [sugestao, setSugestao] = useState<string | null>(null);
+  // mesmo código no pixel (navegador) e na API de Conversões (servidor): a Meta conta o Lead uma vez só
+  const [eventoId, setEventoId] = useState("");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- gerado só no navegador (evita diferença com o servidor)
+    setEventoId(crypto.randomUUID());
+  }, []);
+  useEffect(() => {
+    if (estado.ok && eventoId) rastrear("Lead", {}, eventoId);
+  }, [estado.ok, eventoId]);
 
   if (estado.ok) {
     return (
@@ -36,6 +46,7 @@ export function FormCadastro() {
 
   return (
     <form action={acao} className="grid gap-4" noValidate>
+      <input type="hidden" name="evento_id" value={eventoId} />
       {estado.erro ? <Aviso>{estado.erro}</Aviso> : null}
 
       <Campo

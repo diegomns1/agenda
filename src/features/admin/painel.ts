@@ -31,7 +31,23 @@ export type PainelDono = {
   porTratamento: { nome: string; valor: number }[];
   porPlano: { nome: string; valor: number; detalhe?: string }[];
   outrosDigitados: string[];
+  /** Funil dos anúncios (cadastros dos últimos 30 dias por campanha/anúncio, vindo dos utm_*). */
+  porOrigem: LinhaOrigem[];
 };
+
+export type LinhaOrigem = {
+  campanha: string;
+  anuncio: string | null;
+  cadastros: number;
+  /** você aprovou (lead qualificado) */
+  aprovados: number;
+  recusados: number;
+  pendentes: number;
+  /** já está num plano pago */
+  pagaram: number;
+};
+
+const DIAS_FUNIL = 30;
 
 export async function montarPainelDono(): Promise<PainelDono> {
   const hoje = hojeISO();
@@ -50,7 +66,7 @@ export async function montarPainelDono(): Promise<PainelDono> {
   const leitor = admin ?? (await criarClienteServidor());
 
   const [perfisRes, cobrRes, agRes, evRes, iaRes] = await Promise.all([
-    leitor.from("profiles").select("id, status, plano, ativa_ate, ramo, ramo_outro, tratamento, asaas_subscription_id, created_at"),
+    leitor.from("profiles").select("id, status, plano, ativa_ate, ramo, ramo_outro, tratamento, asaas_subscription_id, created_at, origem_anuncio"),
     admin ? admin.from("cobrancas").select("valor, status, pago_em").gte("pago_em", inicioMes) : Promise.resolve(null),
     admin ? admin.from("agendamentos").select("id", { count: "exact", head: true }).eq("tipo", "atendimento").gte("inicio", inicioMes) : Promise.resolve(null),
     admin
@@ -121,7 +137,27 @@ export async function montarPainelDono(): Promise<PainelDono> {
     return { chave: m, rotulo: formatarDataISO(`${m}-01`, "MMM").replace(".", ""), valor: perfis.filter((p) => mesDe(p.created_at) === m).length };
   });
 
+  // funil por anúncio: campanha = utm_campaign (ou utm_source); anúncio = utm_content
+  const desde = Date.now() - DIAS_FUNIL * 86_400_000;
+  const linhas = new Map<string, LinhaOrigem>();
+  for (const p of perfis) {
+    if (new Date(p.created_at).getTime() < desde) continue;
+    const o = (p.origem_anuncio ?? {}) as { utm_source?: string; utm_campaign?: string; utm_content?: string; fbclid?: string };
+    const campanha = o.utm_campaign || (o.utm_source ? `${o.utm_source} (sem campanha)` : o.fbclid ? "Meta (sem utm)" : "Direto / sem anúncio");
+    const anuncio = o.utm_content || null;
+    const chave = `${campanha}|${anuncio ?? ""}`;
+    const l = linhas.get(chave) ?? { campanha, anuncio, cadastros: 0, aprovados: 0, recusados: 0, pendentes: 0, pagaram: 0 };
+    l.cadastros++;
+    if (p.status === "pendente") l.pendentes++;
+    else if (p.status === "recusada") l.recusados++;
+    else l.aprovados++;
+    if (p.plano !== "teste" && p.status !== "recusada") l.pagaram++;
+    linhas.set(chave, l);
+  }
+  const porOrigem = [...linhas.values()].sort((a, b) => b.cadastros - a.cadastros);
+
   return {
+    porOrigem,
     totais: {
       contas: perfis.length,
       pendentes: perfis.filter((p) => p.status === "pendente").length,

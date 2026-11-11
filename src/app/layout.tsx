@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Nunito } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { NOME_APP } from "@/lib/constantes";
+import { META_VERIFICACAO_DOMINIO } from "@/features/rastreio/comum";
 import "./globals.css";
 
 // Nunito: arredondada e amigável, combina com o desenho do logotipo
@@ -30,6 +31,8 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
   },
   formatDetection: { telephone: false },
+  // verificação do domínio vaguinha.app na Meta (Configurações do negócio → Domínios)
+  other: { "facebook-domain-verification": META_VERIFICACAO_DOMINIO },
   icons: {
     icon: [
       { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
