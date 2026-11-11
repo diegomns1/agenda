@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EMAIL_CONTATO, EMPRESA, OPERADOR, VERSAO_TERMOS } from "@/lib/legal";
+import { ATUALIZACAO_PRIVACIDADE, EMAIL_CONTATO, EMPRESA, OPERADOR } from "@/lib/legal";
 import { formatarDataISO } from "@/lib/datas";
 
 export const metadata: Metadata = { title: "Política de Privacidade" };
@@ -10,7 +10,7 @@ export default function PaginaPrivacidade() {
     <>
       <h1>Política de Privacidade</h1>
       <p className="lead">
-        Versão de {formatarDataISO(VERSAO_TERMOS)}. Aqui explicamos, em linguagem simples, quais dados o Vaguinha guarda, para
+        Atualizada em {formatarDataISO(ATUALIZACAO_PRIVACIDADE)}. Aqui explicamos, em linguagem simples, quais dados o Vaguinha guarda, para
         quê, e quais são os seus direitos. Esta política faz parte dos <Link href="/termos">Termos de Uso</Link>.
       </p>
 
@@ -67,7 +67,20 @@ export default function PaginaPrivacidade() {
         preferir, escreva para <a href={`mailto:${EMAIL_CONTATO}`}>{EMAIL_CONTATO}</a> que encaminhamos o pedido.
       </p>
 
-      <h2>4. O que não fazemos</h2>
+      <h2>4. Conversas no WhatsApp oficial do Vaguinha</h2>
+      <p>
+        Quando alguém escreve para o WhatsApp oficial do Vaguinha, (14) 99802-3550, guardamos o número, o nome do perfil do
+        WhatsApp, as mensagens da conversa, o que a pessoa contar (por exemplo, nome e ramo de trabalho) e, se ela veio de um
+        anúncio, qual foi o anúncio. Usamos isso para responder, tirar dúvidas, ajudar no uso do Vaguinha e acompanhar o
+        atendimento.
+      </p>
+      <p>
+        As respostas são escritas por uma <strong>assistente virtual (inteligência artificial)</strong>, e a nossa equipe pode ler
+        a conversa para continuar o atendimento quando for preciso. Se você for profissional do plano Premium e conectar o seu
+        WhatsApp, a assistente também lê e propõe mudanças na sua agenda, mas só altera algo depois do seu Confirmar.
+      </p>
+
+      <h2>5. O que não fazemos</h2>
       <ul>
         <li>Não vendemos nem alugamos dados a ninguém.</li>
         <li>Não enviamos mensagens às clientes: o WhatsApp abre no seu aparelho e quem envia é você.</li>
@@ -75,14 +88,24 @@ export default function PaginaPrivacidade() {
         <li>Não usamos cookies de publicidade. Os cookies do Vaguinha servem só para manter você conectada.</li>
       </ul>
 
-      <h2>5. Onde os dados ficam e quem nos ajuda</h2>
+      <h2>6. Onde os dados ficam e quem nos ajuda</h2>
       <p>Usamos provedores de tecnologia que guardam ou processam dados em nosso nome, com contratos de confidencialidade:</p>
       <ul>
         <li>
           <strong>Supabase</strong> (banco de dados, login e arquivos), com servidores na região de São Paulo, Brasil.
         </li>
         <li>
-          <strong>Vercel</strong> (hospedagem do painel), com processamento na região de São Paulo e rede de entrega global.
+          <strong>Hostinger</strong> (servidor onde o painel e o site funcionam).
+        </li>
+        <li>
+          <strong>Meta (WhatsApp Business Platform)</strong>, para enviar e receber as mensagens do WhatsApp oficial do Vaguinha.
+        </li>
+        <li>
+          <strong>Anthropic (Claude)</strong>, a inteligência artificial que escreve as respostas da assistente. Pelos termos
+          comerciais da Anthropic, esses dados não são usados para treinar os modelos dela.
+        </li>
+        <li>
+          <strong>Asaas</strong>, para as cobranças da assinatura por Pix e cartão.
         </li>
         <li>
           <strong>Serviço de e-mail</strong> para avisos da conta (confirmação de cadastro, aprovação, vencimento).
@@ -93,21 +116,22 @@ export default function PaginaPrivacidade() {
       </ul>
       <p>Alguns desses provedores podem transferir dados para fora do Brasil, sempre com as garantias previstas na LGPD.</p>
 
-      <h2>6. Por quanto tempo guardamos</h2>
+      <h2>7. Por quanto tempo guardamos</h2>
       <ul>
         <li>Enquanto a conta existir. Ao pedir a exclusão, apagamos tudo em até 30 dias.</li>
         <li>Registros de pagamento e de aceite podem ser mantidos pelo prazo exigido por lei.</li>
         <li>Fotos usadas nos stories não são salvas: valem só para gerar a imagem.</li>
+        <li>Conversas no WhatsApp oficial do Vaguinha: cada mensagem fica guardada por até 1 ano, ou menos, se você pedir para apagar.</li>
       </ul>
 
-      <h2>7. Segurança</h2>
+      <h2>8. Segurança</h2>
       <p>
         Todo o tráfego é criptografado (HTTPS). Cada profissional só enxerga os próprios dados, com regras aplicadas direto no
         banco de dados. Senhas são guardadas de forma criptografada e nunca ficam visíveis para nós. Mesmo assim, nenhum sistema
         é 100% seguro: se houver um incidente que afete seus dados, avisaremos você e a autoridade competente conforme a lei.
       </p>
 
-      <h2>8. Seus direitos</h2>
+      <h2>9. Seus direitos</h2>
       <p>Pela LGPD você pode, a qualquer momento:</p>
       <ul>
         <li>confirmar se tratamos seus dados e acessá-los;</li>
@@ -121,7 +145,7 @@ export default function PaginaPrivacidade() {
         dias. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).
       </p>
 
-      <h2>9. Mudanças nesta política</h2>
+      <h2>10. Mudanças nesta política</h2>
       <p>
         Se mudarmos algo relevante, avisaremos por e-mail ou dentro do painel. A data no topo indica a versão em vigor.
       </p>
