@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRightIcon, BellRingIcon, CheckIcon, ChevronDownIcon, FileTextIcon, Link2Icon, MailIcon, SparklesIcon } from "lucide-react";
+import { ArrowRightIcon, BellRingIcon, CheckIcon, ChevronDownIcon, FileTextIcon, Link2Icon, MailIcon } from "lucide-react";
 import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
 import { Button } from "@/components/ui/button";
 import { ACAO_PRINCIPAL_SITE as ACAO_PRINCIPAL, URL_APP } from "@/lib/constantes";
@@ -57,10 +57,10 @@ const PLANOS_SITE = [
   {
     id: "premium" as const,
     destaque: true,
-    para: "Para divulgar horários vagos e usar o assistente de IA.",
+    para: "Para divulgar horários vagos e ter uma assistente no WhatsApp.",
     itens: [
       "Tudo do Profissional",
-      "Assistente de IA que remarca pelo texto",
+      "Assistente de IA no seu WhatsApp",
       "Stories do dia, da semana e do mês",
       "Story do horário que vagou",
       "Story de serviço com foto e valor",
@@ -87,7 +87,11 @@ const DUVIDAS = [
     r: "Não. Eles abrem o seu link, escolhem o serviço e o horário, e informam o nome e o WhatsApp.",
   },
   {
-    p: "O Vaguinha manda mensagem no WhatsApp sozinho?",
+    p: "Como funciona a assistente no WhatsApp?",
+    r: "No plano Premium, você conecta o seu WhatsApp no painel (em Perfil) e passa a conversar com a Vaguinha pelo número oficial dela. Ela consulta e muda a sua agenda, mas sempre pede o seu Confirmar antes. Ela conversa só com você, nunca com os seus clientes.",
+  },
+  {
+    p: "O Vaguinha manda mensagem para os meus clientes sozinho?",
     r: "Não. Mensagem automática pode bloquear o seu número. O Vaguinha prepara o texto e abre o WhatsApp do cliente; você toca em enviar.",
   },
   {
@@ -114,6 +118,14 @@ export default function PaginaSite() {
       <section className={cn("fundo-aurora before:animate-none after:animate-none", "flex items-center md:min-h-[calc(100svh-4rem)]")}>
         <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pt-12 pb-16 sm:px-6 md:grid-cols-[1.1fr_0.9fr] md:py-16">
           <div className="grid gap-6">
+            <a
+              href="#assistente"
+              className="surgir inline-flex w-fit items-center gap-2 rounded-full border border-whatsapp/30 bg-background/70 py-1 pr-3 pl-1 text-sm font-semibold text-foreground backdrop-blur hover:bg-background"
+            >
+              <span className="rounded-full bg-whatsapp px-2 py-0.5 text-mini font-bold text-white">Novidade</span>
+              Sua assistente agora no WhatsApp
+              <ArrowRightIcon className="size-3.5" />
+            </a>
             <h1 className="surgir text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-5xl md:text-[3.5rem]">
               Agenda no celular para profissionais de beleza e saúde
             </h1>
@@ -207,30 +219,37 @@ export default function PaginaSite() {
       <section id="assistente" className={cn("flex scroll-mt-16 items-center", TELA)}>
         <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-2">
           <div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">Assistente de IA que mexe na sua agenda</h2>
+            <p className="inline-flex items-center gap-1.5 text-sm font-bold text-whatsapp">
+              <IconeWhatsApp className="size-4" />
+              Novidade · plano Premium
+            </p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">Uma assistente no seu WhatsApp</h2>
             <p className="mt-4 max-w-lg text-pretty text-muted-foreground">
-              No plano Premium. Escreva como escreveria para uma recepcionista: o assistente olha a agenda, prepara a mudança e só aplica depois do
-              seu Confirmar.
+              Mande mensagem para a Vaguinha como mandaria para uma recepcionista. Ela olha a sua agenda, prepara a mudança e só aplica depois do
+              seu Confirmar. Tudo entre um atendimento e outro, sem abrir o app.
             </p>
             <ul className="mt-6 grid gap-2 text-sm">
               {[
-                "“Muda a Bruna de hoje para sexta às 15h”",
-                "“Quais horários estão livres na quarta?”",
+                "“Marca a Duda sexta às 11h, alongamento”",
+                "“Quem eu atendo amanhã?”",
+                "“Cadastra a Bia, 14 99999-8888”",
                 "“Bloqueia minha tarde de quinta, vou ao médico”",
-                "“Quanto entrou este mês?”",
               ].map((t) => (
-                <li key={t} className="w-fit rounded-2xl rounded-bl-md bg-muted px-3 py-2">
+                <li key={t} className="w-fit rounded-2xl rounded-br-md bg-whatsapp/10 px-3 py-2">
                   {t}
                 </li>
               ))}
             </ul>
+            <p className="mt-6 max-w-lg text-sm text-muted-foreground">
+              Prefere o painel? A mesma assistente também funciona dentro do app, por escrito ou por voz.
+            </p>
           </div>
           <div className="relative mx-auto w-full max-w-md pb-24 sm:pb-16">
             <div className="overflow-hidden rounded-3xl bg-muted">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/site/cabeleireira.webp"
-                alt="Cabeleireira mandando um áudio pelo celular entre um atendimento e outro"
+                alt="Cabeleireira falando com a assistente pelo celular entre um atendimento e outro"
                 width={720}
                 height={900}
                 loading="lazy"
@@ -600,21 +619,25 @@ function MockCelular() {
 
 function MockAssistente() {
   return (
-    <div aria-hidden className="grid gap-2.5 rounded-3xl border border-vinho/10 bg-card p-4 shadow-alta">
-      <div className="flex items-center gap-2 border-b border-vinho/10 pb-2.5">
-        <span className="gradiente-marca flex size-8 items-center justify-center rounded-xl text-white">
-          <SparklesIcon className="size-4" />
-        </span>
-        <p className="text-sm font-bold">Assistente</p>
+    <div aria-hidden className="overflow-hidden rounded-3xl border border-vinho/10 bg-card shadow-alta">
+      <div className="flex items-center gap-2.5 bg-whatsapp px-3.5 py-2.5 text-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icons/icon-maskable-192.png" alt="" width={32} height={32} className="size-8 rounded-full" />
+        <div className="leading-tight">
+          <p className="text-sm font-bold">Vaguinha</p>
+          <p className="text-mini opacity-85">online</p>
+        </div>
       </div>
-      <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-vinho px-3 py-2 text-sm text-white">Muda a Bruna de hoje para sexta às 15h</p>
-      <div className="max-w-[90%] rounded-2xl rounded-bl-md bg-muted px-3 py-2 text-sm">
-        A sexta às 15:00 está livre. Preparei a mudança:
-        <div className="mt-2 rounded-xl border bg-background p-2.5">
-          <p className="text-xs font-semibold">Remarcar Bruna (Manicure) de hoje às 14:00 para sexta às 15:00</p>
-          <div className="mt-2 flex gap-2">
-            <span className="rounded-full bg-vinho px-3 py-1 text-xs font-bold text-white">Confirmar</span>
-            <span className="rounded-full px-3 py-1 text-xs text-muted-foreground">Não</span>
+      <div className="grid gap-2 bg-muted/60 p-3">
+        <p className="ml-auto max-w-[85%] rounded-xl rounded-tr-sm bg-whatsapp/15 px-3 py-2 text-sm">Marca a Duda sexta às 11h, alongamento</p>
+        <div className="max-w-[92%]">
+          <div className="rounded-xl rounded-tl-sm bg-card px-3 py-2 text-sm shadow-sm">
+            Sexta às 11:00 está livre. Preparei assim:
+            <p className="mt-1.5 font-semibold">👉 Marcar Duda · Alongamento em gel · sexta, 13/11 às 11:00</p>
+          </div>
+          <div className="mt-1 grid gap-1 text-center text-sm font-semibold text-whatsapp">
+            <span className="rounded-xl bg-card py-1.5 shadow-sm">✅ Confirmar</span>
+            <span className="rounded-xl bg-card py-1.5 shadow-sm">Não</span>
           </div>
         </div>
       </div>

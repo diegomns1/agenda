@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 const NAV = [
   { href: "#recursos", rotulo: "Recursos" },
   { href: "#link", rotulo: "Link de agendamento" },
-  { href: "#assistente", rotulo: "Assistente de IA" },
+  { href: "#assistente", rotulo: "Assistente no WhatsApp" },
   { href: "#planos", rotulo: "Planos" },
   { href: "#duvidas", rotulo: "Perguntas" },
 ];

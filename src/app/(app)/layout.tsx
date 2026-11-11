@@ -8,6 +8,7 @@ import { AplicarTema } from "@/components/layout/AplicarTema";
 import { RegistroSW } from "@/components/pwa/RegistroSW";
 import { AvisoInstalar } from "@/components/pwa/AvisoInstalar";
 import { BotaoAssistente } from "@/features/assistente/components/BotaoAssistente";
+import { estadoWhatsApp } from "@/features/whatsapp/estado";
 
 /** Área da profissional: exige conta aprovada e dentro da validade. */
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
@@ -18,7 +19,10 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
 
   const podeLembretes = temRecurso(perfil.plano, "lembretes");
   const podeStories = temRecurso(perfil.plano, "stories");
-  const lembretesPendentes = podeLembretes ? await contarLembretesPendentes().catch(() => 0) : 0;
+  const [lembretesPendentes, whatsapp] = await Promise.all([
+    podeLembretes ? contarLembretesPendentes().catch(() => 0) : Promise.resolve(0),
+    estadoWhatsApp().catch(() => ({ via: "painel" as const })),
+  ]);
 
   return (
     // data-tema troca as cores do painel (globals.css); "rosa" é o padrão da marca
@@ -34,7 +38,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
       <AvisoInstalar />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-24">{children}</main>
       <BarraInferior bloqueados={{ "/stories": !podeStories }} />
-      <BotaoAssistente />
+      <BotaoAssistente estado={whatsapp} />
       <RegistroSW />
     </div>
   );

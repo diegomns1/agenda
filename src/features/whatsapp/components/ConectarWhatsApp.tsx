@@ -46,7 +46,7 @@ export function ConectarWhatsApp({ conectado, permitido }: Props) {
   }
 
   return (
-    <Card>
+    <Card id="whatsapp" className="scroll-mt-20">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageCircleIcon className="size-5 text-primary" aria-hidden />

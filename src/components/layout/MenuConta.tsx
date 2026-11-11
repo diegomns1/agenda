@@ -36,7 +36,7 @@ export function MenuConta({ admin, linkSuporte }: Props) {
           <DropdownMenuItem asChild className={ITEM}>
             <Link href="/assistente">
               <BotMessageSquareIcon />
-              Assistente de IA
+              Assistente no painel
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className={ITEM}>

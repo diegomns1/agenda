@@ -59,7 +59,11 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   (`clienteDaProfissional`: força profissional_id em todo select/update/delete/insert; só tabelas de negócio).
   NUNCA usar o cliente admin direto em código da assistente. Quadro "Assistente no WhatsApp" no Perfil só aparece
   com WHATSAPP_NUMERO_ASSISTENTE e, sem WHATSAPP_ABERTO=1, só para admin (`numero.ts`, lidos na hora: basta reload).
-  Variáveis na VPS: `ssh -t root@179.198.107.151 bash /root/vaguinha/definir-whatsapp.sh` (deploy/vps/). Fase 2 (áudio) e 3 (avisos automáticos) ainda não feitas.
+  Variáveis na VPS: `ssh -t root@179.198.107.151 bash /root/vaguinha/definir-whatsapp.sh` (deploy/vps/).
+  No ar desde 10/11/2026 no número (14) 99802-3550 (WHATSAPP_ABERTO=1). WhatsApp é o caminho principal:
+  `features/whatsapp/estado.ts` decide o botão fixo, o cartão da tela inicial e o aviso na tela Assistente
+  (conectada → wa.me da Vaguinha; Premium sem conexão → /perfil#whatsapp; resto → /assistente). O chat do painel
+  ficou como reserva ("Assistente no painel" no menu); só remover depois do áudio (Fase 2) e olhando o uso. Fase 2 (áudio) e 3 (avisos automáticos) ainda não feitas.
 - Agenda sem conflito garantido no banco por `EXCLUDE` (btree_gist) sobre `tstzrange(inicio, fim)`,
   cobrindo atendimentos **e** bloqueios (mesma tabela `agendamentos`, coluna `tipo`).
 - /agenda abre no mês (estilo Google: "8h Nome"); dia/semana com rolagem própria (`GradeHoraria`, overscroll-contain).
