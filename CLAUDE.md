@@ -63,7 +63,14 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   No ar desde 10/11/2026 no número (14) 99802-3550 (WHATSAPP_ABERTO=1). WhatsApp é o caminho principal:
   `features/whatsapp/estado.ts` decide o botão fixo, o cartão da tela inicial e o aviso na tela Assistente
   (conectada → wa.me da Vaguinha; Premium sem conexão → /perfil#whatsapp; resto → /assistente). O chat do painel
-  ficou como reserva ("Assistente no painel" no menu); só remover depois do áudio (Fase 2) e olhando o uso. Fase 2 (áudio) e 3 (avisos automáticos) ainda não feitas.
+  ficou como reserva ("Assistente no painel" no menu); só remover depois do áudio (Fase 2) e olhando o uso.
+- **Central do WhatsApp (11/11/2026, PLANO-CENTRAL-WHATSAPP.md no Drive).** O (14) 99802-3550 é o WhatsApp oficial:
+  a IA responde tudo. `processar.ts` guarda cada pessoa em `whatsapp_contatos` (card: etapa robo/link/cadastrou/assinou/
+  sem_resposta + atendimento robo/precisa/humano) e cada mensagem em `whatsapp_mensagens` (migração 0020). Roteia:
+  conectada Premium → assistente (`nucleo`, com `chamar_equipe` e a base de conhecimento); número igual ao do cadastro →
+  `atendimento.ts` modo suporte; resto → modo vendas (lead). `conhecimento.ts` = o que a IA pode afirmar (preços de
+  planos.ts). chamar_equipe → atendimento "precisa" + e-mail para EMAIL_ADMIN. "humano" = Diego assumiu, robô quieto.
+  Limite de IA: 40 mensagens/dia por contato que não é cliente. Fase B (tela /admin/whatsapp com kanban) a seguir. Fase 2 (áudio) e 3 (avisos automáticos) ainda não feitas.
 - Agenda sem conflito garantido no banco por `EXCLUDE` (btree_gist) sobre `tstzrange(inicio, fim)`,
   cobrindo atendimentos **e** bloqueios (mesma tabela `agendamentos`, coluna `tipo`).
 - /agenda abre no mês (estilo Google: "8h Nome"); dia/semana com rolagem própria (`GradeHoraria`, overscroll-contain).

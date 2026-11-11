@@ -13,6 +13,7 @@ import { termosDoRamo, nomeDoRamo } from "@/lib/ramos";
 import { normalizarTelefone } from "@/lib/telefone";
 import { responderSemIA } from "./comandos";
 import { pistasDaFrase } from "./interpretar";
+import { CONHECIMENTO } from "@/features/whatsapp/conhecimento";
 import { contextoDoDia, executarFerramenta, FERRAMENTAS, type Contexto } from "./ferramentas";
 import type { Profile } from "@/types/database";
 import type { MensagemChat, Proposta, RespostaAssistente } from "./tipos";
@@ -76,19 +77,21 @@ export type EntradaAssistente = {
   texto: string;
   /** onde a conversa acontece (muda só o jeito de explicar o Confirmar) */
   canal?: "app" | "whatsapp";
+  /** só no WhatsApp: chamar a equipe (Central do WhatsApp) */
+  chamarEquipe?: (motivo: string) => void;
 };
 
 const SOBRE_O_CANAL = {
   app: "Canal: tela Assistente do painel. As propostas aparecem logo abaixo da sua resposta com os botões Confirmar e Não.",
   whatsapp:
-    "Canal: WhatsApp. Responda curto, como numa conversa de WhatsApp. As propostas chegam logo depois da sua mensagem com os botões Confirmar e Não (ou a profissional pode responder sim/não). Não fale em \"tela\".",
+    "Canal: WhatsApp. Responda curto, como numa conversa de WhatsApp. As propostas chegam logo depois da sua mensagem com os botões Confirmar e Não (ou a profissional pode responder sim/não). Não fale em \"tela\". Dúvidas de como usar o painel: responda pela BASE DE CONHECIMENTO. Problema no sistema, pagamento, plano, cancelamento ou pedido de falar com uma pessoa: use chamar_equipe (só uma vez por assunto).",
 };
 
 /**
  * Uma mensagem da profissional → o assistente consulta a agenda com as ferramentas e responde.
  * Mudanças voltam como `propostas` para ela confirmar (nada é alterado aqui).
  */
-export async function processarMensagem({ supabase, perfil, historico, texto: bruto, canal = "app" }: EntradaAssistente): Promise<RespostaAssistente> {
+export async function processarMensagem({ supabase, perfil, historico, texto: bruto, canal = "app", chamarEquipe }: EntradaAssistente): Promise<RespostaAssistente> {
   const texto = bruto.trim().slice(0, 1500);
   if (!texto) return respostaErro("Escreva o que você precisa.");
 
@@ -107,9 +110,14 @@ export async function processarMensagem({ supabase, perfil, historico, texto: br
   }
 
   const termos = termosDoRamo(perfil.ramo);
-  const contexto: Contexto = { supabase, perfil, propostas: [] };
+  const contexto: Contexto = { supabase, perfil, propostas: [], chamarEquipe };
   const system: Anthropic.Beta.BetaTextBlockParam[] = [
     { type: "text", text: INSTRUCOES, cache_control: { type: "ephemeral" } },
+    // no WhatsApp ela também é o suporte: leva a base de conhecimento (fixa, vai para o cache)
+    ...(canal === "whatsapp"
+      ? [{ type: "text" as const, text: `BASE DE CONHECIMENTO (suporte):
+${CONHECIMENTO}`, cache_control: { type: "ephemeral" as const } }]
+      : []),
     {
       type: "text",
       text: `${contextoDoDia(perfil)}\nRamo: ${nomeDoRamo(perfil.ramo, perfil.ramo_outro)}. Chame os atendimentos de "${termos.varios}".\n${SOBRE_O_CANAL[canal]}`,

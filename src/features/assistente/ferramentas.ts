@@ -17,7 +17,7 @@ import {
   minutosDoDia,
   somarDias,
 } from "@/lib/datas";
-import { formatarTelefone, normalizarTelefone } from "@/lib/telefone";
+import { formatarTelefone, normalizarTelefone, variacoesCelular } from "@/lib/telefone";
 import type { Database, Profile } from "@/types/database";
 import type { Proposta } from "./tipos";
 
@@ -28,7 +28,13 @@ import type { Proposta } from "./tipos";
 
 /** Sessão do navegador (RLS) no app, ou o cliente escopado da profissional no WhatsApp. */
 type Supabase = SupabaseClient<Database>;
-export type Contexto = { supabase: Supabase; perfil: Profile; propostas: Proposta[] };
+export type Contexto = {
+  supabase: Supabase;
+  perfil: Profile;
+  propostas: Proposta[];
+  /** só no WhatsApp: passa a conversa para a equipe (card "Precisa de você" na Central) */
+  chamarEquipe?: (motivo: string) => void;
+};
 
 const texto = (descricao: string) => ({ type: "string", description: descricao });
 const textoOuNulo = (descricao: string) => ({ type: ["string", "null"], description: descricao });
@@ -102,6 +108,11 @@ export const FERRAMENTAS: Anthropic.Beta.BetaTool[] = [
       observacoes: textoOuNulo("Observação nova (substitui a anterior); null para manter"),
     },
   ),
+  ferramenta(
+    "chamar_equipe",
+    "Chama a equipe do Vaguinha (suporte humano) para esta conversa: problema no sistema, pagamento, plano, cancelamento, ou quando pedirem uma pessoa.",
+    { motivo: texto("Motivo em poucas palavras") },
+  ),
   ferramenta("propor_status", "Propõe marcar um atendimento como concluído ou como falta. A profissional confirma na tela.", {
     agendamento_id: texto("id do atendimento (de ver_agenda)"),
     status: { type: "string", enum: ["concluido", "faltou"] },
@@ -135,18 +146,6 @@ async function conflito(ctx: Contexto, inicio: Date, fim: Date, ignorarId?: stri
   return data?.[0] ?? null;
 }
 
-/** Variações do mesmo celular (com e sem o 9 da frente), para achar cadastro repetido. */
-function variacoesTelefone(numero: string) {
-  const v = new Set([numero]);
-  const m = numero.match(/^55(\d{2})(\d{8,9})$/);
-  if (m) {
-    const [, ddd, n] = m;
-    if (n.length === 9 && n.startsWith("9")) v.add(`55${ddd}${n.slice(1)}`);
-    if (n.length === 8) v.add(`55${ddd}9${n}`);
-  }
-  return [...v];
-}
-
 /** Valida o WhatsApp dito pela profissional. Devolve o número normalizado ou uma mensagem de erro. */
 function lerTelefone(bruto: unknown): { numero: string | null } | { erro: string } {
   if (bruto == null || String(bruto).trim() === "") return { numero: null };
@@ -164,7 +163,7 @@ const semAcento = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, 
 async function procurarDuplicidade(ctx: Contexto, nome: string | null, telefone: string | null, ignorarId?: string) {
   let mesmoTelefone: { id: string; nome: string } | null = null;
   if (telefone) {
-    let q = ctx.supabase.from("clientes").select("id, nome").in("telefone", variacoesTelefone(telefone));
+    let q = ctx.supabase.from("clientes").select("id, nome").in("telefone", variacoesCelular(telefone));
     if (ignorarId) q = q.neq("id", ignorarId);
     const { data } = await q.limit(1);
     mesmoTelefone = data?.[0] ?? null;
@@ -441,6 +440,12 @@ export async function executarFerramenta(ctx: Contexto, nome: string, entrada: R
         };
         ctx.propostas.push(p);
         return JSON.stringify({ proposta_criada: p.resumo, aguardando_confirmacao: true });
+      }
+
+      case "chamar_equipe": {
+        if (!ctx.chamarEquipe) return erro("Por aqui não dá para chamar a equipe. Diga para usar 'Falar com o suporte' no Perfil ou mandar mensagem no WhatsApp da Vaguinha.");
+        ctx.chamarEquipe(String(entrada.motivo || "pediu ajuda").slice(0, 200));
+        return JSON.stringify({ ok: true, aviso: "Equipe avisada. Diga que vão responder por aqui mesmo assim que possível." });
       }
 
       case "propor_status": {

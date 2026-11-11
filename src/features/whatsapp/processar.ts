@@ -1,22 +1,30 @@
 import "server-only";
 import { situacaoDaConta } from "@/lib/auth";
 import { URL_APP } from "@/lib/constantes";
+import { hojeISO } from "@/lib/datas";
+import { emailDoAdmin, enviarEmail } from "@/lib/email";
 import { temRecurso } from "@/lib/planos";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { clienteDaProfissional } from "@/lib/supabase/escopado";
+import { formatarTelefone, variacoesCelular } from "@/lib/telefone";
 import { primeiroNome } from "@/lib/texto";
 import { interpretar } from "@/features/assistente/interpretar";
 import { aplicarProposta, processarMensagem } from "@/features/assistente/nucleo";
 import { esquemaProposta, type MensagemChat, type Proposta } from "@/features/assistente/tipos";
-import { hojeISO } from "@/lib/datas";
-import type { Json, Profile } from "@/types/database";
+import type { Json, Profile, WhatsappContato } from "@/types/database";
+import { responderAtendimento, type ModoAtendimento } from "./atendimento";
 import { enviarBotoes, enviarTexto, mostrarDigitando } from "./meta";
 
 /*
- * O que acontece com cada mensagem que chega no WhatsApp da Vaguinha.
+ * O que acontece com cada mensagem que chega no WhatsApp oficial da Vaguinha (Central do WhatsApp, 11/11/2026).
  * A rota do webhook (app/api/webhooks/whatsapp) confere a assinatura da Meta e chama `tratarMensagem`.
- * - Dados do WhatsApp (vínculo, conversa, propostas): cliente admin, sempre filtrando pela profissional.
- * - Agenda, clientes e serviços: `clienteDaProfissional` (escopado: só enxerga os dados dela).
+ * Toda pessoa vira um contato (card) e toda mensagem fica guardada (whatsapp_contatos / whatsapp_mensagens).
+ * Quem responde:
+ *   - profissional com a assistente conectada (Premium) → assistente da agenda (features/assistente/nucleo)
+ *   - profissional cadastrada (o número bate com o do cadastro) → atendimento, modo suporte
+ *   - qualquer outra pessoa → atendimento, modo vendas (lead)
+ *   - card em "humano" (o Diego assumiu) → o robô fica quieto
+ * Dados do WhatsApp: cliente admin. Agenda, clientes e serviços: `clienteDaProfissional` (só enxerga os dados dela).
  */
 
 export type Recebida = {
@@ -26,10 +34,17 @@ export type Recebida = {
   tipo: "texto" | "botao" | "audio" | "outro";
   texto?: string;
   botaoId?: string;
+  /** nome do perfil do WhatsApp da pessoa */
+  nome?: string;
+  /** anúncio "clique para o WhatsApp" de onde a pessoa veio */
+  origem?: Record<string, unknown>;
 };
 
 const HORAS_24 = 24 * 3_600_000;
-const LINK_PERFIL = `${URL_APP.replace(/^https?:\/\//, "")}/perfil`;
+const DOMINIO = URL_APP.replace(/^https?:\/\//, "");
+const LINK_PERFIL = `${DOMINIO}/perfil`;
+/** Mensagens com IA por dia para quem não é cliente (protege o crédito da API). */
+const LIMITE_IA_CONTATO_DIA = 40;
 
 /** Lê o corpo do webhook da Meta e devolve só as mensagens recebidas (ignora avisos de entrega/leitura). */
 export function lerWebhook(corpo: unknown): Recebida[] {
@@ -38,7 +53,8 @@ export function lerWebhook(corpo: unknown): Recebida[] {
   if (!Array.isArray(entradas)) return saida;
   for (const entrada of entradas) {
     for (const mudanca of (entrada as { changes?: unknown[] })?.changes ?? []) {
-      const valor = (mudanca as { value?: { messages?: unknown[] } })?.value;
+      const valor = (mudanca as { value?: { messages?: unknown[]; contacts?: { wa_id?: string; profile?: { name?: string } }[] } })?.value;
+      const nomes = new Map((valor?.contacts ?? []).map((c) => [String(c.wa_id ?? ""), c.profile?.name]));
       for (const bruta of valor?.messages ?? []) {
         const m = bruta as {
           id?: string;
@@ -47,15 +63,21 @@ export function lerWebhook(corpo: unknown): Recebida[] {
           text?: { body?: string };
           interactive?: { button_reply?: { id?: string; title?: string } };
           button?: { payload?: string; text?: string };
+          referral?: Record<string, unknown>;
         };
         if (!m.id || !m.from) continue;
-        const base = { wamid: m.id, de: m.from.replace(/\D/g, "") };
+        const de = m.from.replace(/\D/g, "");
+        const base: Recebida = { wamid: m.id, de, tipo: "outro", nome: nomes.get(m.from) ?? undefined };
+        if (m.referral && typeof m.referral === "object") {
+          const r = m.referral;
+          base.origem = { tipo: r.source_type, id: r.source_id, url: r.source_url, titulo: r.headline, texto: r.body };
+        }
         if (m.type === "text" && m.text?.body) saida.push({ ...base, tipo: "texto", texto: m.text.body });
         else if (m.type === "interactive" && m.interactive?.button_reply?.id)
           saida.push({ ...base, tipo: "botao", botaoId: m.interactive.button_reply.id, texto: m.interactive.button_reply.title });
         else if (m.type === "button" && m.button?.payload) saida.push({ ...base, tipo: "botao", botaoId: m.button.payload, texto: m.button.text });
         else if (m.type === "audio") saida.push({ ...base, tipo: "audio" });
-        else saida.push({ ...base, tipo: "outro" });
+        else saida.push(base);
       }
     }
   }
@@ -71,13 +93,85 @@ export function codigoDeConexao(texto: string): string | null {
 
 type Admin = ReturnType<typeof criarClienteAdmin>;
 
-async function guardarFala(admin: Admin, profissionalId: string, papel: "voce" | "assistente", texto: string) {
-  await admin.from("whatsapp_conversa").insert({ profissional_id: profissionalId, papel, texto: texto.slice(0, 4000) });
+/** Guarda uma mensagem no histórico do contato. */
+async function registrar(admin: Admin, telefone: string, de: "contato" | "robo" | "equipe" | "sistema", texto: string, wamid?: string) {
+  await admin.from("whatsapp_mensagens").insert({ telefone, de, texto: texto.slice(0, 4000), wamid: wamid ?? null });
+  await admin.from("whatsapp_contatos").update({ ultima_msg_em: new Date().toISOString() }).eq("telefone", telefone);
 }
 
-async function responder(admin: Admin, para: string, profissionalId: string | null, texto: string) {
+/** Manda texto e guarda como resposta do robô. */
+async function responder(admin: Admin, para: string, texto: string) {
   await enviarTexto(para, texto);
-  if (profissionalId) await guardarFala(admin, profissionalId, "assistente", texto);
+  await registrar(admin, para, "robo", texto);
+}
+
+/** Cria/atualiza o card de quem escreveu e guarda a mensagem recebida. */
+async function registrarEntrada(admin: Admin, m: Recebida): Promise<WhatsappContato> {
+  const agora = new Date().toISOString();
+  const { data: atual } = await admin.from("whatsapp_contatos").select("*").eq("telefone", m.de).maybeSingle();
+  const mudar: Partial<Omit<WhatsappContato, "telefone">> = {
+    ultima_msg_em: agora,
+    ultima_do_contato_em: agora,
+    nao_lidas: (atual?.nao_lidas ?? 0) + 1,
+  };
+  if (m.nome) mudar.nome_whatsapp = m.nome.slice(0, 80);
+  if (m.origem && !atual?.origem) mudar.origem = m.origem as Json;
+  // quem esfriou e voltou a falar volta para o robô
+  if (atual?.etapa === "sem_resposta") mudar.etapa = "robo";
+  const { data } = atual
+    ? await admin.from("whatsapp_contatos").update(mudar).eq("telefone", m.de).select("*").single()
+    : await admin.from("whatsapp_contatos").insert({ telefone: m.de, ...mudar }).select("*").single();
+
+  const texto = m.tipo === "texto" ? m.texto ?? "" : m.tipo === "botao" ? `[botão] ${m.texto ?? ""}` : m.tipo === "audio" ? "[áudio]" : "[mídia]";
+  await admin.from("whatsapp_mensagens").insert({ telefone: m.de, de: "contato", texto: texto.slice(0, 4000), wamid: m.wamid });
+  return data as WhatsappContato;
+}
+
+/** Últimas falas das 24 h, da mais antiga para a mais nova (memória da conversa). Não inclui a mensagem atual. */
+async function historicoRecente(admin: Admin, telefone: string): Promise<MensagemChat[]> {
+  const { data } = await admin
+    .from("whatsapp_mensagens")
+    .select("de, texto")
+    .eq("telefone", telefone)
+    .neq("de", "sistema")
+    .gt("criado_em", new Date(Date.now() - HORAS_24).toISOString())
+    .order("criado_em", { ascending: false })
+    .limit(15);
+  const falas = (data ?? []).reverse().map((f) => ({ papel: f.de === "contato" ? ("voce" as const) : ("assistente" as const), texto: f.texto }));
+  falas.pop(); // a última é a mensagem que está sendo respondida agora
+  return falas;
+}
+
+/** A IA pediu ajuda: card vai para "Precisa de você" e o Diego recebe um e-mail com a conversa. */
+async function chamarDiego(admin: Admin, contato: WhatsappContato, motivo: string) {
+  if (contato.atendimento !== "robo") return; // já foi chamado (ou já está com ele)
+  await admin.from("whatsapp_contatos").update({ atendimento: "precisa", motivo_ajuda: motivo }).eq("telefone", contato.telefone);
+  await registrar(admin, contato.telefone, "sistema", `🙋 A IA chamou a equipe: ${motivo}`);
+
+  const para = emailDoAdmin();
+  if (!para) return;
+  const { data: msgs } = await admin
+    .from("whatsapp_mensagens")
+    .select("de, texto, criado_em")
+    .eq("telefone", contato.telefone)
+    .order("criado_em", { ascending: false })
+    .limit(12);
+  const quem = contato.nome || contato.nome_whatsapp || formatarTelefone(contato.telefone);
+  const conversa = (msgs ?? [])
+    .reverse()
+    .map((x) => `${x.de === "contato" ? quem : x.de === "robo" ? "Vaguinha" : x.de === "equipe" ? "Você" : "•"}: ${x.texto}`)
+    .join("\n");
+  const central = `${URL_APP}/admin/whatsapp?c=${contato.telefone}`;
+  await enviarEmail({
+    para,
+    assunto: `WhatsApp: ${quem} precisa de você`,
+    texto: `Motivo: ${motivo}\nContato: ${quem} · ${formatarTelefone(contato.telefone)}\n\n${conversa}\n\nAbrir na Central: ${central}`,
+    html: `<p><b>Motivo:</b> ${esc(motivo)}<br><b>Contato:</b> ${esc(quem)} · ${esc(formatarTelefone(contato.telefone))}</p><pre style="font-family:inherit;white-space:pre-wrap;background:#f6f1ee;padding:12px;border-radius:8px">${esc(conversa)}</pre><p><a href="${central}">Abrir na Central do WhatsApp</a></p>`,
+  });
+}
+
+function esc(t: string) {
+  return t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 }
 
 /** Conecta o número a quem gerou o código no painel. */
@@ -89,7 +183,7 @@ async function conectar(admin: Admin, m: Recebida, codigo: string) {
     .gt("expira_em", new Date().toISOString())
     .maybeSingle();
   if (!pedido) {
-    await enviarTexto(m.de, `Esse código não vale mais (ele dura 15 minutos). Gere outro no painel, em ${LINK_PERFIL}, no quadro "Assistente no WhatsApp".`);
+    await responder(admin, m.de, `Esse código não vale mais (ele dura 15 minutos). Gere outro no painel, em ${LINK_PERFIL}, no quadro "Assistente no WhatsApp".`);
     return;
   }
   // um número fica em uma conta só: se estava em outra, sai de lá
@@ -100,14 +194,17 @@ async function conectar(admin: Admin, m: Recebida, codigo: string) {
   await admin.from("whatsapp_codigos").delete().eq("profissional_id", pedido.profissional_id);
   if (error) {
     console.error("[whatsapp] vínculo", error);
-    await enviarTexto(m.de, "Não consegui conectar agora. Tente de novo em instantes.");
+    await responder(admin, m.de, "Não consegui conectar agora. Tente de novo em instantes.");
     return;
   }
-  const { data: perfil } = await admin.from("profiles").select("nome").eq("id", pedido.profissional_id).maybeSingle();
+  const { data: perfil } = await admin.from("profiles").select("nome, plano").eq("id", pedido.profissional_id).maybeSingle();
+  await admin
+    .from("whatsapp_contatos")
+    .update({ profissional_id: pedido.profissional_id, etapa: perfil?.plano && perfil.plano !== "teste" ? "assinou" : "cadastrou" })
+    .eq("telefone", m.de);
   await responder(
     admin,
     m.de,
-    pedido.profissional_id,
     `Pronto, ${primeiroNome(perfil?.nome ?? "")}! Seu WhatsApp está conectado à sua agenda. ✨\n\n` +
       `É só me mandar o que precisa, do seu jeito. Por exemplo:\n` +
       `• quem eu atendo amanhã?\n• horários livres na sexta\n• marca a Duda sexta às 11h alongamento\n• cadastra a Bia 14 99999-8888\n\n` +
@@ -119,7 +216,7 @@ async function conectar(admin: Admin, m: Recebida, codigo: string) {
 async function ultimaPendente(admin: Admin, profissionalId: string) {
   const { data } = await admin
     .from("whatsapp_propostas")
-    .select("id, dados, situacao, criada_em")
+    .select("id")
     .eq("profissional_id", profissionalId)
     .eq("situacao", "pendente")
     .gt("criada_em", new Date(Date.now() - HORAS_24).toISOString())
@@ -136,39 +233,27 @@ async function decidir(admin: Admin, perfil: Profile, para: string, propostaId: 
     .eq("id", propostaId)
     .eq("profissional_id", perfil.id)
     .maybeSingle();
-  if (!linha) return responder(admin, para, perfil.id, "Não achei essa mudança. Me peça de novo, por favor.");
+  if (!linha) return responder(admin, para, "Não achei essa mudança. Me peça de novo, por favor.");
   if (linha.situacao !== "pendente") {
     const ja = linha.situacao === "confirmada" ? "já foi feita" : "já foi resolvida";
-    return responder(admin, para, perfil.id, `Essa mudança ${ja}. Se precisar de outra coisa, é só pedir.`);
+    return responder(admin, para, `Essa mudança ${ja}. Se precisar de outra coisa, é só pedir.`);
   }
   if (Date.now() - new Date(linha.criada_em).getTime() > HORAS_24) {
     await admin.from("whatsapp_propostas").update({ situacao: "vencida" }).eq("id", linha.id);
-    return responder(admin, para, perfil.id, "Essa proposta ficou velha (mais de 24 h) e eu não mexi em nada. Me peça de novo, por favor.");
+    return responder(admin, para, "Essa proposta ficou velha (mais de 24 h) e eu não mexi em nada. Me peça de novo, por favor.");
   }
   const p = esquemaProposta.safeParse(linha.dados);
   if (!p.success) {
     await admin.from("whatsapp_propostas").update({ situacao: "erro" }).eq("id", linha.id);
-    return responder(admin, para, perfil.id, "Essa proposta veio com defeito e eu não mexi em nada. Me peça de novo, por favor.");
+    return responder(admin, para, "Essa proposta veio com defeito e eu não mexi em nada. Me peça de novo, por favor.");
   }
   if (!confirmar) {
     await admin.from("whatsapp_propostas").update({ situacao: "recusada" }).eq("id", linha.id);
-    return responder(admin, para, perfil.id, `Ok, deixei como estava. Não fiz: ${p.data.resumo}.`);
+    return responder(admin, para, `Ok, deixei como estava. Não fiz: ${p.data.resumo}.`);
   }
   const r = await aplicarProposta(clienteDaProfissional(perfil.id), perfil, p.data);
   await admin.from("whatsapp_propostas").update({ situacao: r.ok ? "confirmada" : "erro" }).eq("id", linha.id);
-  return responder(admin, para, perfil.id, r.ok ? `✅ ${r.mensagem}` : `⚠️ ${r.mensagem}`);
-}
-
-/** Últimas falas das 24 h, da mais antiga para a mais nova (memória da conversa). */
-async function historicoRecente(admin: Admin, profissionalId: string): Promise<MensagemChat[]> {
-  const { data } = await admin
-    .from("whatsapp_conversa")
-    .select("papel, texto")
-    .eq("profissional_id", profissionalId)
-    .gt("criado_em", new Date(Date.now() - HORAS_24).toISOString())
-    .order("criado_em", { ascending: false })
-    .limit(12);
-  return (data ?? []).reverse().map((f) => ({ papel: f.papel, texto: f.texto }));
+  return responder(admin, para, r.ok ? `✅ ${r.mensagem}` : `⚠️ ${r.mensagem}`);
 }
 
 /** Manda cada proposta com os botões Confirmar / Não. */
@@ -183,7 +268,7 @@ async function enviarPropostas(admin: Admin, para: string, perfil: Profile, text
     if (data) ids.push(data.id);
   }
   if (ids.length !== propostas.length) {
-    await enviarTexto(para, "Não consegui preparar a mudança agora. Tente de novo em instantes.");
+    await responder(admin, para, "Não consegui preparar a mudança agora. Tente de novo em instantes.");
     return;
   }
   const botoes = (id: string) => [
@@ -197,18 +282,71 @@ async function enviarPropostas(admin: Admin, para: string, perfil: Profile, text
     await enviarTexto(para, textoDaIA);
     for (let i = 0; i < propostas.length; i++) await enviarBotoes(para, `👉 ${propostas[i].resumo}`, botoes(ids[i]));
   }
-  await guardarFala(admin, perfil.id, "assistente", `${textoDaIA}\n${propostas.map((p) => `(proposta: ${p.resumo})`).join("\n")}`);
+  await registrar(admin, para, "robo", `${textoDaIA}\n${propostas.map((p) => `(proposta: ${p.resumo})`).join("\n")}`);
 }
 
-/** Limpeza leve de tempos em tempos (conversa velha e ids de mensagens já tratadas). */
+/** Cadastro com este WhatsApp (o número do cadastro bate com quem escreveu)? */
+async function perfilPeloNumero(admin: Admin, telefone: string): Promise<Profile | null> {
+  const { data } = await admin.from("profiles").select("*").in("telefone", variacoesCelular(telefone)).limit(1);
+  return (data?.[0] as Profile | undefined) ?? null;
+}
+
+/** Leva o card do funil adiante quando a pessoa já tem cadastro (lead → cadastrou → assinou). */
+async function atualizarFunil(admin: Admin, contato: WhatsappContato, perfil: Profile) {
+  const etapa = perfil.plano !== "teste" && situacaoDaConta(perfil) === "aprovada" ? "assinou" : "cadastrou";
+  if (contato.profissional_id !== perfil.id || contato.etapa !== etapa) {
+    await admin.from("whatsapp_contatos").update({ profissional_id: perfil.id, etapa }).eq("telefone", contato.telefone);
+    contato.profissional_id = perfil.id;
+    contato.etapa = etapa;
+  }
+}
+
+/** Atendimento de quem não usa a assistente da agenda: vendas (lead) ou suporte (cadastrada). */
+async function atender(admin: Admin, contato: WhatsappContato, texto: string, modo: ModoAtendimento, perfil: Profile | null) {
+  // limite diário de IA por contato
+  const hoje = hojeISO();
+  const usadasHoje = contato.ia_dia === hoje ? contato.ia_mensagens_dia : 0;
+  if (usadasHoje >= LIMITE_IA_CONTATO_DIA) {
+    await chamarDiego(admin, contato, "muitas mensagens hoje (limite da IA)");
+    if (usadasHoje === LIMITE_IA_CONTATO_DIA) await responder(admin, contato.telefone, "Recebi! Vou deixar a equipe continuar daqui, tá? Respondem por aqui mesmo. 😊");
+    await admin.from("whatsapp_contatos").update({ ia_dia: hoje, ia_mensagens_dia: usadasHoje + 1 }).eq("telefone", contato.telefone);
+    return;
+  }
+
+  const historico = await historicoRecente(admin, contato.telefone);
+  const r = await responderAtendimento({
+    modo,
+    historico,
+    texto,
+    perfil,
+    jaSabe: { nome: contato.nome, nomeWhatsapp: contato.nome_whatsapp, ramo: contato.ramo, equipeChamada: contato.atendimento === "precisa" },
+  });
+
+  const mudar: Partial<Omit<WhatsappContato, "telefone">> = {
+    ia_usada: true,
+    ia_dia: hoje,
+    ia_mensagens_dia: usadasHoje + 1,
+    ia_custo_usd: Number(contato.ia_custo_usd) + r.custoUsd,
+  };
+  if (r.anotado.nome) mudar.nome = r.anotado.nome;
+  if (r.anotado.ramo) mudar.ramo = r.anotado.ramo;
+  if (r.mandouLink && contato.etapa === "robo") mudar.etapa = "link";
+  await admin.from("whatsapp_contatos").update(mudar).eq("telefone", contato.telefone);
+
+  await responder(admin, contato.telefone, r.texto);
+  if (r.chamarEquipe) await chamarDiego(admin, contato, r.chamarEquipe);
+}
+
+/** Limpeza leve de tempos em tempos (ids de mensagens já tratadas, códigos vencidos, propostas velhas). */
 async function faxina(admin: Admin) {
   if (Math.random() > 0.05) return;
   const doisDias = new Date(Date.now() - 2 * HORAS_24).toISOString();
   await Promise.all([
-    admin.from("whatsapp_conversa").delete().lt("criado_em", doisDias),
     admin.from("whatsapp_recebidas").delete().lt("recebida_em", new Date(Date.now() - 7 * HORAS_24).toISOString()),
     admin.from("whatsapp_codigos").delete().lt("expira_em", new Date().toISOString()),
     admin.from("whatsapp_propostas").update({ situacao: "vencida" }).eq("situacao", "pendente").lt("criada_em", doisDias),
+    // conversa de leads guardada por 1 ano
+    admin.from("whatsapp_mensagens").delete().lt("criado_em", new Date(Date.now() - 365 * HORAS_24).toISOString()),
   ]);
 }
 
@@ -219,77 +357,68 @@ export async function tratarMensagem(m: Recebida): Promise<void> {
   const { error: repetida } = await admin.from("whatsapp_recebidas").insert({ wamid: m.wamid });
   if (repetida) return;
 
+  let contato: WhatsappContato | null = null;
   try {
-    // 1) Conectar o número (vale para qualquer número, com um código gerado no painel)
+    contato = await registrarEntrada(admin, m);
+
+    // 1) Conectar a assistente (código gerado no Perfil)
     const codigo = m.tipo === "texto" && m.texto ? codigoDeConexao(m.texto) : null;
     if (codigo) return await conectar(admin, m, codigo);
 
-    // 2) Quem é?
-    const { data: vinculo } = await admin.from("whatsapp_vinculos").select("profissional_id").eq("telefone", m.de).maybeSingle();
-    if (!vinculo) {
-      await enviarTexto(
-        m.de,
-        `Oi! Aqui é a assistente do Vaguinha, a agenda para profissionais de beleza e saúde. 💜\n\n` +
-          `Se você é profissional com conta Premium, conecte seu WhatsApp em ${LINK_PERFIL} (quadro "Assistente no WhatsApp").\n` +
-          `Se quer marcar um horário com alguém, fale direto com a profissional.`,
-      );
-      return;
-    }
-    const { data: perfil } = await admin.from("profiles").select("*").eq("id", vinculo.profissional_id).maybeSingle();
-    if (!perfil) return;
-    if (situacaoDaConta(perfil) !== "aprovada") {
-      await enviarTexto(m.de, `Sua conta do Vaguinha não está ativa no momento. Entre em ${LINK_PERFIL} para ver o que falta.`);
-      return;
-    }
-    if (!temRecurso(perfil.plano, "assistente")) {
-      await enviarTexto(m.de, `A assistente no WhatsApp faz parte do plano Premium. Veja os planos em ${URL_APP.replace(/^https?:\/\//, "")}/assinatura.`);
-      return;
-    }
+    // 2) O Diego assumiu esta conversa: o robô fica quieto
+    if (contato.atendimento === "humano") return;
 
     void mostrarDigitando(m.wamid);
 
-    // 3) Botões Confirmar / Não
-    if (m.tipo === "botao" && m.botaoId) {
-      const [acao, id] = m.botaoId.split(":");
-      if ((acao === "sim" || acao === "nao") && id) {
-        await guardarFala(admin, perfil.id, "voce", acao === "sim" ? "Confirmar" : "Não");
-        return await decidir(admin, perfil, m.de, id, acao === "sim");
+    // 3) Quem é?
+    const { data: vinculo } = await admin.from("whatsapp_vinculos").select("profissional_id").eq("telefone", m.de).maybeSingle();
+    const perfil = vinculo
+      ? ((await admin.from("profiles").select("*").eq("id", vinculo.profissional_id).maybeSingle()).data as Profile | null)
+      : await perfilPeloNumero(admin, m.de);
+    if (perfil) await atualizarFunil(admin, contato, perfil);
+    const comAssistente = Boolean(vinculo && perfil && situacaoDaConta(perfil) === "aprovada" && temRecurso(perfil.plano, "assistente"));
+
+    // 4) Áudio e mídia: ainda só texto
+    if (m.tipo === "audio") return await responder(admin, m.de, "Por enquanto eu só leio mensagens escritas. 🙏 Me manda por texto?");
+    if (m.tipo === "outro") return await responder(admin, m.de, "Por enquanto eu só entendo mensagens de texto. Me conta por escrito o que você precisa?");
+
+    const umaVez = contato;
+    const chamarEquipe = (motivo: string) => void chamarDiego(admin, umaVez, motivo);
+
+    if (comAssistente && perfil) {
+      // 5) Botões Confirmar / Não
+      if (m.tipo === "botao" && m.botaoId) {
+        const [acao, id] = m.botaoId.split(":");
+        if ((acao === "sim" || acao === "nao") && id) return await decidir(admin, perfil, m.de, id, acao === "sim");
       }
-    }
+      const texto = (m.texto ?? "").trim().slice(0, 1500);
+      if (!texto) return;
 
-    if (m.tipo === "audio") {
-      await enviarTexto(m.de, "Por enquanto eu só leio mensagens escritas. 🙏 Me manda por texto? (Áudio está chegando em breve.)");
-      return;
-    }
-    if (m.tipo !== "texto" || !m.texto?.trim()) {
-      await enviarTexto(m.de, "Por enquanto eu só entendo mensagens de texto. Me conta por escrito o que você precisa?");
-      return;
-    }
-
-    const texto = m.texto.trim().slice(0, 1500);
-
-    // 4) "sim" / "não" respondendo a uma mudança que está esperando
-    const comando = interpretar(texto, hojeISO());
-    if (comando?.tipo === "confirmar" || comando?.tipo === "recusar") {
-      const pendente = await ultimaPendente(admin, perfil.id);
-      if (pendente) {
-        await guardarFala(admin, perfil.id, "voce", texto);
-        return await decidir(admin, perfil, m.de, pendente.id, comando.tipo === "confirmar");
+      // 6) "sim" / "não" respondendo a uma mudança que está esperando
+      const comando = interpretar(texto, hojeISO());
+      if (comando?.tipo === "confirmar" || comando?.tipo === "recusar") {
+        const pendente = await ultimaPendente(admin, perfil.id);
+        if (pendente) return await decidir(admin, perfil, m.de, pendente.id, comando.tipo === "confirmar");
       }
-    }
 
-    // 5) Conversa normal: o mesmo cérebro da tela Assistente
-    const historico = await historicoRecente(admin, perfil.id);
-    await guardarFala(admin, perfil.id, "voce", texto);
-    const r = await processarMensagem({ supabase: clienteDaProfissional(perfil.id), perfil, historico, texto, canal: "whatsapp" });
-    if (!r.ok) return await responder(admin, m.de, perfil.id, r.erro ?? "Não consegui agora. Tente de novo em instantes.");
-    const resposta = r.texto?.trim() || "Pronto.";
-    if (r.propostas?.length) await enviarPropostas(admin, m.de, perfil, resposta, r.propostas);
-    else await responder(admin, m.de, perfil.id, resposta);
+      // 7) Assistente da agenda (o mesmo cérebro da tela Assistente), que também chama a equipe
+      const historico = await historicoRecente(admin, m.de);
+      const r = await processarMensagem({ supabase: clienteDaProfissional(perfil.id), perfil, historico, texto, canal: "whatsapp", chamarEquipe });
+      if (!r.ok) return await responder(admin, m.de, r.erro ?? "Não consegui agora. Tente de novo em instantes.");
+      const resposta = r.texto?.trim() || "Pronto.";
+      if (r.propostas?.length) await enviarPropostas(admin, m.de, perfil, resposta, r.propostas);
+      else await responder(admin, m.de, resposta);
+    } else {
+      // 8) Vendas (lead) ou suporte (já tem cadastro)
+      const texto = (m.texto ?? "").trim().slice(0, 1500);
+      if (!texto) return;
+      await atender(admin, contato, texto, perfil ? "suporte" : "lead", perfil);
+    }
 
     await faxina(admin);
   } catch (e) {
     console.error("[whatsapp] erro ao tratar mensagem", e);
-    await enviarTexto(m.de, "Tive um problema para responder agora. 😕 Tente de novo em instantes.").catch(() => {});
+    await enviarTexto(m.de, "Tive um problema para responder agora. 😕 A equipe já foi avisada e responde por aqui.").catch(() => {});
+    if (contato) await chamarDiego(admin, contato, "erro ao responder (ver log)").catch(() => {});
   }
 }

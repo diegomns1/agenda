@@ -7,6 +7,18 @@ export function normalizarTelefone(valor: string | null | undefined): string | n
   return digitos;
 }
 
+/** Variações do mesmo celular brasileiro (com e sem o 9 da frente): a Meta às vezes manda sem o 9. */
+export function variacoesCelular(numero: string) {
+  const v = new Set([numero]);
+  const m = numero.match(/^55(\d{2})(\d{8,9})$/);
+  if (m) {
+    const [, ddd, n] = m;
+    if (n.length === 9 && n.startsWith("9")) v.add(`55${ddd}${n.slice(1)}`);
+    if (n.length === 8) v.add(`55${ddd}9${n}`);
+  }
+  return [...v];
+}
+
 /** 5511999999999 → (11) 99999-9999 */
 export function formatarTelefone(valor: string | null | undefined): string {
   if (!valor) return "";

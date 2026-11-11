@@ -186,6 +186,27 @@ export type PushSubscriptionInsert = Pick<PushSubscriptionRow, "profissional_id"
 
 export type PushSubscriptionUpdate = Partial<Omit<PushSubscriptionRow, "id" | "profissional_id" | "created_at">>;
 
+/** Pessoa que escreveu no WhatsApp oficial (card da Central do WhatsApp). */
+export type WhatsappContato = {
+  telefone: string;
+  nome_whatsapp: string | null;
+  nome: string | null;
+  ramo: string | null;
+  profissional_id: string | null;
+  etapa: "robo" | "link" | "cadastrou" | "assinou" | "sem_resposta";
+  atendimento: "robo" | "precisa" | "humano";
+  motivo_ajuda: string | null;
+  origem: Json | null;
+  nao_lidas: number;
+  ia_usada: boolean;
+  ia_dia: string | null;
+  ia_mensagens_dia: number;
+  ia_custo_usd: number;
+  criado_em: string;
+  ultima_msg_em: string;
+  ultima_do_contato_em: string | null;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -269,6 +290,18 @@ export type Database = {
         Row: { id: string; profissional_id: string; dados: Json; situacao: "pendente" | "confirmada" | "recusada" | "erro" | "vencida"; criada_em: string };
         Insert: { id?: string; profissional_id: string; dados: Json; situacao?: "pendente" | "confirmada" | "recusada" | "erro" | "vencida"; criada_em?: string };
         Update: Partial<{ situacao: "pendente" | "confirmada" | "recusada" | "erro" | "vencida" }>;
+        Relationships: [];
+      };
+      whatsapp_contatos: {
+        Row: WhatsappContato;
+        Insert: Pick<WhatsappContato, "telefone"> & Partial<WhatsappContato>;
+        Update: Partial<Omit<WhatsappContato, "telefone">>;
+        Relationships: [];
+      };
+      whatsapp_mensagens: {
+        Row: { id: number; telefone: string; de: "contato" | "robo" | "equipe" | "sistema"; texto: string; wamid: string | null; criado_em: string };
+        Insert: { telefone: string; de: "contato" | "robo" | "equipe" | "sistema"; texto: string; wamid?: string | null; criado_em?: string };
+        Update: Partial<{ texto: string }>;
         Relationships: [];
       };
       whatsapp_recebidas: {
