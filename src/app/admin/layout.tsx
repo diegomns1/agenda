@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeftIcon, ChartPieIcon, ShieldCheckIcon, UsersIcon } from "lucide-react";
+import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { ehAdmin, obterUsuario } from "@/lib/auth";
 import { BotaoSair } from "@/features/auth/components/BotaoSair";
 import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
@@ -10,8 +12,15 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
   const usuario = await obterUsuario();
   if (!ehAdmin(usuario)) redirect("/");
 
+  // conversas em que a IA chamou o Diego (aparece no botão da Central)
+  const { count: precisam } = await criarClienteAdmin()
+    .from("whatsapp_contatos")
+    .select("telefone", { count: "exact", head: true })
+    .eq("atendimento", "precisa")
+    .then((r) => r, () => ({ count: 0 }));
+
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col overflow-x-clip">
       <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4">
           <div className="flex items-center gap-2 font-bold">
@@ -41,6 +50,17 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
           <Link href="/admin">
             <UsersIcon />
             Contas
+          </Link>
+        </Button>
+        <Button asChild variant="outline" size="sm" className="rounded-full">
+          <Link href="/admin/whatsapp">
+            <IconeWhatsApp className="size-4" />
+            WhatsApp
+            {precisam ? (
+              <span className="rounded-full bg-destructive px-1.5 text-mini leading-4 font-bold text-white tabular-nums" aria-label={`${precisam} precisam de você`}>
+                {precisam}
+              </span>
+            ) : null}
           </Link>
         </Button>
       </nav>

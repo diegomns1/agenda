@@ -70,7 +70,12 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   conectada Premium → assistente (`nucleo`, com `chamar_equipe` e a base de conhecimento); número igual ao do cadastro →
   `atendimento.ts` modo suporte; resto → modo vendas (lead). `conhecimento.ts` = o que a IA pode afirmar (preços de
   planos.ts). chamar_equipe → atendimento "precisa" + e-mail para EMAIL_ADMIN. "humano" = Diego assumiu, robô quieto.
-  Limite de IA: 40 mensagens/dia por contato que não é cliente. Fase B (tela /admin/whatsapp com kanban) a seguir. Fase 2 (áudio) e 3 (avisos automáticos) ainda não feitas.
+  Limite de IA: 40 mensagens/dia por contato que não é cliente.
+  Tela `/admin/whatsapp` (aba WhatsApp do admin, com contador de "precisa"): `central.ts` (ações só admin) +
+  `components/CentralWhatsApp` (kanban: Precisa de você, Com você, Robô, Link, Cadastrou, Assinou, Sem resposta;
+  filtro Todos/Leads/Clientes; arrastar no computador; atualiza a cada 10 s) + `ConversaWhatsApp` (Assumir, Devolver ao
+  robô, Mover, Responder). Responder pela Central põe o card em "humano" (o robô sai). Janela da Meta: 24 h
+  (72 h se veio de anúncio). Lead parado há 3 dias vira "sem resposta" ao abrir a Central. `?c=<telefone>` abre a conversa. Fase 2 (áudio) e 3 (avisos automáticos) ainda não feitas.
 - Agenda sem conflito garantido no banco por `EXCLUDE` (btree_gist) sobre `tstzrange(inicio, fim)`,
   cobrindo atendimentos **e** bloqueios (mesma tabela `agendamentos`, coluna `tipo`).
 - /agenda abre no mês (estilo Google: "8h Nome"); dia/semana com rolagem própria (`GradeHoraria`, overscroll-contain).
