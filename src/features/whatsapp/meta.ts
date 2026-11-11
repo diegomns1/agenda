@@ -8,7 +8,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  *   WHATSAPP_APP_SECRET       "Chave secreta do app" (segredo; confere que o aviso veio mesmo da Meta)
  *   WHATSAPP_VERIFY_TOKEN     senha combinada no cadastro do webhook (segredo)
  *   WHATSAPP_PHONE_NUMBER_ID  id do número na Meta (não é segredo)
- *   NEXT_PUBLIC_WHATSAPP_ASSISTENTE  número da Vaguinha, só dígitos com 55 (aparece no painel)
+ *   WHATSAPP_NUMERO_ASSISTENTE / WHATSAPP_ABERTO  ver numero.ts
  *   WHATSAPP_GRAPH_VERSION    opcional (padrão abaixo)
  * Sem a chave/ID, as mensagens de saída só aparecem no log ("modo simulado"), para testar sem a Meta.
  */

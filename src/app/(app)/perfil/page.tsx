@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CreditCardIcon } from "lucide-react";
-import { obterPerfil } from "@/lib/auth";
+import { ehAdmin, obterPerfil, obterUsuario } from "@/lib/auth";
 import { URL_APP } from "@/lib/constantes";
 import { formatarDataISO } from "@/lib/datas";
 import { PLANOS, temRecurso } from "@/lib/planos";
@@ -13,7 +13,7 @@ import { UploadLogo } from "@/features/perfil/components/UploadLogo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { ConectarWhatsApp } from "@/features/whatsapp/components/ConectarWhatsApp";
-import { descreverNumero, NUMERO_ASSISTENTE } from "@/features/whatsapp/numero";
+import { descreverNumero, whatsappLiberadoPara } from "@/features/whatsapp/numero";
 
 export const metadata: Metadata = { title: "Perfil" };
 
@@ -21,8 +21,8 @@ export default async function PaginaPerfil() {
   const perfil = await obterPerfil();
   if (!perfil) redirect("/aguardando-aprovacao");
 
-  // assistente no WhatsApp: o quadro só aparece depois que o número da Vaguinha estiver configurado
-  const whatsappLigado = Boolean(NUMERO_ASSISTENTE);
+  // assistente no WhatsApp: o quadro só aparece com o número configurado (e, em teste, só para admin)
+  const whatsappLigado = whatsappLiberadoPara(ehAdmin(await obterUsuario()));
   const { data: vinculo } = whatsappLigado
     ? await (await criarClienteServidor()).from("whatsapp_vinculos").select("telefone").eq("profissional_id", perfil.id).maybeSingle()
     : { data: null };

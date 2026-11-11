@@ -58,7 +58,8 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   Sem sessão de navegador, os dados da profissional são lidos com `lib/supabase/escopado.ts`
   (`clienteDaProfissional`: força profissional_id em todo select/update/delete/insert; só tabelas de negócio).
   NUNCA usar o cliente admin direto em código da assistente. Quadro "Assistente no WhatsApp" no Perfil só aparece
-  com NEXT_PUBLIC_WHATSAPP_ASSISTENTE configurado. Fase 2 (áudio) e 3 (avisos automáticos) ainda não feitas.
+  com WHATSAPP_NUMERO_ASSISTENTE e, sem WHATSAPP_ABERTO=1, só para admin (`numero.ts`, lidos na hora: basta reload).
+  Variáveis na VPS: `ssh -t root@179.198.107.151 bash /root/vaguinha/definir-whatsapp.sh` (deploy/vps/). Fase 2 (áudio) e 3 (avisos automáticos) ainda não feitas.
 - Agenda sem conflito garantido no banco por `EXCLUDE` (btree_gist) sobre `tstzrange(inicio, fim)`,
   cobrindo atendimentos **e** bloqueios (mesma tabela `agendamentos`, coluna `tipo`).
 - /agenda abre no mês (estilo Google: "8h Nome"); dia/semana com rolagem própria (`GradeHoraria`, overscroll-contain).
