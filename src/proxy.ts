@@ -2,13 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { atualizarSessao } from "@/lib/supabase/middleware";
 
 /** Rotas que não exigem login. */
-const ROTAS_PUBLICAS = ["/login", "/cadastro", "/recuperar-senha", "/auth/callback", "/auth/sair", "/offline", "/p", "/termos", "/privacidade", "/site"];
+const ROTAS_PUBLICAS = ["/login", "/cadastro", "/recuperar-senha", "/auth/callback", "/auth/sair", "/offline", "/p", "/termos", "/privacidade", "/exclusao-de-dados", "/site"];
 // /assinatura exige login (tratado abaixo), mas não exige conta em dia: o layout (conta) cuida disso.
 
 /** Domínio do site institucional (apex). Serve a pasta app/(site)/site. */
 const HOST_SITE = "vaguinha.app";
 /** Caminhos que o site pode servir diretamente (o resto vai para o painel). */
-const CAMINHOS_DO_SITE = ["/site", "/termos", "/privacidade", "/offline", "/manifest.webmanifest"];
+const CAMINHOS_DO_SITE = ["/site", "/termos", "/privacidade", "/exclusao-de-dados", "/offline", "/manifest.webmanifest"];
 
 function ehPublica(pathname: string) {
   return ROTAS_PUBLICAS.some((r) => pathname === r || pathname.startsWith(`${r}/`));

@@ -28,6 +28,10 @@ export default function LayoutLegal({ children }: { children: React.ReactNode })
         <Link href="/privacidade" className="underline-offset-4 hover:underline">
           Política de Privacidade
         </Link>
+        {" · "}
+        <Link href="/exclusao-de-dados" className="underline-offset-4 hover:underline">
+          Exclusão de dados
+        </Link>
         {" · vaguinha.app"}
       </footer>
     </div>
