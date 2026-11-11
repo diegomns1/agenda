@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { ehAdmin, obterPerfil, obterUsuario } from "@/lib/auth";
 import { temRecurso } from "@/lib/planos";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
-import { linkWhatsApp } from "@/lib/telefone";
 import { numeroAssistente, whatsappLiberadoPara } from "./numero";
 
 // sem letras/números parecidos (O/0, I/1, L) para ninguém errar se precisar digitar
@@ -25,7 +24,10 @@ export async function gerarConexaoWhatsApp(): Promise<{ ok: true; link: string; 
     .upsert({ profissional_id: perfil.id, codigo: bruto, expira_em: new Date(Date.now() + 15 * 60_000).toISOString() }, { onConflict: "profissional_id" });
   if (error) return { ok: false, erro: "Não consegui gerar o código agora. Tente de novo." };
 
-  return { ok: true, codigo, link: linkWhatsApp(numeroAssistente(), `Conectar Vaguinha código ${codigo}`) };
+  // número internacional completo, sem normalizar (o de teste da Meta é americano: linkWhatsApp poria 55 na frente)
+  const link = new URL(`https://wa.me/${numeroAssistente()}`);
+  link.searchParams.set("text", `Conectar Vaguinha código ${codigo}`);
+  return { ok: true, codigo, link: link.toString() };
 }
 
 export async function desconectarWhatsApp(): Promise<{ ok: boolean; erro?: string }> {
