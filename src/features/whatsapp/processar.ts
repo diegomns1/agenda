@@ -101,8 +101,14 @@ async function registrar(admin: Admin, telefone: string, de: "contato" | "robo" 
 
 /** Manda texto e guarda como resposta do robô. */
 async function responder(admin: Admin, para: string, texto: string) {
-  await enviarTexto(para, texto);
+  const entregue = await enviarTexto(para, texto);
   await registrar(admin, para, "robo", texto);
+  if (!entregue) await avisarNaoEntregue(admin, para);
+}
+
+/** A Meta recusou a mensagem: aparece na conversa da Central para ninguém achar que a pessoa foi respondida. */
+async function avisarNaoEntregue(admin: Admin, para: string) {
+  await registrar(admin, para, "sistema", "⚠️ A Meta não entregou a última resposta (veja o log do servidor)");
 }
 
 /** Cria/atualiza o card de quem escreveu e guarda a mensagem recebida. */
@@ -275,14 +281,16 @@ async function enviarPropostas(admin: Admin, para: string, perfil: Profile, text
     { id: `sim:${id}`, titulo: "✅ Confirmar" },
     { id: `nao:${id}`, titulo: "Não" },
   ];
+  let entregue = true;
   if (propostas.length === 1) {
     // uma só: a resposta da IA vai junto, já com os botões embaixo
-    await enviarBotoes(para, `${textoDaIA}\n\n👉 ${propostas[0].resumo}`, botoes(ids[0]));
+    entregue = await enviarBotoes(para, `${textoDaIA}\n\n👉 ${propostas[0].resumo}`, botoes(ids[0]));
   } else {
-    await enviarTexto(para, textoDaIA);
-    for (let i = 0; i < propostas.length; i++) await enviarBotoes(para, `👉 ${propostas[i].resumo}`, botoes(ids[i]));
+    entregue = await enviarTexto(para, textoDaIA);
+    for (let i = 0; i < propostas.length; i++) entregue = (await enviarBotoes(para, `👉 ${propostas[i].resumo}`, botoes(ids[i]))) && entregue;
   }
   await registrar(admin, para, "robo", `${textoDaIA}\n${propostas.map((p) => `(proposta: ${p.resumo})`).join("\n")}`);
+  if (!entregue) await avisarNaoEntregue(admin, para);
 }
 
 /** Cadastro com este WhatsApp (o número do cadastro bate com quem escreveu)? */

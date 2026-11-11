@@ -64,16 +64,19 @@ function emPedacos(texto: string, limite: number) {
   return pedacos;
 }
 
-export async function enviarTexto(para: string, texto: string) {
+/** true = a Meta aceitou todas as partes. */
+export async function enviarTexto(para: string, texto: string): Promise<boolean> {
+  let ok = true;
   for (const parte of emPedacos(texto, LIMITE_TEXTO)) {
-    await chamarMeta({ to: para, type: "text", text: { body: parte, preview_url: false } });
+    ok = (await chamarMeta({ to: para, type: "text", text: { body: parte, preview_url: false } })) && ok;
   }
+  return ok;
 }
 
 export type Botao = { id: string; titulo: string };
 
 /** Mensagem com até 3 botões de resposta (títulos de até 20 letras). */
-export async function enviarBotoes(para: string, texto: string, botoes: Botao[]) {
+export async function enviarBotoes(para: string, texto: string, botoes: Botao[]): Promise<boolean> {
   let corpo = texto.trim();
   if (corpo.length > LIMITE_CORPO_BOTOES) {
     // texto longo vai antes, numa mensagem comum; os botões seguem com o final
@@ -81,7 +84,7 @@ export async function enviarBotoes(para: string, texto: string, botoes: Botao[])
     corpo = partes.pop()!;
     await enviarTexto(para, partes.join("\n"));
   }
-  await chamarMeta({
+  return chamarMeta({
     to: para,
     type: "interactive",
     interactive: {

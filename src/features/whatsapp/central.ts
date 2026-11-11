@@ -125,7 +125,7 @@ export async function responderContato(telefone: string, texto: string): Promise
   if (Date.now() - ultima > janelaH * 3_600_000) {
     return { ok: false, erro: `Passaram mais de ${janelaH} h desde a última mensagem dessa pessoa: a Meta só deixa responder depois que ela escrever de novo.` };
   }
-  await enviarTexto(telefone, limpo);
+  if (!(await enviarTexto(telefone, limpo))) return { ok: false, erro: "A Meta não aceitou a mensagem. Tente de novo; se continuar, me mande um print." };
   await admin.from("whatsapp_mensagens").insert({ telefone, de: "equipe", texto: limpo });
   await admin
     .from("whatsapp_contatos")
