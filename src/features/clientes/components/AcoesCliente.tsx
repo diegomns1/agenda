@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { CalendarPlusIcon, PencilIcon, Trash2Icon } from "lucide-react";
-import { excluirCliente } from "@/features/clientes/actions";
+import { CalendarPlusIcon, CalendarOffIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { excluirCliente, virarCompromisso } from "@/features/clientes/actions";
 import { FormCliente } from "./FormCliente";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -23,11 +23,19 @@ import type { Cliente } from "@/types/database";
 export function AcoesCliente({ cliente, ultimoServicoId }: { cliente: Cliente; ultimoServicoId?: string | null }) {
   const [editando, setEditando] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
+  const [virando, setVirando] = useState(false);
   const [pendente, iniciar] = useTransition();
 
   function excluir() {
     iniciar(async () => {
       const r = await excluirCliente(cliente.id);
+      if (r?.erro) toast.error(r.erro);
+    });
+  }
+
+  function virar() {
+    iniciar(async () => {
+      const r = await virarCompromisso(cliente.id);
       if (r?.erro) toast.error(r.erro);
     });
   }
@@ -48,6 +56,11 @@ export function AcoesCliente({ cliente, ultimoServicoId }: { cliente: Cliente; u
         <Trash2Icon />
         Excluir
       </Button>
+      {/* cadastro que veio do Google Agenda e não é gente ("Academia", "Cílios") */}
+      <Button variant="ghost" onClick={() => setVirando(true)} disabled={pendente}>
+        <CalendarOffIcon />
+        Não é cliente
+      </Button>
 
       <Dialog open={editando} onOpenChange={setEditando}>
         <DialogContent>
@@ -58,6 +71,22 @@ export function AcoesCliente({ cliente, ultimoServicoId }: { cliente: Cliente; u
           {editando ? <FormCliente cliente={cliente} aoConcluir={() => setEditando(false)} /> : null}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={virando} onOpenChange={setVirando}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>&quot;{cliente.nome}&quot; é um compromisso seu?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Os horários com esse nome viram compromissos seus na agenda (continuam ocupando o horário, sem lembrete para
+              cliente) e o cadastro sai de Clientes. Use para coisas como academia, médico ou o seu próprio cabelo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={virar}>Virar compromisso</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={confirmando} onOpenChange={setConfirmando}>
         <AlertDialogContent>

@@ -82,7 +82,7 @@ export const FERRAMENTAS: Anthropic.Beta.BetaTool[] = [
     data: texto(DATA),
     hora: texto(HORA),
   }),
-  ferramenta("propor_bloqueio", "Propõe bloquear um horário (almoço, médico, folga). A profissional confirma na tela.", {
+  ferramenta("propor_bloqueio", "Propõe um compromisso da profissional, que ocupa o horário (academia, natação, médico, almoço, folga). A profissional confirma na tela.", {
     titulo: texto("Motivo curto, ex.: Médico"),
     data: texto(DATA),
     dia_inteiro: { type: "boolean", description: "true para bloquear o dia todo" },
@@ -364,7 +364,7 @@ export async function executarFerramenta(ctx: Contexto, nome: string, entrada: R
         const hf = entrada.hora_fim ? String(entrada.hora_fim) : null;
         if (!ehDataISO(dia)) return erro("Data inválida.");
         if (!diaInteiro && (!hi || !hf || horaParaMinutos(hf) <= horaParaMinutos(hi))) return erro("Informe início e fim (o fim depois do início).");
-        const titulo = String(entrada.titulo || "Bloqueio").slice(0, 60);
+        const titulo = String(entrada.titulo || "Compromisso").slice(0, 60);
         const p: Proposta = {
           id: novoId(),
           tipo: "bloquear",

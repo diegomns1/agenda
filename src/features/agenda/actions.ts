@@ -73,7 +73,7 @@ export async function salvarAgendamento(_: EstadoForm, formData: FormData): Prom
 
     revalidar();
     // id volta para a tela destacar o bloqueio na agenda
-    return { ok: true, mensagem: id ? "Bloqueio atualizado." : "Horário bloqueado.", valores: { id: salvo.id } };
+    return { ok: true, mensagem: id ? "Compromisso atualizado." : "Compromisso salvo. O horário fica ocupado.", valores: { id: salvo.id } };
   }
 
   // ---------------------------------------------------------- atendimento

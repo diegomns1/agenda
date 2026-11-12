@@ -20,6 +20,7 @@ export default async function PaginaClientes({ searchParams }: PageProps<"/clien
       </div>
 
       {msg === "excluida" ? <Aviso tipo="sucesso">Cadastro excluído.</Aviso> : null}
+      {msg === "compromisso" ? <Aviso tipo="sucesso">Pronto: os horários viraram compromissos seus na agenda e o cadastro saiu de Clientes.</Aviso> : null}
 
       {total > 0 || busca ? (
         <Suspense>

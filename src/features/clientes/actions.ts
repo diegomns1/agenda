@@ -80,3 +80,38 @@ export async function excluirCliente(id: string): Promise<EstadoForm> {
   revalidar(id);
   redirect("/clientes?msg=excluida");
 }
+
+/**
+ * "Não é cliente": o cadastro era um compromisso da própria profissional (ex.: "Academia", "Cílios" vindos do
+ * Google Agenda). Os horários dela viram compromissos (tipo bloqueio, o horário continua ocupado) e o cadastro some.
+ * Os cancelados ficam como estão (não voltam a ocupar o horário).
+ */
+export async function virarCompromisso(id: string): Promise<EstadoForm> {
+  const { supabase } = await sessao();
+  const { data: cliente, error: erroCliente } = await supabase.from("clientes").select("id, nome").eq("id", id).maybeSingle();
+  if (erroCliente || !cliente) return { erro: "Cadastro não encontrado." };
+
+  const { error } = await supabase
+    .from("agendamentos")
+    .update({
+      tipo: "bloqueio",
+      titulo: cliente.nome.slice(0, 60),
+      cliente_id: null,
+      cliente_nome: null,
+      servico_id: null,
+      servico_nome: null,
+      valor: null,
+      status: "agendado",
+    })
+    .eq("cliente_id", id)
+    .eq("tipo", "atendimento")
+    .neq("status", "cancelado");
+  if (error) return { erro: `Não foi possível mudar os horários: ${error.message}` };
+
+  const { error: erroExcluir } = await supabase.from("clientes").delete().eq("id", id);
+  if (erroExcluir) return { erro: `Os horários viraram compromisso, mas o cadastro não foi apagado: ${erroExcluir.message}` };
+
+  revalidar(id);
+  revalidatePath("/agenda");
+  redirect("/clientes?msg=compromisso");
+}

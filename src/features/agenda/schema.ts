@@ -25,7 +25,7 @@ export const esquemaAtendimento = z
 export const esquemaBloqueio = z
   .object({
     tipo: z.literal("bloqueio"),
-    titulo: z.string().trim().min(1, "Dê um nome ao bloqueio (ex.: almoço)").max(60),
+    titulo: z.string().trim().min(1, "Dê um nome ao compromisso (ex.: academia, almoço)").max(60),
     dia: data,
     dia_inteiro: z.string().optional().transform((v) => v === "on"),
     hora_inicio: hora.optional(),

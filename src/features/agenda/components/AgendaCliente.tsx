@@ -344,10 +344,10 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
             <DialogTitle>
               {form?.agendamento
                 ? form.agendamento.tipo === "bloqueio"
-                  ? "Editar bloqueio"
+                  ? "Editar compromisso"
                   : "Remarcar / editar atendimento"
                 : form?.tipo === "bloqueio"
-                  ? "Bloquear horário"
+                  ? "Novo compromisso"
                   : "Marcar atendimento"}
             </DialogTitle>
             <DialogDescription>

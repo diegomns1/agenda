@@ -21,7 +21,7 @@ type Linha = {
   diaInteiro: boolean;
 };
 
-const ROTULO_TIPO: Record<TipoImportacao, string> = { atendimento: "Atendimento", bloqueio: "Bloqueio", ignorar: "Não trazer" };
+const ROTULO_TIPO: Record<TipoImportacao, string> = { atendimento: "Atendimento", bloqueio: "Compromisso meu", ignorar: "Não trazer" };
 const POR_PAGINA = 150;
 
 export function ImportarAgenda() {
@@ -102,7 +102,8 @@ export function ImportarAgenda() {
       .filter((l) => tipos[l.chave] === "atendimento" || tipos[l.chave] === "bloqueio")
       .map((l) => ({
         tipo: tipos[l.chave] as "atendimento" | "bloqueio",
-        nome: tipos[l.chave] === "bloqueio" ? l.titulo.slice(0, 80) : l.nome,
+        // compromisso: o título sem a hora da frente ("11h Academia" → "Academia")
+        nome: tipos[l.chave] === "bloqueio" ? [l.nome, l.observacao].filter(Boolean).join(", ").slice(0, 80) || l.titulo.slice(0, 80) : l.nome,
         observacao: tipos[l.chave] === "atendimento" ? l.observacao : null,
         inicio: l.inicio,
         fim: l.fim,
@@ -223,6 +224,9 @@ export function ImportarAgenda() {
       {agendas ? (
         <section className="surgir grid grid-cols-1 gap-3 rounded-2xl border bg-card p-4">
           <h2 className="text-sm font-semibold">3. Confira antes de trazer</h2>
+          <p className="text-xs text-muted-foreground">
+            Academia, médico, seu cabelo, folga: marque <strong className="text-foreground">Compromisso meu</strong>. O horário fica ocupado, mas não vira cliente.
+          </p>
 
           {agendas.length > 1 ? (
             <div className="grid grid-cols-1 gap-1.5">
@@ -317,7 +321,7 @@ export function ImportarAgenda() {
                 {enviando ? "Trazendo para a agenda…" : `Trazer ${aImportar} para a agenda`}
               </Button>
               <p className="text-xs text-muted-foreground">
-                {contagem.atendimento} atendimento{contagem.atendimento === 1 ? "" : "s"} e {contagem.bloqueio} bloqueio{contagem.bloqueio === 1 ? "" : "s"}. Se algum
+                {contagem.atendimento} atendimento{contagem.atendimento === 1 ? "" : "s"} e {contagem.bloqueio} compromisso{contagem.bloqueio === 1 ? "" : "s"} seu{contagem.bloqueio === 1 ? "" : "s"}. Se algum
                 horário bater com outro já marcado, ele fica de fora e você vê a lista no final.
               </p>
             </>

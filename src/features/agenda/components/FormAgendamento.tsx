@@ -75,7 +75,7 @@ export function FormAgendamento({ clientes, servicos, inicial, aoConcluir }: Pro
                 tipo === t ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {t === "atendimento" ? "Atendimento" : "Bloqueio"}
+              {t === "atendimento" ? "Atendimento" : "Compromisso"}
             </button>
           ))}
         </div>
@@ -105,7 +105,7 @@ export function FormAgendamento({ clientes, servicos, inicial, aoConcluir }: Pro
           )}
 
           <BotaoEnviar textoCarregando="Salvando...">
-            {ag ? "Salvar alterações" : tipo === "atendimento" ? "Marcar atendimento" : "Bloquear horário"}
+            {ag ? "Salvar alterações" : tipo === "atendimento" ? "Marcar atendimento" : "Salvar compromisso"}
           </BotaoEnviar>
         </>
       )}
@@ -376,7 +376,7 @@ function CamposBloqueio({ inicial, estado }: { inicial?: InicialForm; estado: Es
       <Campo
         rotulo="Motivo"
         nome="titulo"
-        placeholder="Ex.: almoço, médico, folga, férias"
+        placeholder="Ex.: academia, natação, médico, almoço, folga"
         defaultValue={v?.titulo ?? ag?.titulo ?? ""}
         erros={estado.erros?.titulo}
         autoFocus

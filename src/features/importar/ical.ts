@@ -155,13 +155,30 @@ export function lerIcs(texto: string, arquivo: string, de: Date, ate: Date): Age
 
 export type TipoImportacao = "atendimento" | "bloqueio" | "ignorar";
 
-const PARECE_BLOQUEIO = /almo[cç]o|folga|f[eé]rias|n[aã]o atend|fechad|bloque|recesso|viagem|pessoal|feriado/i;
+/** Horário fechado ou coisa da própria profissional: vira compromisso (tipo "bloqueio"), não cliente. */
+const PARECE_COMPROMISSO = new RegExp(
+  [
+    "almo[cç]o|folga|f[eé]rias|n[aã]o atend|fechad|bloque|recesso|viagem|pessoal|feriado",
+    // rotina e saúde dela
+    "academia|nata[cç][aã]o|pilates|muscula[cç]|crossfit|yoga|ioga|treino|hidrogin|funcional",
+    "m[eé]dic|dentista|consulta|exame|terapia|psic[oó]log|fisioterap|nutricionista|vacina",
+    "escola|faculdade|reuni[aã]o|igreja|culto|cart[oó]rio|despachante|compromisso|festa|casamento|anivers",
+  ].join("|"),
+  "i",
+);
+/** Título que é só um serviço ("Cílios", "Cabelo meu"): quase sempre é a profissional se cuidando, não uma cliente. */
+const SO_SERVICO =
+  /^(meu |minha |meus |minhas )?(c[ií]lios|sobrancelhas?|cabelo|unhas?|p[eé]s?|m[aã]os?|depila[cç][aã]o|massagem|limpeza de pele|manicure|pedicure|escova|progressiva|luzes)( meu| minha| meus| minhas)?$/i;
+/** "Dr. Lidiane", "Dra Ana": consulta dela. */
+const DOUTOR = /^dra?\.?\s/i;
 
 /** O que fazer com cada compromisso, por padrão. A pessoa pode trocar na prévia. */
 export function sugerirTipo(e: Pick<EventoLido, "titulo" | "diaInteiro">, automatica: boolean): TipoImportacao {
   if (automatica) return "ignorar";
   if (e.diaInteiro) return /n[aã]o atend|folga|f[eé]rias|fechad|recesso|viagem/i.test(e.titulo) ? "bloqueio" : "ignorar";
-  return PARECE_BLOQUEIO.test(e.titulo) ? "bloqueio" : "atendimento";
+  const { nome } = separarTitulo(e.titulo);
+  if (!/\p{L}/u.test(nome.replace(/\d+\s*h/gi, ""))) return "ignorar"; // título só com hora ("17h30"): não dá para saber o que é
+  return PARECE_COMPROMISSO.test(e.titulo) || SO_SERVICO.test(nome.trim()) || DOUTOR.test(nome) ? "bloqueio" : "atendimento";
 }
 
 /**
@@ -169,9 +186,15 @@ export function sugerirTipo(e: Pick<EventoLido, "titulo" | "diaInteiro">, automa
  * "8h Thay" → "Thay"; "16h30 Babi" → "Babi"; "10 HR tia Cida" → "tia Cida"; "14 Valmiza" → "Valmiza";
  * "15h Ana Clara, mão e pé" → nome "Ana Clara", observação "mão e pé".
  */
+// o "h" depois dos minutos ("7h30h") só conta se vier sozinho: "14h00 Helena" não pode virar "elena"
+const HORA = String.raw`\d{1,2}\s*(?:(?:horas?|hrs?)(?=\s|$)|[:h.]\s*\d{2}(?:h(?=\s|$))?|h(?=\s|$|\d|[-–—:|,.]))?\s*(?:min(?=\s|$))?`;
+
 export function separarTitulo(titulo: string): { nome: string; observacao: string | null } {
   const semHora = titulo
-    .replace(/^\s*\d{1,2}\s*(?:horas?|hrs?|[:h.]\s*\d{2}|h)?\s*(?:min)?\s*[-–—:|,.]?\s*/i, "")
+    // na frente: "8h", "16h30", "7h30h", "10 HR", "15h às 16h"
+    .replace(new RegExp(`^\\s*(?:[àa]s\\s*)?${HORA}(?:\\s*(?:[àa]s|a|até|-|–)\\s*${HORA})?\\s*[-–—:|,.]?\\s*`, "i"), "")
+    // no fim: "Tamires 8h", "unha Elenice 13h"
+    .replace(/\s*(?:[àa]s\s*)?\d{1,2}\s*h(?:\s*\d{2})?\s*$/i, "")
     .replace(/\s+/g, " ")
     .trim();
   const base = semHora.length > 0 ? semHora : titulo.trim();

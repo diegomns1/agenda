@@ -52,7 +52,7 @@ export const VISUAL_STATUS: Record<StatusAgendamento, VisualStatus> = {
 };
 
 export const VISUAL_BLOQUEIO: VisualStatus = {
-  rotulo: "Bloqueio",
+  rotulo: "Compromisso",
   Icone: LockIcon,
   chip: `bg-muted text-muted-foreground ${LISTRAS}`,
   cartao: `border-border bg-muted text-muted-foreground ${LISTRAS}`,

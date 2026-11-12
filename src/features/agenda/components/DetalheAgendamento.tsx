@@ -199,7 +199,7 @@ export function DetalheAgendamento({ agendamento: a, clientes, mensagens, aoFech
                 ) : (
                   <Button variant="ghost" className={cn(botao, "text-destructive")} disabled={pendente} onClick={() => setConfirmando("excluir")}>
                     <Trash2Icon />
-                    Remover bloqueio
+                    Remover compromisso
                   </Button>
                 )}
               </div>
@@ -212,7 +212,7 @@ export function DetalheAgendamento({ agendamento: a, clientes, mensagens, aoFech
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmando === "cancelar" ? (a?.status === "pendente" ? "Recusar este pedido?" : "Cancelar este atendimento?") : "Remover este bloqueio?"}
+              {confirmando === "cancelar" ? (a?.status === "pendente" ? "Recusar este pedido?" : "Cancelar este atendimento?") : "Remover este compromisso?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmando === "cancelar"

@@ -56,7 +56,7 @@ export function BarraAgenda({ visao, data, aoMarcar, aoBloquear }: Props) {
         <div className="flex gap-2">
           <Button variant="outline" onClick={aoBloquear} className="h-toque sm:h-8">
             <LockIcon />
-            Bloquear
+            Compromisso
           </Button>
           {/* No celular, "Marcar" é o botão flutuante embaixo (alcance do polegar) */}
           <Button onClick={aoMarcar} className="hidden sm:inline-flex">
