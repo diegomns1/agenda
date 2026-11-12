@@ -46,10 +46,16 @@ const LINK_PERFIL = `${URL_APP}/perfil`; // com https://, para o WhatsApp deixar
 const LIMITE_IA_CONTATO_DIA = 40;
 /** Espera antes de responder um lead: se a pessoa mandar outra mensagem nesse tempo ("Sin" + "Sim"), responde uma vez só. */
 const ESPERA_JUNTAR_MS = 5000;
-/** Respostas do robô para o mesmo contato em 1 hora. Gente de verdade não passa disso; robô respondendo robô, sim. */
-const LIMITE_ROBO_HORA = 15;
-/** Respostas do robô em 10 minutos: ping-pong rápido demais para uma pessoa digitando. */
-const LIMITE_ROBO_10_MIN = 8;
+/** Respostas do robô para o mesmo contato em 1 hora (rede de segurança; a conversa de uma pessoa animada fica bem abaixo). */
+const LIMITE_ROBO_HORA = 30;
+/**
+ * Resposta "instantânea": mensagem comprida que chega poucos segundos depois da resposta do robô. Uma pessoa precisa
+ * ler e digitar; outro robô responde na hora. Contar só a quantidade de mensagens pegava gente que digita rápido
+ * (12/11/2026, teste do Diego).
+ */
+const SEGUNDOS_INSTANTANEA = 6;
+const MIN_CARACTERES_INSTANTANEA = 25;
+const LIMITE_INSTANTANEAS = 3;
 
 /** Frases de resposta automática (WhatsApp Business, chatbots de menu). Comparadas sem acento e em minúsculas. */
 const FRASE_AUTOMATICA = new RegExp(
@@ -189,10 +195,19 @@ export async function motivoRobo(admin: Admin, telefone: string, texto: string):
   const msgs = data ?? [];
   const agora = Date.now();
   const doRobo = msgs.filter((x) => x.de === "robo");
-  if (doRobo.filter((x) => agora - new Date(x.criado_em).getTime() < 10 * 60_000).length >= LIMITE_ROBO_10_MIN)
-    return "conversa rápida demais para uma pessoa";
   if (doRobo.filter((x) => agora - new Date(x.criado_em).getTime() < 3_600_000).length >= LIMITE_ROBO_HORA)
     return `mais de ${LIMITE_ROBO_HORA} respostas em 1 hora`;
+  // respostas compridas chegando segundos depois do robô, várias vezes na última hora
+  const ordem = [...msgs].reverse();
+  let instantaneas = 0;
+  for (let i = 1; i < ordem.length; i++) {
+    const msg = ordem[i];
+    const antes = ordem[i - 1];
+    if (msg.de !== "contato" || antes.de !== "robo" || agora - new Date(msg.criado_em).getTime() > 3_600_000) continue;
+    const segundos = (new Date(msg.criado_em).getTime() - new Date(antes.criado_em).getTime()) / 1000;
+    if (segundos <= SEGUNDOS_INSTANTANEA && msg.texto.trim().length >= MIN_CARACTERES_INSTANTANEA) instantaneas++;
+  }
+  if (instantaneas >= LIMITE_INSTANTANEAS) return "respostas compridas chegando na hora, rápido demais para uma pessoa";
   // a mesma mensagem comprida chegando de novo: resposta pronta de robô
   const atual = normalizar(texto);
   if (atual.length >= 20 && msgs.filter((x) => x.de === "contato" && normalizar(x.texto) === atual).length >= 2)
