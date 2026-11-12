@@ -9,9 +9,10 @@ import { URL_APP } from "@/lib/constantes";
  */
 
 const preco = (p: keyof typeof PLANOS) => formatarPreco(PLANOS[p].preco);
-// com utm: o Painel do dono mostra quantos cadastros vieram da conversa com a IA no WhatsApp
-export const LINK_CADASTRO = `${URL_APP.replace(/^https?:\/\//, "")}/cadastro?utm_source=whatsapp&utm_medium=ia`;
-export const LINK_SITE = "vaguinha.app";
+// com utm: o Painel do dono mostra quantos cadastros vieram da conversa com a IA no WhatsApp.
+// Sempre com https://: sem ele, em alguns celulares o WhatsApp não deixa tocar no link (12/11/2026).
+export const LINK_CADASTRO = `${URL_APP}/cadastro?utm_source=whatsapp&utm_medium=ia`;
+export const LINK_SITE = "https://vaguinha.app";
 
 export const CONHECIMENTO = `
 # O que é o Vaguinha

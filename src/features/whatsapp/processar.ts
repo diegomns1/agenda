@@ -41,10 +41,11 @@ export type Recebida = {
 };
 
 const HORAS_24 = 24 * 3_600_000;
-const DOMINIO = URL_APP.replace(/^https?:\/\//, "");
-const LINK_PERFIL = `${DOMINIO}/perfil`;
+const LINK_PERFIL = `${URL_APP}/perfil`; // com https://, para o WhatsApp deixar tocar
 /** Mensagens com IA por dia para quem não é cliente (protege o crédito da API). */
 const LIMITE_IA_CONTATO_DIA = 40;
+/** Espera antes de responder um lead: se a pessoa mandar outra mensagem nesse tempo ("Sin" + "Sim"), responde uma vez só. */
+const ESPERA_JUNTAR_MS = 5000;
 /** Respostas do robô para o mesmo contato em 1 hora. Gente de verdade não passa disso; robô respondendo robô, sim. */
 const LIMITE_ROBO_HORA = 15;
 /** Respostas do robô em 10 minutos: ping-pong rápido demais para uma pessoa digitando. */
@@ -373,8 +374,23 @@ async function atualizarFunil(admin: Admin, contato: WhatsappContato, perfil: Pr
   }
 }
 
+/** Depois da espera, chegou outra mensagem da pessoa? Então quem responde é a mais nova (com esta junto no histórico). */
+async function chegouOutraDepois(admin: Admin, telefone: string, wamid: string) {
+  await new Promise((r) => setTimeout(r, ESPERA_JUNTAR_MS));
+  const { data } = await admin
+    .from("whatsapp_mensagens")
+    .select("wamid")
+    .eq("telefone", telefone)
+    .eq("de", "contato")
+    .order("criado_em", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return Boolean(data?.wamid && data.wamid !== wamid);
+}
+
 /** Atendimento de quem não usa a assistente da agenda: vendas (lead) ou suporte (cadastrada). */
-async function atender(admin: Admin, contato: WhatsappContato, texto: string, modo: ModoAtendimento, perfil: Profile | null) {
+async function atender(admin: Admin, contato: WhatsappContato, texto: string, modo: ModoAtendimento, perfil: Profile | null, wamid: string) {
+  if (await chegouOutraDepois(admin, contato.telefone, wamid)) return;
   // limite diário de IA por contato
   const hoje = hojeISO();
   const usadasHoje = contato.ia_dia === hoje ? contato.ia_mensagens_dia : 0;
@@ -391,7 +407,13 @@ async function atender(admin: Admin, contato: WhatsappContato, texto: string, mo
     historico,
     texto,
     perfil,
-    jaSabe: { nome: contato.nome, nomeWhatsapp: contato.nome_whatsapp, ramo: contato.ramo, equipeChamada: contato.atendimento === "precisa" },
+    jaSabe: {
+      nome: contato.nome,
+      nomeWhatsapp: contato.nome_whatsapp,
+      ramo: contato.ramo,
+      equipeChamada: contato.atendimento === "precisa",
+      linkEnviado: contato.etapa !== "robo" || historico.some((f) => f.papel === "assistente" && f.texto.includes("/cadastro")),
+    },
   });
 
   const mudar: Partial<Omit<WhatsappContato, "telefone">> = {
@@ -490,7 +512,7 @@ export async function tratarMensagem(m: Recebida): Promise<void> {
       // 8) Vendas (lead) ou suporte (já tem cadastro)
       const texto = (m.texto ?? "").trim().slice(0, 1500);
       if (!texto) return;
-      await atender(admin, contato, texto, perfil ? "suporte" : "lead", perfil);
+      await atender(admin, contato, texto, perfil ? "suporte" : "lead", perfil, m.wamid);
     }
 
     await faxina(admin);
