@@ -74,10 +74,11 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   `features/whatsapp/estado.ts` decide o botão fixo, o cartão da tela inicial e o aviso na tela Assistente
   (conectada → wa.me da Vaguinha; Premium sem conexão → /perfil#whatsapp; resto → /assistente). O chat do painel
   ficou como reserva ("Assistente no painel" no menu); só remover depois do áudio (Fase 2) e olhando o uso.
-- **Google Ads (12/11/2026).** Tag GTM-PBCD8PX2 (`GOOGLE_TAG_ID` em rastreio/comum.ts) carregada pelo `RastreioMeta`
-  só depois do "Aceitar". Cadastro concluído → `rastrearCadastroGoogle` (sign_up + dataLayer "cadastro_concluido" e,
-  a conversão "Inscrição" AW-18571039970/i-R6COKq_rYdEOKprpdF, 1,00 BRL). Sem envio pelo servidor. O `cadastrar`
-  devolve `destino: "/"` em vez de redirect, para a tela disparar os avisos antes de abrir a agenda.
+- **Google Ads (12/11/2026).** gtag.js com `config` AW-18571039970 (`GOOGLE_ADS_ID` em rastreio/comum.ts), carregado
+  pelo `RastreioMeta` (site, cadastro, "Situação da conta") só depois do "Aceitar". O contêiner GTM-PBCD8PX2 NÃO é
+  carregado (não repassava a conversão e duplicaria o remarketing). Cadastro concluído → `rastrearCadastroGoogle`:
+  conversão "Inscrição" AW-18571039970/i-R6COKq_rYdEOKprpdF, 1,00 BRL, transaction_id = evento_id, e só depois
+  (event_callback ou 1,5 s) abre a agenda. O `cadastrar` devolve `destino: "/"` em vez de redirect para isso.
 - **Anúncios da Meta (11/11/2026).** Pixel "Vaguinha Site" 2307852893116834 (BM Vaguinha App, conta Vaguinha CA),
   domínio vaguinha.app verificado por meta tag (`features/rastreio/comum.ts`). `RastreioMeta` (site, telas públicas e
   legais; nunca no painel): aviso de cookies (vg_consent em .vaguinha.app) e pixel só depois do "Aceitar"; guarda utm_* e

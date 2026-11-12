@@ -4,7 +4,7 @@ import {
   COOKIE_CONSENTIMENTO,
   COOKIE_ORIGEM,
   GOOGLE_ADS_CONVERSAO_CADASTRO,
-  GOOGLE_TAG_ID,
+  GOOGLE_ADS_ID,
   PARAMS_ORIGEM,
   type OrigemCookie,
 } from "./comum";
@@ -79,41 +79,51 @@ export function carregarPixel(pixelId: string) {
   fbq("init", pixelId);
 }
 
-/** Código oficial da tag do Google (o mesmo que o Google Ads mostra), carregado uma vez só. */
+/** gtag.js do Google Ads (o código padrão do Google), carregado uma vez só e só com o "Aceitar". */
 export function carregarGoogle() {
-  if (window.gtag) return;
+  if (window.gtag || consentimento() !== "sim") return;
   window.dataLayer = window.dataLayer || [];
   window.gtag = function gtag() {
     // eslint-disable-next-line prefer-rest-params -- a tag do Google precisa do objeto `arguments`
     window.dataLayer!.push(arguments);
   };
   window.gtag("js", new Date());
+  window.gtag("config", GOOGLE_ADS_ID);
   const s = document.createElement("script");
   s.async = true;
-  s.src = `https://www.googletagmanager.com/gtm.js?id=${GOOGLE_TAG_ID}`;
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`;
   document.head.appendChild(s);
 }
 
 const cadastrosEnviados = new Set<string>();
 
 /**
- * Cadastro concluído no Google: evento sign_up (e "cadastro_concluido" no dataLayer, para gatilhos da tag) e a
- * conversão "Inscrição" do Google Ads (valor 1,00 BRL). Só é chamada quando o cadastro deu certo (FormCadastro).
- * Uma vez por cadastro: o mesmo `id` não dispara de novo nesta página, e o transaction_id faz o Google descartar repetidos.
+ * Cadastro concluído: conversão "Inscrição" do Google Ads (1,00 BRL), uma vez por cadastro (o mesmo `id` não dispara
+ * de novo nesta página, e o transaction_id faz o Google descartar repetidos).
+ * `depois` roda quando o Google confirma o envio (event_callback) ou em 1,5 s, o que vier primeiro, e roda na hora
+ * se não houver o que enviar (sem "Aceitar", sem tag). É ali que o cadastro abre a agenda.
  */
-export function rastrearCadastroGoogle(id: string) {
-  if (consentimento() !== "sim" || !window.gtag || cadastrosEnviados.has(id)) return;
-  cadastrosEnviados.add(id);
-  window.gtag("event", "sign_up", { method: "email" });
-  window.dataLayer!.push({ event: "cadastro_concluido" });
-  if (GOOGLE_ADS_CONVERSAO_CADASTRO) {
-    window.gtag("event", "conversion", {
-      send_to: GOOGLE_ADS_CONVERSAO_CADASTRO,
-      value: 1.0,
-      currency: "BRL",
-      transaction_id: id,
-    });
+export function rastrearCadastroGoogle(id: string, depois?: () => void) {
+  let feito = false;
+  const seguir = () => {
+    if (feito) return;
+    feito = true;
+    depois?.();
+  };
+
+  if (consentimento() !== "sim" || !window.gtag || !GOOGLE_ADS_CONVERSAO_CADASTRO || cadastrosEnviados.has(id)) {
+    seguir();
+    return;
   }
+  cadastrosEnviados.add(id);
+  window.gtag("event", "conversion", {
+    send_to: GOOGLE_ADS_CONVERSAO_CADASTRO,
+    value: 1.0,
+    currency: "BRL",
+    transaction_id: id,
+    event_callback: seguir,
+  });
+  setTimeout(seguir, 1500); // segurança: se o Google não responder, abre a agenda mesmo assim
 }
 
 /** Manda um evento pelo pixel (só se a pessoa aceitou). `eventID` igual ao do servidor evita contar duas vezes. */

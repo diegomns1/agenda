@@ -32,16 +32,14 @@ export function FormCadastro() {
   useEffect(() => {
     if (!estado.ok) return;
     // cadastro deu certo: avisa os anúncios (só com o "Aceitar" dos cookies) e, se já entrou, abre a agenda
-    if (eventoId) {
-      rastrear("Lead", {}, eventoId);
-      rastrearCadastroGoogle(eventoId);
-    }
-    if (estado.destino) {
-      const destino = estado.destino;
-      // um instante para os avisos saírem antes de trocar de página
-      const t = setTimeout(() => window.location.assign(destino), 600);
-      return () => clearTimeout(t);
-    }
+    // depois que o Google confirmar a conversão (ou em 1,5 s, no máximo)
+    const destino = estado.destino;
+    const abrir = () => {
+      if (destino) window.location.assign(destino);
+    };
+    if (!eventoId) return abrir();
+    rastrear("Lead", {}, eventoId);
+    rastrearCadastroGoogle(eventoId, abrir);
   }, [estado.ok, estado.destino, eventoId]);
 
   if (estado.ok) {
