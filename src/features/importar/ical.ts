@@ -186,13 +186,26 @@ export function nomeDoTitulo(titulo: string): string {
 
 // ---------------------------------------------------------------- arquivos
 
-/** Abre .ics ou .zip (exportação do Google: um .ics por agenda) e devolve os textos. */
+const NAO_E_AGENDA = "Esse arquivo não é a agenda do Google. Escolha o arquivo .zip (ou .ics) que o Google Agenda baixou.";
+
+/**
+ * Abre .ics ou .zip (exportação do Google: um .ics por agenda) e devolve os textos.
+ * Reconhece pelo conteúdo, não pelo nome: o celular às vezes troca a extensão ou o tipo do arquivo baixado.
+ */
 export async function textosDoArquivo(arquivo: File): Promise<{ nome: string; texto: string }[]> {
-  const ehZip = /\.zip$/i.test(arquivo.name) || arquivo.type.includes("zip");
-  if (!ehZip) return [{ nome: arquivo.name, texto: await arquivo.text() }];
+  const bytes = new Uint8Array(await arquivo.arrayBuffer());
+  const ehZip = bytes[0] === 0x50 && bytes[1] === 0x4b; // "PK": começo de todo .zip
   const { unzipSync, strFromU8 } = await import("fflate");
-  const conteudo = unzipSync(new Uint8Array(await arquivo.arrayBuffer()), {
-    filter: (f) => /\.ics$/i.test(f.name) && f.originalSize < 30_000_000,
-  });
-  return Object.entries(conteudo).map(([nome, dados]) => ({ nome: nome.split("/").pop() ?? nome, texto: strFromU8(dados) }));
+  if (!ehZip) {
+    const texto = strFromU8(bytes).replace(/^﻿/, "");
+    if (!texto.includes("BEGIN:VCALENDAR")) throw new Error(NAO_E_AGENDA);
+    return [{ nome: arquivo.name, texto }];
+  }
+  let conteudo: Record<string, Uint8Array>;
+  try {
+    conteudo = unzipSync(bytes, { filter: (f) => /\.ics$/i.test(f.name) && f.originalSize < 30_000_000 });
+  } catch {
+    throw new Error("Não consegui abrir esse .zip (pode ter baixado pela metade). Exporte de novo no Google Agenda e tente outra vez.");
+  }
+  return Object.entries(conteudo).map(([nome, dados]) => ({ nome: nome.split("/").pop() ?? nome, texto: strFromU8(dados).replace(/^﻿/, "") }));
 }

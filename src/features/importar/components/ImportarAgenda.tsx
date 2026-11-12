@@ -50,7 +50,16 @@ export function ImportarAgenda() {
       const de = new Date(agora.getTime() - (incluirPassado ? 92 : 0) * 86_400_000);
       de.setUTCHours(3, 0, 0, 0); // começo do dia em Brasília
       const ate = new Date(agora.getTime() + 400 * 86_400_000);
-      const lidas = textos.map((t) => lerIcs(t.texto, t.nome, de, ate));
+      // uma agenda com defeito não derruba as outras do mesmo .zip
+      const lidas: AgendaLida[] = [];
+      for (const t of textos) {
+        try {
+          lidas.push(lerIcs(t.texto, t.nome, de, ate));
+        } catch {
+          // agenda ilegível: fica de fora
+        }
+      }
+      if (lidas.length === 0) throw new Error("Não consegui ler as agendas desse arquivo. Exporte de novo no Google Agenda e tente outra vez.");
       const novosTipos: Record<string, TipoImportacao> = {};
       for (const a of lidas) for (const ev of a.eventos) novosTipos[`${a.arquivo}|${ev.chave}`] = sugerirTipo(ev, a.automatica);
       setAgendas(lidas);
@@ -103,7 +112,17 @@ export function ImportarAgenda() {
       return;
     }
     iniciar(async () => {
-      const r = await importarCompromissos({ itens, criarClientes });
+      let r: ResultadoImportacao;
+      try {
+        r = await importarCompromissos({ itens, criarClientes });
+      } catch {
+        // quase sempre: o Vaguinha foi atualizado com esta tela aberta (a página antiga não acha mais o servidor novo)
+        toast.error("Não consegui falar com o servidor. Toque em Recarregar e escolha o arquivo de novo.", {
+          duration: Infinity,
+          action: { label: "Recarregar", onClick: () => window.location.reload() },
+        });
+        return;
+      }
       if (!r.ok) {
         toast.error(r.erro);
         return;
@@ -190,7 +209,9 @@ export function ImportarAgenda() {
             <span className="block text-xs text-muted-foreground">Entram como concluídos e aparecem no histórico e nos relatórios. Sem marcar, vem só de hoje em diante.</span>
           </span>
         </label>
-        <input ref={inputRef} type="file" accept=".zip,.ics,text/calendar,application/zip" className="hidden" onChange={aoEscolher} />
+        {/* sem `accept`: em alguns Android o .zip do Google vem com outro tipo e ficava cinza na hora de escolher.
+            O arquivo é conferido pelo conteúdo depois (textosDoArquivo). */}
+        <input ref={inputRef} type="file" className="hidden" onChange={aoEscolher} />
         <Button className="h-toque w-fit sm:h-toque" onClick={() => inputRef.current?.click()} disabled={lendo || enviando}>
           {lendo ? <Loader2Icon className="animate-spin" /> : <FileUpIcon />}
           {agendas ? "Escolher outro arquivo" : "Escolher arquivo (.zip ou .ics)"}
