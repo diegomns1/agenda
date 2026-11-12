@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { NextResponse, type NextRequest } from "next/server";
 import { obterPerfil } from "@/lib/auth";
 import { ehDataISO, hojeISO } from "@/lib/datas";
+import { URL_APP } from "@/lib/constantes"; // não usar a origem do pedido: na VPS é localhost:3020 (interno)
 import { temRecurso } from "@/lib/planos";
 import {
   dadosDia,
@@ -100,7 +101,7 @@ export async function GET(request: NextRequest, { params }: Contexto) {
   if ("erro" in r) return r.erro;
 
   const sp = request.nextUrl.searchParams;
-  return gerar(r.perfil, tipo as TipoStory, { data: sp.get("data") ?? undefined, tema: sp.get("tema") ?? undefined }, sp.get("baixar") === "1", request.nextUrl.origin);
+  return gerar(r.perfil, tipo as TipoStory, { data: sp.get("data") ?? undefined, tema: sp.get("tema") ?? undefined }, sp.get("baixar") === "1", URL_APP);
 }
 
 /**
@@ -121,5 +122,5 @@ export async function POST(request: NextRequest, { params }: Contexto) {
   const sel = esquemaSelecaoStory.safeParse(corpo);
   if (!sel.success) return NextResponse.json({ erro: "Seleção inválida" }, { status: 400 });
 
-  return gerar(r.perfil, tipo as TipoStory, sel.data, false, request.nextUrl.origin);
+  return gerar(r.perfil, tipo as TipoStory, sel.data, false, URL_APP);
 }
