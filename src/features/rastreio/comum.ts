@@ -31,3 +31,11 @@ export const LINK_WHATSAPP_SITE = `https://wa.me/${WHATSAPP_VAGUINHA}?text=${enc
 
 /** Etiqueta de verificação do domínio vaguinha.app na Meta (Configurações do negócio → Domínios). Não é segredo. */
 export const META_VERIFICACAO_DOMINIO = "62xj6bxqtp9k4fx721s1ooe99st4kc";
+
+/** Tag do Google (Google Ads), 12/11/2026. Carrega só depois do "Aceitar", como o pixel da Meta. Não é segredo. */
+export const GOOGLE_TAG_ID = "GTM-PBCD8PX2";
+/**
+ * Conversão "Inscrição" do Google Ads no formato "AW-123456789/AbCdEfGh" (Google Ads → Metas → Conversões →
+ * a ação de inscrição → Configurar tag → "send_to"). Enquanto estiver null, o cadastro manda só o evento sign_up.
+ */
+export const GOOGLE_ADS_CONVERSAO_CADASTRO: string | null = null;

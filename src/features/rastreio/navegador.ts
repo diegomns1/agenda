@@ -1,14 +1,23 @@
 "use client";
 
-import { COOKIE_CONSENTIMENTO, COOKIE_ORIGEM, PARAMS_ORIGEM, type OrigemCookie } from "./comum";
+import {
+  COOKIE_CONSENTIMENTO,
+  COOKIE_ORIGEM,
+  GOOGLE_ADS_CONVERSAO_CADASTRO,
+  GOOGLE_TAG_ID,
+  PARAMS_ORIGEM,
+  type OrigemCookie,
+} from "./comum";
 
-/* Funções de rastreio que rodam no navegador. Nada vai para a Meta sem o "Aceitar" do aviso de cookies. */
+/* Funções de rastreio que rodam no navegador. Nada vai para a Meta nem para o Google sem o "Aceitar" do aviso de cookies. */
 
 type Fbq = ((...args: unknown[]) => void) & { callMethod?: (...a: unknown[]) => void; queue?: unknown[]; loaded?: boolean; version?: string; push?: unknown };
 declare global {
   interface Window {
     fbq?: Fbq;
     _fbq?: Fbq;
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
   }
 }
 
@@ -68,6 +77,34 @@ export function carregarPixel(pixelId: string) {
   s.src = "https://connect.facebook.net/en_US/fbevents.js";
   document.head.appendChild(s);
   fbq("init", pixelId);
+}
+
+/** Código oficial da tag do Google (o mesmo que o Google Ads mostra), carregado uma vez só. */
+export function carregarGoogle() {
+  if (window.gtag) return;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function gtag() {
+    // eslint-disable-next-line prefer-rest-params -- a tag do Google precisa do objeto `arguments`
+    window.dataLayer!.push(arguments);
+  };
+  window.gtag("js", new Date());
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = `https://www.googletagmanager.com/gtm.js?id=${GOOGLE_TAG_ID}`;
+  document.head.appendChild(s);
+}
+
+/**
+ * Cadastro concluído no Google: evento sign_up (e "cadastro_concluido" no dataLayer, para gatilhos da tag) e,
+ * quando o rótulo estiver configurado, a conversão do Google Ads. `id` evita contar duas vezes o mesmo cadastro.
+ */
+export function rastrearCadastroGoogle(id?: string) {
+  if (consentimento() !== "sim" || !window.gtag) return;
+  window.gtag("event", "sign_up", { method: "email" });
+  window.dataLayer!.push({ event: "cadastro_concluido" });
+  if (GOOGLE_ADS_CONVERSAO_CADASTRO) {
+    window.gtag("event", "conversion", { send_to: GOOGLE_ADS_CONVERSAO_CADASTRO, ...(id ? { transaction_id: id } : {}) });
+  }
 }
 
 /** Manda um evento pelo pixel (só se a pessoa aceitou). `eventID` igual ao do servidor evita contar duas vezes. */

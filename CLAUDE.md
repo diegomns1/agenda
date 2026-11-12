@@ -74,6 +74,9 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   `features/whatsapp/estado.ts` decide o botão fixo, o cartão da tela inicial e o aviso na tela Assistente
   (conectada → wa.me da Vaguinha; Premium sem conexão → /perfil#whatsapp; resto → /assistente). O chat do painel
   ficou como reserva ("Assistente no painel" no menu); só remover depois do áudio (Fase 2) e olhando o uso.
+- **Google Ads (12/11/2026).** Tag GTM-PBCD8PX2 (`GOOGLE_TAG_ID` em rastreio/comum.ts) carregada pelo `RastreioMeta`
+  só depois do "Aceitar". Cadastro concluído → `rastrearCadastroGoogle` (sign_up + dataLayer "cadastro_concluido" e,
+  com `GOOGLE_ADS_CONVERSAO_CADASTRO` = "AW-…/rótulo" preenchido, a conversão do Google Ads). Sem envio pelo servidor.
 - **Anúncios da Meta (11/11/2026).** Pixel "Vaguinha Site" 2307852893116834 (BM Vaguinha App, conta Vaguinha CA),
   domínio vaguinha.app verificado por meta tag (`features/rastreio/comum.ts`). `RastreioMeta` (site, telas públicas e
   legais; nunca no painel): aviso de cookies (vg_consent em .vaguinha.app) e pixel só depois do "Aceitar"; guarda utm_* e

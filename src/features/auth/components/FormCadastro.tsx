@@ -11,7 +11,7 @@ import { ESTADO_INICIAL } from "@/components/formulario/tipos";
 import { SeletorRamo } from "@/components/formulario/SeletorRamo";
 import { EscolhaTratamento } from "@/components/formulario/EscolhaTratamento";
 import { sugerirEmail } from "@/features/auth/sugerir-email";
-import { rastrear } from "@/features/rastreio/navegador";
+import { rastrear, rastrearCadastroGoogle } from "@/features/rastreio/navegador";
 
 /*
  * Cadastro (etapa 5): o fácil primeiro (nome, e-mail, senha), depois o que personaliza o painel.
@@ -30,7 +30,10 @@ export function FormCadastro() {
     setEventoId(crypto.randomUUID());
   }, []);
   useEffect(() => {
-    if (estado.ok && eventoId) rastrear("Lead", {}, eventoId);
+    if (estado.ok && eventoId) {
+      rastrear("Lead", {}, eventoId);
+      rastrearCadastroGoogle(eventoId);
+    }
   }, [estado.ok, eventoId]);
 
   if (estado.ok) {

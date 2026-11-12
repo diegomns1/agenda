@@ -47,7 +47,10 @@ export default function PaginaPrivacidade() {
           </tr>
           <tr>
             <td>De onde você veio (anúncio ou link, com os parâmetros utm), se aceitou os cookies de medição, IP e navegador do cadastro</td>
-            <td>Saber quais anúncios trazem profissionais e, se você aceitou, avisar a Meta do cadastro, da aprovação e da assinatura</td>
+            <td>
+              Saber quais anúncios trazem profissionais e, se você aceitou, avisar a Meta do cadastro, da liberação e da assinatura
+              e o Google do cadastro
+            </td>
           </tr>
           <tr>
             <td>Data e versão do aceite destes termos</td>
@@ -91,8 +94,9 @@ export default function PaginaPrivacidade() {
         <li>Não usamos os dados dos seus clientes para contatá-los nem para treinar sistemas.</li>
         <li>
           Não usamos cookies de publicidade sem a sua escolha. No site e nas telas de cadastro aparece um aviso: se você tocar em
-          “Aceitar”, ligamos o Pixel da Meta para medir de onde vêm as visitas e melhorar nossos anúncios; em “Só os necessários”,
-          ficam só os cookies que mantêm você conectada e lembram a sua escolha. Dentro do painel não há pixel.
+          “Aceitar”, ligamos o Pixel da Meta e a tag do Google para medir de onde vêm as visitas e melhorar nossos anúncios; em
+          “Só os necessários”, ficam só os cookies que mantêm você conectada e lembram a sua escolha. Dentro do painel não há
+          pixel nem tag de anúncios.
         </li>
       </ul>
 
@@ -109,6 +113,10 @@ export default function PaginaPrivacidade() {
           <strong>Meta (WhatsApp Business Platform)</strong>, para enviar e receber as mensagens do WhatsApp oficial do Vaguinha.
           E, só se você aceitou os cookies de medição, o <strong>Pixel da Meta e a API de Conversões</strong>: avisamos a Meta
           quando há cadastro, aprovação ou assinatura, mandando e-mail e telefone embaralhados (hash), para medir os anúncios.
+        </li>
+        <li>
+          <strong>Google (Google Ads)</strong>, só se você aceitou os cookies de medição: a tag do Google mede as visitas ao site
+          e avisa quando um cadastro é feito, para medir os anúncios no Google. Não mandamos seu e-mail nem seu telefone.
         </li>
         <li>
           <strong>Anthropic (Claude)</strong>, a inteligência artificial que escreve as respostas da assistente. Pelos termos

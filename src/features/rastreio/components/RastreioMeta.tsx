@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { capturarOrigem, carregarPixel, consentimento, salvarConsentimento } from "../navegador";
+import { capturarOrigem, carregarGoogle, carregarPixel, consentimento, salvarConsentimento } from "../navegador";
 
 /**
- * Aviso de cookies + Pixel da Meta. Vai no site e nas telas públicas (cadastro, login, termos), nunca dentro do painel.
- * O pixel só carrega depois do "Aceitar". A origem (utm/fbclid) é guardada sempre: é dado nosso, para o funil por anúncio.
+ * Aviso de cookies + Pixel da Meta + tag do Google. Vai no site e nas telas públicas (cadastro, login, termos), nunca
+ * dentro do painel. Os dois só carregam depois do "Aceitar". A origem (utm/fbclid) é guardada sempre: é dado nosso,
+ * para o funil por anúncio.
  */
 export function RastreioMeta({ pixelId }: { pixelId: string | null }) {
   const pathname = usePathname();
@@ -22,6 +23,7 @@ export function RastreioMeta({ pixelId }: { pixelId: string | null }) {
 
   useEffect(() => {
     if (escolha === "sim" && pixelId) carregarPixel(pixelId);
+    if (escolha === "sim") carregarGoogle();
   }, [escolha, pixelId]);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function RastreioMeta({ pixelId }: { pixelId: string | null }) {
     >
       <p className="text-pretty text-muted-foreground">
         Usamos cookies para o site funcionar e, se você aceitar, para medir de onde vêm as visitas e melhorar nossos anúncios
-        (Pixel da Meta). Saiba mais na{" "}
+        (Pixel da Meta e tag do Google). Saiba mais na{" "}
         <Link href="/privacidade" className="font-medium text-foreground underline underline-offset-2">
           Política de Privacidade
         </Link>
