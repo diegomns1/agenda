@@ -10,13 +10,70 @@ import { formatarDataISO, hojeISO, somarDias } from "@/lib/datas";
 import { enviarEmail } from "@/lib/email";
 import { emailContaAprovada, emailContaRecusada, emailContaSuspensa } from "@/features/emails/modelos";
 import type { EstadoForm } from "@/components/formulario/tipos";
-import { esquemaAlterarPlano, esquemaAlterarStatus } from "./schema";
+import { esquemaAlterarPlano, esquemaAlterarStatus, esquemaExcluirConta } from "./schema";
 import { after } from "next/server";
 import { registrarAprovacao } from "@/features/rastreio/servidor";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
 
 async function exigirAdmin() {
   const usuario = await obterUsuario();
   if (!ehAdmin(usuario)) throw new Error("Sem permissão");
+  return usuario!;
+}
+
+/**
+ * Apaga de vez uma conta (login, perfil, agenda, clientes, serviços, conversas, logo). Sem volta.
+ * Travas: só conta suspensa ou recusada; nunca um admin nem você mesmo; nunca quem tem assinatura no Asaas
+ * ou já pagou (registro de pagamento precisa ficar guardado por lei: nesses casos, deixe suspensa).
+ */
+export async function excluirConta(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
+  const eu = await exigirAdmin();
+
+  const r = esquemaExcluirConta.safeParse(Object.fromEntries(formData));
+  if (!r.success) return { erros: z.flattenError(r.error).fieldErrors, erro: "Digite EXCLUIR para confirmar." };
+  const { id } = r.data;
+  if (id === eu.id) return { erro: "Você não pode excluir a sua própria conta." };
+
+  const admin = criarClienteAdmin();
+  const { data: conta } = await admin
+    .from("profiles")
+    .select("nome, status, asaas_subscription_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!conta) return { erro: "Conta não encontrada (talvez já tenha sido excluída)." };
+  if (conta.status !== "suspensa" && conta.status !== "recusada") {
+    return { erro: "Antes de excluir, suspenda ou recuse a conta." };
+  }
+  if (conta.asaas_subscription_id) {
+    return { erro: "Esta conta tem assinatura no Asaas. Cancele a assinatura lá e deixe a conta suspensa." };
+  }
+  const { count: pagas } = await admin
+    .from("cobrancas")
+    .select("id", { count: "exact", head: true })
+    .eq("profissional_id", id)
+    .not("pago_em", "is", null);
+  if (pagas) return { erro: "Esta conta já pagou. Os registros de pagamento precisam ficar guardados: deixe a conta suspensa." };
+
+  const { data: usuario } = await admin.auth.admin.getUserById(id);
+  if ((usuario.user?.app_metadata as { role?: string } | undefined)?.role === "admin") {
+    return { erro: "Não é possível excluir uma conta de administrador." };
+  }
+
+  // Atendimentos primeiro: o vínculo atendimento → serviço não deixa apagar um serviço ainda em uso
+  const { error: erroAgenda } = await admin.from("agendamentos").delete().eq("profissional_id", id);
+  if (erroAgenda) return { erro: `Não foi possível apagar a agenda: ${erroAgenda.message}` };
+
+  // Logo (Storage não apaga sozinho)
+  const { data: arquivos } = await admin.storage.from("logos").list(id);
+  if (arquivos?.length) await admin.storage.from("logos").remove(arquivos.map((a) => `${id}/${a.name}`));
+
+  // Apagar o login apaga o perfil e, em cascata, clientes, serviços, histórico, lembretes, cobranças e o WhatsApp
+  const { error } = await admin.auth.admin.deleteUser(id);
+  if (error) return { erro: `Não foi possível excluir: ${error.message}` };
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/painel");
+  return { ok: true, mensagem: `Conta de ${conta.nome} excluída.` };
 }
 
 function revalidarConta(id: string) {

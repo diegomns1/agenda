@@ -10,6 +10,14 @@ export const esquemaAlterarStatus = z.object({
   motivo: z.string().trim().max(300, "Máximo de 300 caracteres").optional(),
 });
 
+export const esquemaExcluirConta = z.object({
+  id: z.uuid(),
+  confirmacao: z
+    .string()
+    .trim()
+    .refine((v) => v.toUpperCase() === "EXCLUIR", "Digite EXCLUIR para confirmar"),
+});
+
 export const esquemaAlterarPlano = z.object({
   id: z.uuid(),
   plano: z.enum(chavesPlano),
