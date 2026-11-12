@@ -46,6 +46,13 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   (`features/auth/aprovacao.ts`): na 1ª entrada (e-mail já confirmado), /aguardando-aprovacao aprova com service_role
   a conta pendente + plano teste + sem validade, grava `ativa_ate` = hoje + DIAS_TESTE, manda StartTrial e o e-mail de
   boas-vindas. O admin continua recusando/suspendendo. `APROVACAO_MANUAL=1` no env da VPS volta ao modo manual (reload).
+- **Teste grátis de 5 dias desde 12/11/2026** (`DIAS_TESTE` em lib/planos.ts; textos fixos com "5 dias" no site,
+  cadastro, termos e e-mails: ao mudar de novo, `grep "5 dias"`). Migração 0022 deu +2 dias a quem estava no teste.
+- Suporte = WhatsApp oficial da Vaguinha (`SUPORTE_WHATSAPP` em lib/constantes.ts; a IA atende). Sugestões de
+  melhorias são escritas no painel (menu do topo e Perfil > Falar com o suporte) e caem em Admin > Sugestões
+  (tabela `sugestoes`, migração 0022; nome/e-mail/WhatsApp copiados no envio; limite de 10 por dia).
+- Admin > conta > Excluir conta: só suspensa/recusada, nunca a própria; "Excluir mesmo assim" passa as travas de
+  outro admin, assinatura no Asaas (cancela lá antes) e pagamento registrado (contas de teste).
 - Admin = usuário com `app_metadata.role = 'admin'` no JWT (SQL em `supabase/migrations/0001_base.sql`).
 - `plano` e `ativa_ate` controlam pagamento manual via Pix. Asaas/Mercado Pago é futuro.
 - **WhatsApp para as clientes finais: sem API** (decisão mantida). Lembretes: push para a profissional 1 dia e 1 h antes; botão "Lembrar cliente"

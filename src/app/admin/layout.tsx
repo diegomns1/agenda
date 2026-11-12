@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeftIcon, ChartPieIcon, ShieldCheckIcon, UsersIcon } from "lucide-react";
+import { ArrowLeftIcon, ChartPieIcon, LightbulbIcon, ShieldCheckIcon, UsersIcon } from "lucide-react";
 import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { ehAdmin, obterUsuario } from "@/lib/auth";
@@ -17,6 +17,12 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
     .from("whatsapp_contatos")
     .select("telefone", { count: "exact", head: true })
     .eq("atendimento", "precisa")
+    .then((r) => r, () => ({ count: 0 }));
+  // sugestões ainda não lidas (botão Sugestões)
+  const { count: sugestoesNovas } = await criarClienteAdmin()
+    .from("sugestoes")
+    .select("id", { count: "exact", head: true })
+    .is("lida_em", null)
     .then((r) => r, () => ({ count: 0 }));
 
   return (
@@ -39,7 +45,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
           </div>
         </div>
       </header>
-      <nav className="mx-auto flex w-full max-w-3xl gap-2 px-4 pt-4" aria-label="Seções do admin">
+      <nav className="mx-auto flex w-full max-w-3xl flex-wrap gap-2 px-4 pt-4" aria-label="Seções do admin">
         <Button asChild variant="outline" size="sm" className="rounded-full">
           <Link href="/admin/painel">
             <ChartPieIcon />
@@ -59,6 +65,17 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
             {precisam ? (
               <span className="rounded-full bg-destructive px-1.5 text-mini leading-4 font-bold text-white tabular-nums" aria-label={`${precisam} precisam de você`}>
                 {precisam}
+              </span>
+            ) : null}
+          </Link>
+        </Button>
+        <Button asChild variant="outline" size="sm" className="rounded-full">
+          <Link href="/admin/sugestoes">
+            <LightbulbIcon />
+            Sugestões
+            {sugestoesNovas ? (
+              <span className="rounded-full bg-primary px-1.5 text-mini leading-4 font-bold text-primary-foreground tabular-nums" aria-label={`${sugestoesNovas} novas`}>
+                {sugestoesNovas}
               </span>
             ) : null}
           </Link>

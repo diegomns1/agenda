@@ -8,7 +8,7 @@ export const PLANOS = {
     nome: "Teste grátis",
     curto: "Teste",
     preco: 0,
-    descricao: "3 dias grátis com os recursos do Essencial.",
+    descricao: "5 dias grátis com os recursos do Essencial.",
     // mesmo nível do Essencial: agenda, clientes e serviços (sem lembretes, link e stories)
     nivel: 1,
   },
@@ -38,7 +38,7 @@ export const PLANOS = {
 export type Plano = keyof typeof PLANOS;
 
 /** Duração do teste grátis, contada a partir da aprovação da conta pelo admin. */
-export const DIAS_TESTE = 3;
+export const DIAS_TESTE = 5; // 5 dias desde 12/11/2026 (antes 3). Textos fixos: grep "5 dias"
 
 export const RECURSOS = {
   lembretes: { nome: "Lembretes", planoMinimo: "profissional" as Plano },

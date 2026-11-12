@@ -137,7 +137,7 @@ export function AcoesConta({ conta }: { conta: Profile }) {
           </BotaoEnviar>
         </form>
         <p className="text-xs text-muted-foreground">
-          &quot;Ativa até&quot; em branco = sem data de término. Contas no plano Teste ganham 3 dias automaticamente quando são
+          &quot;Ativa até&quot; em branco = sem data de término. Contas no plano Teste ganham 5 dias automaticamente quando são
           liberadas (sozinhas, ao confirmar o e-mail e entrar, ou quando você aprova).
         </p>
       </section>
@@ -148,7 +148,7 @@ export function AcoesConta({ conta }: { conta: Profile }) {
         <p className="text-xs text-muted-foreground">
           {podeExcluir
             ? "Apaga de vez o login, a agenda, os clientes, os serviços e as conversas desta conta. Não dá para desfazer."
-            : "Para excluir, primeiro suspenda ou recuse a conta. Contas que já pagaram não podem ser excluídas: deixe suspensas."}
+            : "Para excluir, primeiro suspenda ou recuse a conta."}
         </p>
         {podeExcluir ? (
           <div>
@@ -178,6 +178,19 @@ export function AcoesConta({ conta }: { conta: Profile }) {
                 <p className="text-sm text-destructive">{estadoExcluir.erros.confirmacao[0]}</p>
               ) : null}
             </div>
+
+            {/* Para contas de teste que caem nas travas (outro admin, assinatura no Asaas, pagamento registrado) */}
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" name="forcar" value="1" className="mt-0.5 size-4 accent-destructive" />
+              <span>
+                Excluir mesmo assim
+                <span className="block text-xs text-muted-foreground">
+                  Só para conta de teste que é admin, tem assinatura no Asaas ou pagamento registrado. A assinatura é cancelada
+                  no Asaas antes.
+                </span>
+              </span>
+            </label>
+            {estadoExcluir.erro ? <p className="text-sm text-destructive">{estadoExcluir.erro}</p> : null}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setExcluindo(false)}>

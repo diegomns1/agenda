@@ -19,7 +19,7 @@ const TEXTOS: Record<
   pendente: {
     titulo: "Cadastro recebido. Falta a liberação",
     texto:
-      "Uma pessoa confere cada conta antes de liberar. Você recebe um e-mail quando a sua estiver pronta, e os 3 dias grátis começam nesse dia. Enquanto isso, vá separando a lista dos seus serviços com valores e duração, e a sua logo: é o primeiro passo depois de entrar.",
+      "Uma pessoa confere cada conta antes de liberar. Você recebe um e-mail quando a sua estiver pronta, e os 5 dias grátis começam nesse dia. Enquanto isso, vá separando a lista dos seus serviços com valores e duração, e a sua logo: é o primeiro passo depois de entrar.",
     Icone: ClockIcon,
   },
   recusada: {

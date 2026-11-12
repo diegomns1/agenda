@@ -91,7 +91,7 @@ export function emailCadastroRecebido(para: string, nome: string): Email {
     titulo: "Cadastro recebido",
     saudacao: `Oi, ${primeiroNome(nome)}!`,
     paragrafos: [
-      "Uma pessoa confere cada conta antes de liberar o acesso, para o Vaguinha ter só profissionais de verdade. Quando a sua estiver pronta, chega outro e-mail com o link para entrar, e os 3 dias grátis começam nesse dia.",
+      "Uma pessoa confere cada conta antes de liberar o acesso, para o Vaguinha ter só profissionais de verdade. Quando a sua estiver pronta, chega outro e-mail com o link para entrar, e os 5 dias grátis começam nesse dia.",
       "Para ganhar tempo, separe a lista dos seus serviços com valor e duração, e a sua logo. É a primeira coisa que o painel vai pedir.",
     ],
     botao: { texto: "Ver a situação da conta", url: `${URL_APP}/login` },

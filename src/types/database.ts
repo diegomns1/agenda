@@ -85,6 +85,18 @@ export type Profile = {
   updated_at: string;
 };
 
+/** Sugestão de melhoria enviada pela profissional (migração 0022). Nome/e-mail/WhatsApp copiados no envio. */
+export type Sugestao = {
+  id: string;
+  profissional_id: string | null;
+  nome: string;
+  email: string | null;
+  telefone: string | null;
+  texto: string;
+  created_at: string;
+  lida_em: string | null;
+};
+
 export type Cobranca = {
   id: string;
   profissional_id: string;
@@ -267,6 +279,18 @@ export type Database = {
         Row: Cobranca;
         Insert: CobrancaInsert;
         Update: CobrancaUpdate;
+        Relationships: [];
+      };
+      sugestoes: {
+        Row: Sugestao;
+        Insert: {
+          profissional_id: string;
+          nome: string;
+          email?: string | null;
+          telefone?: string | null;
+          texto: string;
+        };
+        Update: { lida_em?: string | null };
         Relationships: [];
       };
       assistente_uso: {

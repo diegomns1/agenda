@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(URL_SITE),
   title: { absolute: "Vaguinha · Agenda no celular para profissionais de beleza e saúde" },
   description:
-    "Agenda, histórico de clientes, lembretes, link para pedirem horário e stories dos horários livres. Para manicure, barbearia, salão, estética, personal e quem atende com hora marcada. 3 dias grátis.",
+    "Agenda, histórico de clientes, lembretes, link para pedirem horário e stories dos horários livres. Para manicure, barbearia, salão, estética, personal e quem atende com hora marcada. 5 dias grátis.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     url: URL_SITE,
     siteName: "Vaguinha",
     title: "Vaguinha · Agenda no celular para profissionais de beleza e saúde",
-    description: "Agenda, clientes, lembretes e link de agendamento. 3 dias grátis; planos a partir de R$ 29,90 por mês.",
+    description: "Agenda, clientes, lembretes e link de agendamento. 5 dias grátis; planos a partir de R$ 29,90 por mês.",
   },
   twitter: { card: "summary_large_image" },
 };

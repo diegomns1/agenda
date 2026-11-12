@@ -1,9 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
-import { BotMessageSquareIcon, ChartColumnIcon, LifeBuoyIcon, LogOutIcon, MenuIcon, MessageSquareTextIcon, ShieldCheckIcon } from "lucide-react";
+import { useRef, useState } from "react";
+import {
+  BotMessageSquareIcon,
+  ChartColumnIcon,
+  LifeBuoyIcon,
+  LightbulbIcon,
+  LogOutIcon,
+  MenuIcon,
+  MessageSquareTextIcon,
+  ShieldCheckIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DialogoSugestao } from "@/features/sugestoes/components/DialogoSugestao";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,10 +32,12 @@ const ITEM = "min-h-toque gap-2.5 px-2.5 text-destaque";
  */
 export function MenuConta({ admin, linkSuporte }: Props) {
   const formSair = useRef<HTMLFormElement>(null);
+  const [sugestao, setSugestao] = useState(false);
 
   return (
     <>
       <form ref={formSair} method="post" action="/auth/sair" className="hidden" />
+      <DialogoSugestao aberto={sugestao} aoMudar={setSugestao} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="size-toque sm:size-toque" aria-label="Abrir menu">
@@ -56,6 +68,11 @@ export function MenuConta({ admin, linkSuporte }: Props) {
               <LifeBuoyIcon />
               Falar com o suporte
             </a>
+          </DropdownMenuItem>
+          {/* abre depois do menu fechar: o menu devolve o foco e travaria o clique na caixa */}
+          <DropdownMenuItem className={ITEM} onSelect={() => setTimeout(() => setSugestao(true), 0)}>
+            <LightbulbIcon />
+            Sugestões de melhorias
           </DropdownMenuItem>
           {admin ? (
             <DropdownMenuItem asChild className={ITEM}>

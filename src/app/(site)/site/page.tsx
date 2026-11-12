@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 /*
  * Site público (etapa 5 do plano de design, com as regras da Taste Skill):
- * - o título diz o que é e para quem; a primeira tela tem um fato concreto (3 dias grátis, R$ 29,90);
+ * - o título diz o que é e para quem; a primeira tela tem um fato concreto (5 dias grátis, R$ 29,90);
  * - uma ação principal com o mesmo texto no menu, no topo e no fim ("Começar o teste grátis");
  * - nada aparece "surgindo" ao rolar; só o topo entra uma vez ao carregar; cartões sobem 2px no hover;
  * - cada recurso mostra um pedaço da tela real em vez de ícone genérico;
@@ -36,7 +36,7 @@ const PROFISSOES = [
 const PASSOS = [
   {
     titulo: "Crie a conta",
-    texto: "Nome, ramo, e-mail e senha. Confirme o e-mail e pronto: o acesso é liberado na hora e o teste de 3 dias começa.",
+    texto: "Nome, ramo, e-mail e senha. Confirme o e-mail e pronto: o acesso é liberado na hora e o teste de 5 dias começa.",
   },
   { titulo: "Monte a agenda", texto: "Cadastre serviços, valores e horários de atendimento. Suba a logo e escolha as cores." },
   { titulo: "Divulgue o link", texto: "Coloque o link na bio, poste os stories e deixe os lembretes avisarem você." },
@@ -73,7 +73,7 @@ const PLANOS_SITE = [
 const DUVIDAS = [
   {
     p: "Quanto tempo leva para começar a usar?",
-    r: "Um minuto. Você preenche o cadastro, confirma o e-mail e já entra na agenda. O teste de 3 dias começa nesse dia, sem cartão.",
+    r: "Um minuto. Você preenche o cadastro, confirma o e-mail e já entra na agenda. O teste de 5 dias começa nesse dia, sem cartão.",
   },
   {
     p: "Preciso instalar alguma coisa?",
@@ -101,7 +101,7 @@ const DUVIDAS = [
   },
   {
     p: "Como funciona o pagamento?",
-    r: "O teste de 3 dias é grátis e não pede cartão. Depois, a assinatura é mensal, por Pix ou cartão de crédito, sem fidelidade. Se cancelar, seus dados continuam guardados.",
+    r: "O teste de 5 dias é grátis e não pede cartão. Depois, a assinatura é mensal, por Pix ou cartão de crédito, sem fidelidade. Se cancelar, seus dados continuam guardados.",
   },
   {
     p: "Meus dados e os dos meus clientes estão seguros?",
@@ -146,7 +146,7 @@ export default function PaginaSite() {
               </Button>
             </div>
             <p className="surgir surgir-atraso-3 text-sm text-muted-foreground">
-              <strong className="font-semibold text-foreground">3 dias grátis.</strong> Depois, planos a partir de{" "}
+              <strong className="font-semibold text-foreground">5 dias grátis.</strong> Depois, planos a partir de{" "}
               <strong className="font-semibold text-foreground">{formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês</strong>,
               por Pix ou cartão de crédito.
             </p>
@@ -389,7 +389,7 @@ export default function PaginaSite() {
       <section className="border-t border-vinho/10">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-6 px-4 py-20 sm:px-6 md:flex-row md:items-end md:justify-between md:py-28">
           <div className="max-w-2xl">
-            <h2 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">Teste o Vaguinha grátis por 3 dias</h2>
+            <h2 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">Teste o Vaguinha grátis por 5 dias</h2>
             <p className="mt-3 text-lg text-muted-foreground">
               Sem cartão para começar. Depois do teste, planos a partir de {formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês.
             </p>

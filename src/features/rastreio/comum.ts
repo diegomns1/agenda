@@ -4,6 +4,8 @@
  * assim o que a pessoa escolheu no site vale também na tela de cadastro do painel.
  */
 
+import { SUPORTE_WHATSAPP } from "@/lib/constantes";
+
 /** "sim" = aceitou os cookies de medição; "nao" = só os necessários. Sem o cookie, mostra o aviso. */
 export const COOKIE_CONSENTIMENTO = "vg_consent";
 /** De onde a pessoa veio (utm_* e fbclid da última visita que trouxe esses dados). */
@@ -23,8 +25,8 @@ export function lerOrigemCookie(valor: string | null | undefined): OrigemCookie 
   }
 }
 
-/** WhatsApp oficial da Vaguinha (a IA atende os leads). */
-export const WHATSAPP_VAGUINHA = "5514998023550";
+/** WhatsApp oficial da Vaguinha (a IA atende os leads). O mesmo número do suporte. */
+export const WHATSAPP_VAGUINHA = SUPORTE_WHATSAPP;
 export const LINK_WHATSAPP_SITE = `https://wa.me/${WHATSAPP_VAGUINHA}?text=${encodeURIComponent("Oi! Vim pelo site e quero saber mais sobre o Vaguinha.")}`;
 
 /** Etiqueta de verificação do domínio vaguinha.app na Meta (Configurações do negócio → Domínios). Não é segredo. */

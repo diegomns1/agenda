@@ -14,6 +14,7 @@ import { esquemaAlterarPlano, esquemaAlterarStatus, esquemaExcluirConta } from "
 import { after } from "next/server";
 import { registrarAprovacao } from "@/features/rastreio/servidor";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
+import { ErroAsaas, cancelarAssinatura as cancelarNoAsaas } from "@/lib/asaas";
 
 async function exigirAdmin() {
   const usuario = await obterUsuario();
@@ -23,8 +24,9 @@ async function exigirAdmin() {
 
 /**
  * Apaga de vez uma conta (login, perfil, agenda, clientes, serviços, conversas, logo). Sem volta.
- * Travas: só conta suspensa ou recusada; nunca um admin nem você mesmo; nunca quem tem assinatura no Asaas
- * ou já pagou (registro de pagamento precisa ficar guardado por lei: nesses casos, deixe suspensa).
+ * Travas fixas: só conta suspensa ou recusada; nunca a sua própria conta.
+ * Travas que o admin pode passar marcando "Excluir mesmo assim" (contas de teste, pedido do Diego em 12/11):
+ * outra conta de admin, assinatura no Asaas (é cancelada lá antes) e cobrança já paga.
  */
 export async function excluirConta(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
   const eu = await exigirAdmin();
@@ -32,6 +34,7 @@ export async function excluirConta(_: EstadoForm, formData: FormData): Promise<E
   const r = esquemaExcluirConta.safeParse(Object.fromEntries(formData));
   if (!r.success) return { erros: z.flattenError(r.error).fieldErrors, erro: "Digite EXCLUIR para confirmar." };
   const { id } = r.data;
+  const forcar = formData.get("forcar") === "1";
   if (id === eu.id) return { erro: "Você não pode excluir a sua própria conta." };
 
   const admin = criarClienteAdmin();
@@ -44,19 +47,35 @@ export async function excluirConta(_: EstadoForm, formData: FormData): Promise<E
   if (conta.status !== "suspensa" && conta.status !== "recusada") {
     return { erro: "Antes de excluir, suspenda ou recuse a conta." };
   }
-  if (conta.asaas_subscription_id) {
-    return { erro: "Esta conta tem assinatura no Asaas. Cancele a assinatura lá e deixe a conta suspensa." };
-  }
   const { count: pagas } = await admin
     .from("cobrancas")
     .select("id", { count: "exact", head: true })
     .eq("profissional_id", id)
     .not("pago_em", "is", null);
-  if (pagas) return { erro: "Esta conta já pagou. Os registros de pagamento precisam ficar guardados: deixe a conta suspensa." };
-
   const { data: usuario } = await admin.auth.admin.getUserById(id);
-  if ((usuario.user?.app_metadata as { role?: string } | undefined)?.role === "admin") {
-    return { erro: "Não é possível excluir uma conta de administrador." };
+  const ehOutroAdmin = (usuario.user?.app_metadata as { role?: string } | undefined)?.role === "admin";
+
+  const avisos = [
+    ehOutroAdmin ? "é uma conta de administrador" : null,
+    conta.asaas_subscription_id ? "tem assinatura no Asaas" : null,
+    pagas ? "já tem pagamento registrado" : null,
+  ].filter(Boolean);
+  if (avisos.length && !forcar) {
+    return { erro: `Esta conta ${avisos.join(", ")}. Se for conta de teste, marque "Excluir mesmo assim" e confirme de novo.` };
+  }
+
+  // Assinatura no Asaas: cancela lá primeiro, para não continuar cobrando ninguém
+  if (conta.asaas_subscription_id) {
+    try {
+      await cancelarNoAsaas(conta.asaas_subscription_id);
+    } catch (e) {
+      // assinatura que o Asaas já não conhece (ex.: criada no ambiente de testes) não impede a exclusão
+      const naoExiste = e instanceof ErroAsaas && (e.status === 404 || e.status === 400);
+      if (!naoExiste) {
+        const msg = e instanceof Error ? e.message : String(e);
+        return { erro: `Não consegui cancelar a assinatura no Asaas (${msg}). Cancele lá e tente de novo.` };
+      }
+    }
   }
 
   // Atendimentos primeiro: o vínculo atendimento → serviço não deixa apagar um serviço ainda em uso

@@ -21,7 +21,8 @@ export default async function PaginaPainelDono() {
   const mesAtual = p.cadastrosPorMes.at(-1)?.chave;
 
   return (
-    <div className="grid gap-5">
+    // grid-cols-1 (= minmax(0, 1fr)): sem isso a tabela larga do funil esticava a coluna e cortava tudo no celular
+    <div className="grid grid-cols-1 gap-5">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Painel do dono</h1>
         <p className="text-sm text-muted-foreground">Quem está usando o Vaguinha, de qual ramo, e quanto entra por mês.</p>
