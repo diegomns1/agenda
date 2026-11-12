@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { obterUsuario } from "@/lib/auth";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
 
 /* Importa compromissos já lidos no navegador (features/importar/ical.ts).
    O banco impede horários sobrepostos (EXCLUDE): o que bater com algo já marcado fica de fora e volta na lista. */
@@ -107,4 +108,72 @@ export async function importarCompromissos(pedido: { itens: ItemImportacao[]; cr
   revalidatePath("/");
   revalidatePath("/clientes");
   return { ok: true, importados, clientesNovas, recusados };
+}
+
+
+// ---------------------------------------------------------------- começar do zero
+
+const esquemaLimpeza = z.object({
+  escopo: z.enum(["importados", "tudo"]),
+  clientes: z.boolean(),
+  confirmacao: z.literal("APAGAR"),
+});
+
+export type ResultadoLimpeza = { ok: true; horarios: number; clientes: number } | { ok: false; erro: string };
+
+/**
+ * Apaga a agenda para importar de novo. "importados" = só o que veio do Google (marcado na observação);
+ * "tudo" = todos os horários. O histórico desses horários também sai, senão cada um viraria "horário que vagou"
+ * nos relatórios e nos stories. Clientes: no modo "importados", só os sem WhatsApp que ficaram sem nenhum horário.
+ */
+export async function limparAgenda(pedido: z.input<typeof esquemaLimpeza>): Promise<ResultadoLimpeza> {
+  const usuario = await obterUsuario();
+  if (!usuario) return { ok: false, erro: "Sessão expirada. Entre de novo." };
+  const p = esquemaLimpeza.safeParse(pedido);
+  if (!p.success) return { ok: false, erro: "Digite APAGAR para confirmar." };
+  const { escopo, clientes } = p.data;
+  const supabase = await criarClienteServidor();
+  const admin = criarClienteAdmin();
+
+  let apagar = supabase.from("agendamentos").delete().eq("profissional_id", usuario.id);
+  if (escopo === "importados") apagar = apagar.ilike("observacoes", "%importado%");
+  const { data: apagados, error } = await apagar.select("id");
+  if (error) return { ok: false, erro: `Não foi possível apagar a agenda: ${error.message}` };
+  const ids = (apagados ?? []).map((a) => a.id);
+
+  // histórico (sem policy de delete para a profissional: vai pelo admin, sempre preso ao id dela)
+  if (escopo === "tudo") {
+    await admin.from("agendamento_eventos").delete().eq("profissional_id", usuario.id);
+  } else {
+    for (let o = 0; o < ids.length; o += 200) {
+      await admin.from("agendamento_eventos").delete().eq("profissional_id", usuario.id).in("agendamento_id", ids.slice(o, o + 200));
+    }
+  }
+
+  let clientesApagadas = 0;
+  if (clientes) {
+    if (escopo === "tudo") {
+      const { data, error: e } = await supabase.from("clientes").delete().eq("profissional_id", usuario.id).select("id");
+      if (e) return { ok: false, erro: `A agenda foi apagada, mas os clientes não: ${e.message}` };
+      clientesApagadas = data?.length ?? 0;
+    } else {
+      const [{ data: semZap }, { data: usados }] = await Promise.all([
+        supabase.from("clientes").select("id").eq("profissional_id", usuario.id).is("telefone", null),
+        supabase.from("agendamentos").select("cliente_id").eq("profissional_id", usuario.id).not("cliente_id", "is", null),
+      ]);
+      const emUso = new Set((usados ?? []).map((u) => u.cliente_id));
+      const sobrando = (semZap ?? []).map((c) => c.id).filter((id) => !emUso.has(id));
+      for (let o = 0; o < sobrando.length; o += 200) {
+        const { data, error: e } = await supabase.from("clientes").delete().in("id", sobrando.slice(o, o + 200)).select("id");
+        if (e) return { ok: false, erro: `A agenda foi apagada, mas os clientes não: ${e.message}` };
+        clientesApagadas += data?.length ?? 0;
+      }
+    }
+  }
+
+  revalidatePath("/agenda");
+  revalidatePath("/");
+  revalidatePath("/clientes");
+  revalidatePath("/relatorios");
+  return { ok: true, horarios: ids.length, clientes: clientesApagadas };
 }
