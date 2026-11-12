@@ -390,8 +390,8 @@ async function atualizarFunil(admin: Admin, contato: WhatsappContato, perfil: Pr
 }
 
 /** Depois da espera, chegou outra mensagem da pessoa? Então quem responde é a mais nova (com esta junto no histórico). */
-async function chegouOutraDepois(admin: Admin, telefone: string, wamid: string) {
-  await new Promise((r) => setTimeout(r, ESPERA_JUNTAR_MS));
+async function chegouOutraDepois(admin: Admin, telefone: string, wamid: string, esperarMs = ESPERA_JUNTAR_MS) {
+  if (esperarMs > 0) await new Promise((r) => setTimeout(r, esperarMs));
   const { data } = await admin
     .from("whatsapp_mensagens")
     .select("wamid")
@@ -403,8 +403,25 @@ async function chegouOutraDepois(admin: Admin, telefone: string, wamid: string) 
   return Boolean(data?.wamid && data.wamid !== wamid);
 }
 
+/**
+ * Quanto tempo, desde que a mensagem chegou, uma pessoa levaria para ler e digitar esta resposta no celular.
+ * Com uma variação, para não ficar mecânico. Entre 8 e 20 segundos.
+ */
+export function tempoDeResposta(resposta: string, sorteio = Math.random()) {
+  const base = 6000 + resposta.length * 45;
+  return Math.round(Math.min(20_000, Math.max(8000, base * (0.85 + sorteio * 0.3))));
+}
+
 /** Atendimento de quem não usa a assistente da agenda: vendas (lead) ou suporte (cadastrada). */
-async function atender(admin: Admin, contato: WhatsappContato, texto: string, modo: ModoAtendimento, perfil: Profile | null, wamid: string) {
+async function atender(
+  admin: Admin,
+  contato: WhatsappContato,
+  texto: string,
+  modo: ModoAtendimento,
+  perfil: Profile | null,
+  wamid: string,
+  chegouEm: number,
+) {
   if (await chegouOutraDepois(admin, contato.telefone, wamid)) return;
   // limite diário de IA por contato
   const hoje = hojeISO();
@@ -442,6 +459,15 @@ async function atender(admin: Admin, contato: WhatsappContato, texto: string, mo
   if (r.mandouLink && contato.etapa === "robo") mudar.etapa = "link";
   await admin.from("whatsapp_contatos").update(mudar).eq("telefone", contato.telefone);
 
+  // a Serena "digita" no ritmo de uma pessoa (com o "digitando..." aparecendo) em vez de responder na hora
+  const falta = tempoDeResposta(r.texto) - (Date.now() - chegouEm);
+  if (falta > 0) {
+    void mostrarDigitando(wamid);
+    await new Promise((ok) => setTimeout(ok, falta));
+  }
+  // a pessoa mandou outra mensagem enquanto isso: quem responde é a mais nova, que já vê esta junto
+  if (await chegouOutraDepois(admin, contato.telefone, wamid, 0)) return;
+
   await responder(admin, contato.telefone, r.texto);
   if (r.chamarEquipe) await chamarDiego(admin, contato, r.chamarEquipe);
 }
@@ -460,6 +486,7 @@ async function faxina(admin: Admin) {
 }
 
 export async function tratarMensagem(m: Recebida): Promise<void> {
+  const chegouEm = Date.now();
   const admin = criarClienteAdmin();
 
   // a Meta pode reenviar a mesma mensagem: só trata a primeira vez
@@ -527,7 +554,7 @@ export async function tratarMensagem(m: Recebida): Promise<void> {
       // 8) Vendas (lead) ou suporte (já tem cadastro)
       const texto = (m.texto ?? "").trim().slice(0, 1500);
       if (!texto) return;
-      await atender(admin, contato, texto, perfil ? "suporte" : "lead", perfil, m.wamid);
+      await atender(admin, contato, texto, perfil ? "suporte" : "lead", perfil, m.wamid, chegouEm);
     }
 
     await faxina(admin);

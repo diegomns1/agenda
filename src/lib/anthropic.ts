@@ -15,6 +15,14 @@ export const MODELO_ASSISTENTE = "claude-haiku-5-5";
 /** Preço em US$ por 1 milhão de tokens do modelo acima, com pedido de até 100 mil tokens (para o Painel do dono). */
 export const PRECO_POR_MILHAO = { entrada: 0.1, saida: 0.5, cacheLeitura: 0.01, cacheEscrita: 0.125 };
 
+/**
+ * Modelo da Serena (WhatsApp oficial: vendas e suporte), 12/11/2026: Sonnet 5.5, que lê melhor a mensagem antes de
+ * responder. Fala com poucos leads por dia e cada conversa pode virar assinatura, então vale o modelo melhor.
+ * A assistente da agenda (Premium) continua no Haiku. Preço: US$ 2 / US$ 10 por milhão (cache: leitura 0,20; escrita 2,50).
+ */
+export const MODELO_ATENDIMENTO = "claude-sonnet-5-5";
+export const PRECO_ATENDIMENTO = { entrada: 2, saida: 10, cacheLeitura: 0.2, cacheEscrita: 2.5 };
+
 /** Limite de mensagens por profissional por dia (protege o crédito mensal da API). */
 export const LIMITE_DIARIO_ASSISTENTE = 60;
 
@@ -29,7 +37,9 @@ export function clienteAnthropic(): Anthropic {
   return cliente;
 }
 
-export function custoEmDolar(uso: { entrada: number; saida: number; cacheLeitura: number; cacheEscrita: number }) {
-  const p = PRECO_POR_MILHAO;
+export function custoEmDolar(
+  uso: { entrada: number; saida: number; cacheLeitura: number; cacheEscrita: number },
+  p: typeof PRECO_POR_MILHAO = PRECO_POR_MILHAO,
+) {
   return (uso.entrada * p.entrada + uso.saida * p.saida + uso.cacheLeitura * p.cacheLeitura + uso.cacheEscrita * p.cacheEscrita) / 1_000_000;
 }

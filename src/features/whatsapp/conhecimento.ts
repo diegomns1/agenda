@@ -32,7 +32,7 @@ Site: ${LINK_SITE}
 - Modelos de mensagem do WhatsApp (lembrete, confirmação, remarcação, cancelamento, agradecimento) com endereço e valor.
 - Stories para o Instagram com os horários livres (dia, semana, horário que vagou, serviço com foto e valor), 16 temas.
 - Relatório do mês: quanto entrou, faltas, desmarcações e remarcações.
-- Assistente de IA no WhatsApp (Premium): a profissional conversa com a Vaguinha por este mesmo número para ver a agenda,
+- Assistente de IA no WhatsApp (Premium): a profissional conversa com a assistente por este mesmo número para ver a agenda,
   marcar, remarcar, cancelar, bloquear horários e cadastrar clientes; nada muda sem ela tocar em Confirmar.
   Também funciona dentro do painel, por escrito ou por voz.
 
