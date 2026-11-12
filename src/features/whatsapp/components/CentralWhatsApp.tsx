@@ -216,7 +216,7 @@ function Cartao({ c, aoAbrir, aoArrastar, aoSoltar }: { c: ContatoCentral; aoAbr
           </Etiqueta>
         ) : null}
       </div>
-      {c.atendimento === "precisa" && c.motivo_ajuda ? (
+      {c.motivo_ajuda && (c.atendimento === "precisa" || (c.atendimento === "humano" && c.motivo_ajuda.startsWith("🤖"))) ? (
         <p className="line-clamp-2 text-xs font-medium text-destructive">{c.motivo_ajuda}</p>
       ) : ult ? (
         <p className="line-clamp-2 text-xs text-muted-foreground">

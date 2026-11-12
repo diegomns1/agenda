@@ -45,6 +45,26 @@ const DOMINIO = URL_APP.replace(/^https?:\/\//, "");
 const LINK_PERFIL = `${DOMINIO}/perfil`;
 /** Mensagens com IA por dia para quem não é cliente (protege o crédito da API). */
 const LIMITE_IA_CONTATO_DIA = 40;
+/** Respostas do robô para o mesmo contato em 1 hora. Gente de verdade não passa disso; robô respondendo robô, sim. */
+const LIMITE_ROBO_HORA = 15;
+/** Respostas do robô em 10 minutos: ping-pong rápido demais para uma pessoa digitando. */
+const LIMITE_ROBO_10_MIN = 8;
+
+/** Frases de resposta automática (WhatsApp Business, chatbots de menu). Comparadas sem acento e em minúsculas. */
+const FRASE_AUTOMATICA = new RegExp(
+  [
+    "mensagem automatica",
+    "resposta automatica",
+    "obrigad[oa] por (entrar em )?contato",
+    "agradecemos (o seu|seu|o) contato",
+    "retornaremos (o mais breve|em breve|assim que|seu contato)",
+    "em breve (retornaremos|responderemos|um (de nossos|dos nossos) atendentes)",
+    "digite o numero d[ae]",
+    "escolha uma das opcoes",
+    "selecione uma das opcoes",
+    "responda com o numero",
+  ].join("|"),
+);
 
 /** Lê o corpo do webhook da Meta e devolve só as mensagens recebidas (ignora avisos de entrega/leitura). */
 export function lerWebhook(corpo: unknown): Recebida[] {
@@ -148,11 +168,55 @@ async function historicoRecente(admin: Admin, telefone: string): Promise<Mensage
   return falas;
 }
 
-/** A IA pediu ajuda: card vai para "Precisa de você" e o Diego recebe um e-mail com a conversa. */
-async function chamarDiego(admin: Admin, contato: WhatsappContato, motivo: string) {
-  if (contato.atendimento !== "robo") return; // já foi chamado (ou já está com ele)
-  await admin.from("whatsapp_contatos").update({ atendimento: "precisa", motivo_ajuda: motivo }).eq("telefone", contato.telefone);
-  await registrar(admin, contato.telefone, "sistema", `🙋 A IA chamou a equipe: ${motivo}`);
+function normalizar(t: string) {
+  return t.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Do outro lado parece ser outro robô (resposta automática de outra empresa)? Se a IA continuar respondendo,
+ * os dois ficam conversando o dia inteiro. Olha as últimas 6 h desta conversa (a mensagem atual já está gravada).
+ */
+export async function motivoRobo(admin: Admin, telefone: string, texto: string): Promise<string | null> {
+  if (FRASE_AUTOMATICA.test(normalizar(texto))) return "a mensagem parece resposta automática";
+  const { data } = await admin
+    .from("whatsapp_mensagens")
+    .select("de, texto, criado_em")
+    .eq("telefone", telefone)
+    .gt("criado_em", new Date(Date.now() - 6 * 3_600_000).toISOString())
+    .order("criado_em", { ascending: false })
+    .limit(80);
+  const msgs = data ?? [];
+  const agora = Date.now();
+  const doRobo = msgs.filter((x) => x.de === "robo");
+  if (doRobo.filter((x) => agora - new Date(x.criado_em).getTime() < 10 * 60_000).length >= LIMITE_ROBO_10_MIN)
+    return "conversa rápida demais para uma pessoa";
+  if (doRobo.filter((x) => agora - new Date(x.criado_em).getTime() < 3_600_000).length >= LIMITE_ROBO_HORA)
+    return `mais de ${LIMITE_ROBO_HORA} respostas em 1 hora`;
+  // a mesma mensagem comprida chegando de novo: resposta pronta de robô
+  const atual = normalizar(texto);
+  if (atual.length >= 20 && msgs.filter((x) => x.de === "contato" && normalizar(x.texto) === atual).length >= 2)
+    return "a mesma mensagem chegou repetida";
+  return null;
+}
+
+/**
+ * A IA pediu ajuda: card vai para "Precisa de você" e o Diego recebe um e-mail com a conversa.
+ * `silenciar`: parece robô do outro lado. O card vai para "Com você" e a IA para de responder de vez
+ * (não manda nem "vou chamar a equipe", que só alimentaria o outro robô). O Diego devolve ao robô na Central.
+ */
+async function chamarDiego(admin: Admin, contato: WhatsappContato, motivo: string, silenciar = false) {
+  if (silenciar ? contato.atendimento === "humano" : contato.atendimento !== "robo") return; // já foi chamado (ou já está com ele)
+  await admin
+    .from("whatsapp_contatos")
+    .update({ atendimento: silenciar ? "humano" : "precisa", motivo_ajuda: silenciar ? `🤖 IA pausada, parece robô: ${motivo}` : motivo })
+    .eq("telefone", contato.telefone);
+  contato.atendimento = silenciar ? "humano" : "precisa";
+  await registrar(
+    admin,
+    contato.telefone,
+    "sistema",
+    silenciar ? `🤖 IA pausada: parece outro robô do outro lado (${motivo}). Para voltar, devolva ao robô.` : `🙋 A IA chamou a equipe: ${motivo}`,
+  );
 
   const para = emailDoAdmin();
   if (!para) return;
@@ -170,7 +234,7 @@ async function chamarDiego(admin: Admin, contato: WhatsappContato, motivo: strin
   const central = `${URL_APP}/admin/whatsapp?c=${contato.telefone}`;
   await enviarEmail({
     para,
-    assunto: `WhatsApp: ${quem} precisa de você`,
+    assunto: silenciar ? `WhatsApp: IA pausada com ${quem} (parece robô)` : `WhatsApp: ${quem} precisa de você`,
     texto: `Motivo: ${motivo}\nContato: ${quem} · ${formatarTelefone(contato.telefone)}\n\n${conversa}\n\nAbrir na Central: ${central}`,
     html: `<p><b>Motivo:</b> ${esc(motivo)}<br><b>Contato:</b> ${esc(quem)} · ${esc(formatarTelefone(contato.telefone))}</p><pre style="font-family:inherit;white-space:pre-wrap;background:#f6f1ee;padding:12px;border-radius:8px">${esc(conversa)}</pre><p><a href="${central}">Abrir na Central do WhatsApp</a></p>`,
   });
@@ -385,6 +449,12 @@ export async function tratarMensagem(m: Recebida): Promise<void> {
       : await perfilPeloNumero(admin, m.de);
     if (perfil) await atualizarFunil(admin, contato, perfil);
     const comAssistente = Boolean(vinculo && perfil && situacaoDaConta(perfil) === "aprovada" && temRecurso(perfil.plano, "assistente"));
+
+    // 3b) Robô conversando com robô: para antes de gastar IA (a profissional conectada fica de fora: é ela mesma)
+    if (!comAssistente) {
+      const robo = await motivoRobo(admin, m.de, m.texto ?? "");
+      if (robo) return await chamarDiego(admin, contato, robo, true);
+    }
 
     // 4) Áudio e mídia: ainda só texto
     if (m.tipo === "audio") return await responder(admin, m.de, "Por enquanto eu só leio mensagens escritas. 🙏 Me manda por texto?");

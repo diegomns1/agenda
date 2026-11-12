@@ -96,6 +96,10 @@ export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: Cont
           ) : null}
           {contato.atendimento === "precisa" && contato.motivo_ajuda ? (
             <p className="rounded-lg bg-destructive/10 px-2.5 py-1.5 text-sm font-medium text-destructive">A IA chamou você: {contato.motivo_ajuda}</p>
+          ) : contato.atendimento === "humano" && contato.motivo_ajuda?.startsWith("🤖") ? (
+            <p className="rounded-lg bg-destructive/10 px-2.5 py-1.5 text-sm font-medium text-destructive">
+              {contato.motivo_ajuda}. Se for uma pessoa de verdade, toque em devolver ao robô.
+            </p>
           ) : null}
         </DialogHeader>
 
