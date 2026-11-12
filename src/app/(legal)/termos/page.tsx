@@ -28,12 +28,12 @@ export default function PaginaTermos() {
       <ul>
         <li>Você precisa ter 18 anos ou mais e informar dados verdadeiros no cadastro.</li>
         <li>A conta é pessoal. Mantenha sua senha em sigilo: o que for feito com a sua conta é de sua responsabilidade.</li>
-        <li>Contas novas passam por uma aprovação antes de liberar o acesso. Podemos recusar ou suspender contas que violem estes termos.</li>
+        <li>Podemos recusar, suspender ou encerrar contas com dados falsos ou que violem estes termos.</li>
       </ul>
 
       <h2>3. Planos, preços e pagamento</h2>
       <p>
-        Ao ser aprovada, a conta ganha um teste gratuito de 3 dias com os recursos do plano Essencial. Depois, o Vaguinha é
+        Ao confirmar o e-mail e entrar pela primeira vez, a conta ganha um teste gratuito de 3 dias com os recursos do plano Essencial. Depois, o Vaguinha é
         oferecido por assinatura mensal nos planos abaixo (valores podem mudar com aviso prévio de pelo menos 30 dias):
       </p>
       <ul>

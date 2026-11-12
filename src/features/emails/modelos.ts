@@ -99,15 +99,22 @@ export function emailCadastroRecebido(para: string, nome: string): Email {
 }
 
 /** Para o administrador: alguém novo se cadastrou. */
-export function emailNovoCadastroAdmin(para: string, dados: { nome: string; email: string; telefone: string | null }): Email {
+export function emailNovoCadastroAdmin(
+  para: string,
+  dados: { nome: string; email: string; telefone: string | null },
+  automatica = false,
+): Email {
   return montar({
     para,
-    assunto: `Novo cadastro aguardando aprovação: ${dados.nome}`,
+    assunto: automatica ? `Novo cadastro: ${dados.nome}` : `Novo cadastro aguardando aprovação: ${dados.nome}`,
     titulo: "Novo cadastro no Vaguinha",
     paragrafos: [
       `Nome: ${dados.nome}`,
       `E-mail: ${dados.email}`,
       `WhatsApp: ${dados.telefone ?? "não informado"}`,
+      ...(automatica
+        ? ["O teste grátis libera sozinho quando a pessoa confirmar o e-mail e entrar. Se for cadastro falso, recuse ou suspenda no Admin."]
+        : []),
     ],
     botao: { texto: "Abrir o Admin", url: `${URL_APP}/admin` },
   });

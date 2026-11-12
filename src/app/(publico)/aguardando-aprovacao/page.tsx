@@ -7,6 +7,7 @@ import { formatarDataISO } from "@/lib/datas";
 import { linkWhatsApp } from "@/lib/telefone";
 import { SUPORTE_WHATSAPP } from "@/lib/constantes";
 import { BotaoSair } from "@/features/auth/components/BotaoSair";
+import { aprovacaoAutomatica, aprovarTesteAutomatico } from "@/features/auth/aprovacao";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Situação da conta" };
@@ -48,6 +49,8 @@ export default async function PaginaAguardandoAprovacao() {
   const situacao = situacaoDaConta(perfil);
 
   if (situacao === "aprovada") redirect("/");
+  // Conta nova no teste grátis: libera sozinha na primeira entrada (ver features/auth/aprovacao.ts)
+  if (situacao === "pendente" && (await aprovarTesteAutomatico(perfil))) redirect("/");
 
   const testeAcabou = situacao === "vencida" && perfil?.plano === "teste";
   const { titulo, texto, Icone } = testeAcabou
@@ -56,7 +59,14 @@ export default async function PaginaAguardandoAprovacao() {
         texto: "Gostou? Escolha um plano para continuar usando a agenda. Seus clientes, serviços e horários continuam guardados.",
         Icone: TEXTOS.vencida.Icone,
       }
-    : TEXTOS[situacao];
+    : situacao === "pendente" && aprovacaoAutomatica()
+      ? {
+          // só aparece se a liberação automática falhou ou a conta não é de teste
+          titulo: "Falta pouco para liberar sua conta",
+          texto: "Não conseguimos liberar sua conta sozinhos desta vez. Toque em Falar com o suporte que a gente resolve rapidinho.",
+          Icone: ClockIcon,
+        }
+      : TEXTOS[situacao];
   const suporte = SUPORTE_WHATSAPP;
   const motivo =
     (situacao === "recusada" || situacao === "suspensa") && perfil?.status_motivo

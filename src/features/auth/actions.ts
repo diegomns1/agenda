@@ -11,6 +11,7 @@ import { URL_APP } from "@/lib/constantes";
 import { VERSAO_TERMOS } from "@/lib/legal";
 import { OUTRO_RAMO, obterRamo, temaPadrao } from "@/lib/ramos";
 import { emailDoAdmin, enviarEmail } from "@/lib/email";
+import { aprovacaoAutomatica } from "./aprovacao";
 import { emailCadastroRecebido, emailNovoCadastroAdmin } from "@/features/emails/modelos";
 import { valoresDoForm, type EstadoForm } from "@/components/formulario/tipos";
 import {
@@ -105,16 +106,23 @@ export async function cadastrar(_: EstadoForm, formData: FormData): Promise<Esta
 
   // E-mails de aviso (não bloqueiam o cadastro se falharem ou não estiverem configurados)
   const admin = emailDoAdmin();
+  // Com a aprovação automática, o "cadastro recebido" sobra: a pessoa recebe a confirmação de e-mail do
+  // Supabase e, ao entrar, as boas-vindas com a data do teste (features/auth/aprovacao.ts)
+  const automatica = aprovacaoAutomatica();
   await Promise.all([
-    enviarEmail(emailCadastroRecebido(r.data.email, r.data.nome)),
-    admin ? enviarEmail(emailNovoCadastroAdmin(admin, { nome: r.data.nome, email: r.data.email, telefone })) : Promise.resolve(),
+    automatica ? Promise.resolve() : enviarEmail(emailCadastroRecebido(r.data.email, r.data.nome)),
+    admin
+      ? enviarEmail(emailNovoCadastroAdmin(admin, { nome: r.data.nome, email: r.data.email, telefone }, automatica))
+      : Promise.resolve(),
   ]);
 
   // Sem sessão = confirmação de e-mail ligada no Supabase
   if (!data.session) {
     return {
       ok: true,
-      mensagem: "Cadastro feito! Confira seu e-mail e clique no link para confirmar a conta.",
+      mensagem: automatica
+        ? "Cadastro feito! Confira seu e-mail e toque no link para confirmar. Ao entrar, seu teste grátis já começa."
+        : "Cadastro feito! Confira seu e-mail e clique no link para confirmar a conta.",
     };
   }
 

@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
  * - uma ação principal com o mesmo texto no menu, no topo e no fim ("Começar o teste grátis");
  * - nada aparece "surgindo" ao rolar; só o topo entra uma vez ao carregar; cartões sobem 2px no hover;
  * - cada recurso mostra um pedaço da tela real em vez de ícone genérico;
- * - a aprovação do cadastro é dita com clareza (é o que a pessoa vai encontrar).
+ * - o caminho do cadastro é dito com clareza: confirmar o e-mail e entrar (teste liberado sozinho desde 11/11).
  */
 
 const CADASTRO = `${URL_APP}/cadastro`;
@@ -36,7 +36,7 @@ const PROFISSOES = [
 const PASSOS = [
   {
     titulo: "Crie a conta",
-    texto: "Nome, ramo, e-mail e senha. Uma pessoa confere cada cadastro e libera o acesso; o teste de 3 dias começa nesse dia.",
+    texto: "Nome, ramo, e-mail e senha. Confirme o e-mail e pronto: o acesso é liberado na hora e o teste de 3 dias começa.",
   },
   { titulo: "Monte a agenda", texto: "Cadastre serviços, valores e horários de atendimento. Suba a logo e escolha as cores." },
   { titulo: "Divulgue o link", texto: "Coloque o link na bio, poste os stories e deixe os lembretes avisarem você." },
@@ -72,8 +72,8 @@ const PLANOS_SITE = [
 
 const DUVIDAS = [
   {
-    p: "Por que o cadastro passa por aprovação?",
-    r: "Uma pessoa da equipe confere cada cadastro antes de liberar o acesso, para o Vaguinha ter só profissionais de verdade. Você recebe um e-mail quando a conta for liberada, e o teste de 3 dias começa nesse dia.",
+    p: "Quanto tempo leva para começar a usar?",
+    r: "Um minuto. Você preenche o cadastro, confirma o e-mail e já entra na agenda. O teste de 3 dias começa nesse dia, sem cartão.",
   },
   {
     p: "Preciso instalar alguma coisa?",

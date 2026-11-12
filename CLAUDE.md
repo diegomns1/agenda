@@ -42,7 +42,10 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 
 ## Decisões de produto
 
-- Fase de testes gratuita. Cadastro nasce com `status = 'pendente'`; só o admin aprova/recusa/suspende.
+- Fase de testes gratuita. Cadastro nasce com `status = 'pendente'`. **Desde 11/11/2026 o teste é liberado sozinho**
+  (`features/auth/aprovacao.ts`): na 1ª entrada (e-mail já confirmado), /aguardando-aprovacao aprova com service_role
+  a conta pendente + plano teste + sem validade, grava `ativa_ate` = hoje + DIAS_TESTE, manda StartTrial e o e-mail de
+  boas-vindas. O admin continua recusando/suspendendo. `APROVACAO_MANUAL=1` no env da VPS volta ao modo manual (reload).
 - Admin = usuário com `app_metadata.role = 'admin'` no JWT (SQL em `supabase/migrations/0001_base.sql`).
 - `plano` e `ativa_ate` controlam pagamento manual via Pix. Asaas/Mercado Pago é futuro.
 - **WhatsApp para as clientes finais: sem API** (decisão mantida). Lembretes: push para a profissional 1 dia e 1 h antes; botão "Lembrar cliente"
@@ -68,7 +71,7 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   domínio vaguinha.app verificado por meta tag (`features/rastreio/comum.ts`). `RastreioMeta` (site, telas públicas e
   legais; nunca no painel): aviso de cookies (vg_consent em .vaguinha.app) e pixel só depois do "Aceitar"; guarda utm_* e
   fbclid no cookie vg_origem. `rastreio/servidor.ts` (API de Conversões, META_CAPI_TOKEN): Lead no cadastro (mesmo
-  evento_id do navegador), StartTrial quando o admin aprova (= lead qualificado), Subscribe no 1º pagamento (Asaas);
+  evento_id do navegador), StartTrial quando a conta é liberada (automático: confirmou o e-mail e entrou), Subscribe no 1º pagamento (Asaas);
   uma vez cada (profiles.eventos_meta) e só com consentimento (profiles.origem_anuncio, migração 0021). Funil por
   campanha/anúncio no Painel do dono. Chave na VPS: `ssh -t root@179.198.107.151 bash /root/vaguinha/definir-meta.sh`.
 - **Central do WhatsApp (11/11/2026, PLANO-CENTRAL-WHATSAPP.md no Drive).** O (14) 99802-3550 é o WhatsApp oficial:
