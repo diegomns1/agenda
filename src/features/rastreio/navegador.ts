@@ -94,16 +94,25 @@ export function carregarGoogle() {
   document.head.appendChild(s);
 }
 
+const cadastrosEnviados = new Set<string>();
+
 /**
- * Cadastro concluído no Google: evento sign_up (e "cadastro_concluido" no dataLayer, para gatilhos da tag) e,
- * quando o rótulo estiver configurado, a conversão do Google Ads. `id` evita contar duas vezes o mesmo cadastro.
+ * Cadastro concluído no Google: evento sign_up (e "cadastro_concluido" no dataLayer, para gatilhos da tag) e a
+ * conversão "Inscrição" do Google Ads (valor 1,00 BRL). Só é chamada quando o cadastro deu certo (FormCadastro).
+ * Uma vez por cadastro: o mesmo `id` não dispara de novo nesta página, e o transaction_id faz o Google descartar repetidos.
  */
-export function rastrearCadastroGoogle(id?: string) {
-  if (consentimento() !== "sim" || !window.gtag) return;
+export function rastrearCadastroGoogle(id: string) {
+  if (consentimento() !== "sim" || !window.gtag || cadastrosEnviados.has(id)) return;
+  cadastrosEnviados.add(id);
   window.gtag("event", "sign_up", { method: "email" });
   window.dataLayer!.push({ event: "cadastro_concluido" });
   if (GOOGLE_ADS_CONVERSAO_CADASTRO) {
-    window.gtag("event", "conversion", { send_to: GOOGLE_ADS_CONVERSAO_CADASTRO, ...(id ? { transaction_id: id } : {}) });
+    window.gtag("event", "conversion", {
+      send_to: GOOGLE_ADS_CONVERSAO_CADASTRO,
+      value: 1.0,
+      currency: "BRL",
+      transaction_id: id,
+    });
   }
 }
 

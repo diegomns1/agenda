@@ -38,4 +38,4 @@ export const GOOGLE_TAG_ID = "GTM-PBCD8PX2";
  * Conversão "Inscrição" do Google Ads no formato "AW-123456789/AbCdEfGh" (Google Ads → Metas → Conversões →
  * a ação de inscrição → Configurar tag → "send_to"). Enquanto estiver null, o cadastro manda só o evento sign_up.
  */
-export const GOOGLE_ADS_CONVERSAO_CADASTRO: string | null = null;
+export const GOOGLE_ADS_CONVERSAO_CADASTRO: string | null = "AW-18571039970/i-R6COKq_rYdEOKprpdF"; // "Inscrição", 12/11/2026
