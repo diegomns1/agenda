@@ -30,19 +30,29 @@ export function FormCadastro() {
     setEventoId(crypto.randomUUID());
   }, []);
   useEffect(() => {
-    if (estado.ok && eventoId) {
+    if (!estado.ok) return;
+    // cadastro deu certo: avisa os anúncios (só com o "Aceitar" dos cookies) e, se já entrou, abre a agenda
+    if (eventoId) {
       rastrear("Lead", {}, eventoId);
       rastrearCadastroGoogle(eventoId);
     }
-  }, [estado.ok, eventoId]);
+    if (estado.destino) {
+      const destino = estado.destino;
+      // um instante para os avisos saírem antes de trocar de página
+      const t = setTimeout(() => window.location.assign(destino), 600);
+      return () => clearTimeout(t);
+    }
+  }, [estado.ok, estado.destino, eventoId]);
 
   if (estado.ok) {
     return (
       <div className="grid gap-4">
         <Aviso tipo="sucesso">{estado.mensagem}</Aviso>
-        <Link href="/login" className="inline-flex min-h-toque items-center justify-center text-sm font-medium underline-offset-4 hover:underline">
-          Ir para o login
-        </Link>
+        {estado.destino ? null : (
+          <Link href="/login" className="inline-flex min-h-toque items-center justify-center text-sm font-medium underline-offset-4 hover:underline">
+            Ir para o login
+          </Link>
+        )}
       </div>
     );
   }

@@ -51,7 +51,7 @@ export default async function PaginaPainelDono() {
       <section className="rounded-2xl border bg-card p-4">
         <h2 className="font-semibold">Funil dos anúncios (últimos 30 dias)</h2>
         <p className="mb-3 text-xs text-muted-foreground">
-          Aprovado = confirmou o e-mail e entrou no teste (liberado sozinho; vai para a Meta como StartTrial). Pagou = está num plano
+          Aprovado = entrou no teste (liberado sozinho; vai para a Meta como StartTrial). Pagou = está num plano
           pago (Subscribe).
         </p>
         {p.porOrigem.length === 0 ? (

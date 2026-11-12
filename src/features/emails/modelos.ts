@@ -113,7 +113,7 @@ export function emailNovoCadastroAdmin(
       `E-mail: ${dados.email}`,
       `WhatsApp: ${dados.telefone ?? "não informado"}`,
       ...(automatica
-        ? ["O teste grátis libera sozinho quando a pessoa confirmar o e-mail e entrar. Se for cadastro falso, recuse ou suspenda no Admin."]
+        ? ["O teste grátis libera sozinho quando a pessoa entra no painel. Se for cadastro falso, recuse ou suspenda no Admin."]
         : []),
     ],
     botao: { texto: "Abrir o Admin", url: `${URL_APP}/admin` },

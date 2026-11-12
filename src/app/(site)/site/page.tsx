@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
  * - uma ação principal com o mesmo texto no menu, no topo e no fim ("Começar o teste grátis");
  * - nada aparece "surgindo" ao rolar; só o topo entra uma vez ao carregar; cartões sobem 2px no hover;
  * - cada recurso mostra um pedaço da tela real em vez de ícone genérico;
- * - o caminho do cadastro é dito com clareza: confirmar o e-mail e entrar (teste liberado sozinho desde 11/11).
+ * - o caminho do cadastro é dito com clareza: cadastrou, entrou (teste liberado sozinho desde 11/11).
  */
 
 const CADASTRO = `${URL_APP}/cadastro`;
@@ -36,7 +36,7 @@ const PROFISSOES = [
 const PASSOS = [
   {
     titulo: "Crie a conta",
-    texto: "Nome, ramo, e-mail e senha. Confirme o e-mail e pronto: o acesso é liberado na hora e o teste de 5 dias começa.",
+    texto: "Nome, ramo, e-mail e senha. O acesso é liberado na hora e o teste de 5 dias já começa.",
   },
   { titulo: "Monte a agenda", texto: "Cadastre serviços, valores e horários de atendimento. Suba a logo e escolha as cores." },
   { titulo: "Divulgue o link", texto: "Coloque o link na bio, poste os stories e deixe os lembretes avisarem você." },
@@ -73,7 +73,7 @@ const PLANOS_SITE = [
 const DUVIDAS = [
   {
     p: "Quanto tempo leva para começar a usar?",
-    r: "Um minuto. Você preenche o cadastro, confirma o e-mail e já entra na agenda. O teste de 5 dias começa nesse dia, sem cartão.",
+    r: "Um minuto. Você preenche o cadastro e já entra na agenda. O teste de 5 dias começa nesse dia, sem cartão.",
   },
   {
     p: "Preciso instalar alguma coisa?",

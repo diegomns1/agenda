@@ -126,7 +126,9 @@ export async function cadastrar(_: EstadoForm, formData: FormData): Promise<Esta
     };
   }
 
-  redirect("/");
+  // Com sessão (confirmação de e-mail desligada no Supabase): a tela avisa a Meta e o Google do cadastro e depois
+  // abre a agenda. Um redirect daqui pularia esse aviso (era por isso que a conversão do Google não aparecia).
+  return { ok: true, mensagem: "Cadastro feito! Abrindo a sua agenda...", destino: "/" };
 }
 
 

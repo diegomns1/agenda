@@ -43,7 +43,7 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
 ## Decisões de produto
 
 - Fase de testes gratuita. Cadastro nasce com `status = 'pendente'`. **Desde 11/11/2026 o teste é liberado sozinho**
-  (`features/auth/aprovacao.ts`): na 1ª entrada (e-mail já confirmado), /aguardando-aprovacao aprova com service_role
+  (`features/auth/aprovacao.ts`): na 1ª entrada (Confirm email está desligado: entra direto do cadastro), /aguardando-aprovacao aprova com service_role
   a conta pendente + plano teste + sem validade, grava `ativa_ate` = hoje + DIAS_TESTE, manda StartTrial e o e-mail de
   boas-vindas. O admin continua recusando/suspendendo. `APROVACAO_MANUAL=1` no env da VPS volta ao modo manual (reload).
 - **Teste grátis de 5 dias desde 12/11/2026** (`DIAS_TESTE` em lib/planos.ts; textos fixos com "5 dias" no site,
@@ -76,7 +76,8 @@ Dono do projeto: Diego. Responder sempre em **português do Brasil**.
   ficou como reserva ("Assistente no painel" no menu); só remover depois do áudio (Fase 2) e olhando o uso.
 - **Google Ads (12/11/2026).** Tag GTM-PBCD8PX2 (`GOOGLE_TAG_ID` em rastreio/comum.ts) carregada pelo `RastreioMeta`
   só depois do "Aceitar". Cadastro concluído → `rastrearCadastroGoogle` (sign_up + dataLayer "cadastro_concluido" e,
-  com `GOOGLE_ADS_CONVERSAO_CADASTRO` = "AW-…/rótulo" preenchido, a conversão do Google Ads). Sem envio pelo servidor.
+  a conversão "Inscrição" AW-18571039970/i-R6COKq_rYdEOKprpdF, 1,00 BRL). Sem envio pelo servidor. O `cadastrar`
+  devolve `destino: "/"` em vez de redirect, para a tela disparar os avisos antes de abrir a agenda.
 - **Anúncios da Meta (11/11/2026).** Pixel "Vaguinha Site" 2307852893116834 (BM Vaguinha App, conta Vaguinha CA),
   domínio vaguinha.app verificado por meta tag (`features/rastreio/comum.ts`). `RastreioMeta` (site, telas públicas e
   legais; nunca no painel): aviso de cookies (vg_consent em .vaguinha.app) e pixel só depois do "Aceitar"; guarda utm_* e

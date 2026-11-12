@@ -6,6 +6,8 @@ export type EstadoForm = {
   erros?: Record<string, string[] | undefined>;
   /** Valores digitados, devolvidos em caso de erro para o formulário não "esvaziar". */
   valores?: Record<string, string>;
+  /** Para onde o navegador vai depois do sucesso (quando a tela precisa rodar algo antes, ex.: avisar os anúncios). */
+  destino?: string;
 };
 
 /** Extrai do FormData os campos de texto pedidos (nunca senhas). */

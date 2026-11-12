@@ -10,8 +10,8 @@ import type { Profile } from "@/types/database";
 
 /*
  * APROVAÇÃO AUTOMÁTICA DO TESTE GRÁTIS (11/11/2026)
- * A conta nova é liberada sozinha na primeira vez que a pessoa entra no painel. Entrar exige o e-mail
- * confirmado (quando a confirmação está ligada no Supabase), então só passa quem tem e-mail de verdade.
+ * A conta nova é liberada sozinha na primeira vez que a pessoa entra no painel. Hoje a confirmação de e-mail
+ * está DESLIGADA no Supabase: o cadastro já entra direto. Ligando "Confirm email", só passa quem tem e-mail de verdade.
  * O admin continua podendo recusar ou suspender depois.
  * Para voltar à aprovação manual (ex.: onda de cadastros falsos): APROVACAO_MANUAL=1 no env da VPS + pm2 reload.
  */
@@ -45,7 +45,7 @@ export async function aprovarTesteAutomatico(perfil: Profile | null): Promise<bo
   if (!data?.length) return false;
 
   after(async () => {
-    // Anúncios: StartTrial na Meta (confirmou o e-mail e entrou = lead que começou o teste)
+    // Anúncios: StartTrial na Meta (entrou no painel = lead que começou o teste)
     await registrarAprovacao(perfil.id).catch((e) => console.error("[meta] aprovação", e));
     // Boas-vindas com a data final do teste e o primeiro passo
     if (perfil.email) await enviarEmail(emailContaAprovada(perfil.email, perfil.nome, false, fimDoTeste)).catch(() => {});

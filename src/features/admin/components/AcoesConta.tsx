@@ -138,7 +138,7 @@ export function AcoesConta({ conta }: { conta: Profile }) {
         </form>
         <p className="text-xs text-muted-foreground">
           &quot;Ativa até&quot; em branco = sem data de término. Contas no plano Teste ganham 5 dias automaticamente quando são
-          liberadas (sozinhas, ao confirmar o e-mail e entrar, ou quando você aprova).
+          liberadas (sozinhas, na primeira entrada, ou quando você aprova).
         </p>
       </section>
 

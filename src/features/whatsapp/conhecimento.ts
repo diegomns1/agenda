@@ -45,7 +45,7 @@ Site: ${LINK_SITE}
 
 # Como começar
 1. Criar a conta em ${LINK_CADASTRO} (nome, ramo, WhatsApp, e-mail e senha).
-2. Confirmar o e-mail (chega um link) e entrar: a conta é liberada na hora, sem esperar ninguém,
+2. Entrar: a conta é liberada na hora, sem esperar ninguém (se chegar um e-mail pedindo confirmação, tocar no link),
    e os ${DIAS_TESTE} dias de teste contam a partir daí.
 3. Cadastrar serviços, valores e horários; subir a logo; divulgar o link.
 
@@ -55,7 +55,7 @@ Empresa: DIG STUDIO CRIATIVO LTDA (CNPJ 64.540.250/0001-05), Ourinhos/SP.
 
 # Suporte para quem já usa
 - Esqueceu a senha: na tela de login, "Esqueci minha senha".
-- Conta ainda não liberada: confirmar o e-mail (procurar também no spam/lixo eletrônico) e entrar de novo.
+- Conta ainda não liberada: sair e entrar de novo no painel (se pediu confirmação de e-mail, procurar também no spam).
   Se mesmo assim aparecer "Falta pouco para liberar sua conta", ou a conta foi recusada/suspensa, chamar a equipe.
 - Instalar como app: no iPhone, Safari → Compartilhar → Adicionar à Tela de Início; no Android, aceitar o aviso de instalar.
 - Lembretes não chegam: precisa ter o app adicionado à tela de início e permitir notificações.
