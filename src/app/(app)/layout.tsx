@@ -36,7 +36,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
         mostrarSino={podeLembretes}
       />
       <AvisoInstalar />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-24">{children}</main>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-32">{children}</main>
       <BarraInferior bloqueados={{ "/stories": !podeStories }} />
       <BotaoAssistente estado={whatsapp} />
       <RegistroSW />

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeftIcon } from "lucide-react";
 import { ImportarAgenda } from "@/features/importar/components/ImportarAgenda";
-import { LimparAgenda } from "@/features/importar/components/LimparAgenda";
 
 export const metadata: Metadata = { title: "Importar agenda" };
 
@@ -18,7 +17,6 @@ export default function PaginaImportarAgenda() {
         <p className="text-sm text-muted-foreground">Traga seus horários de uma vez, sem cadastrar um por um.</p>
       </div>
       <ImportarAgenda />
-      <LimparAgenda />
     </div>
   );
 }

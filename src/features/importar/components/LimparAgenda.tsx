@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { limparAgenda } from "@/features/importar/actions";
 
-/* "Começar do zero": apaga o que foi importado (ou a agenda toda) para importar de novo. */
+/* "Começar do zero": apaga o que foi importado (ou a agenda toda) para importar de novo. Fica no pé da Agenda. */
 export function LimparAgenda() {
   const router = useRouter();
   const [aberto, setAberto] = useState(false);
@@ -55,10 +55,8 @@ export function LimparAgenda() {
   }
 
   return (
-    <section className="grid grid-cols-1 gap-2 rounded-2xl border border-destructive/30 bg-card p-4 text-sm">
-      <h2 className="font-semibold">Deu errado? Comece do zero</h2>
-      <p className="text-muted-foreground">Apaga o que veio do Google (ou a agenda toda) para você importar de novo, com calma.</p>
-      <Button variant="outline" className="h-toque w-fit text-destructive sm:h-toque" onClick={() => setAberto(true)}>
+    <div>
+      <Button variant="ghost" size="sm" className="h-toque text-muted-foreground hover:text-destructive sm:h-8" onClick={() => setAberto(true)}>
         <Trash2Icon />
         Limpar agenda
       </Button>
@@ -67,7 +65,7 @@ export function LimparAgenda() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Limpar a agenda</AlertDialogTitle>
-            <AlertDialogDescription>Não dá para desfazer. Escolha o que apagar:</AlertDialogDescription>
+            <AlertDialogDescription>Para começar do zero (por exemplo, depois de importar errado). Não dá para desfazer. Escolha o que apagar:</AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="grid grid-cols-1 gap-3 text-sm">
@@ -118,6 +116,6 @@ export function LimparAgenda() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </section>
+    </div>
   );
 }

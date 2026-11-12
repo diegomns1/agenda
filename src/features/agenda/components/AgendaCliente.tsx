@@ -32,6 +32,7 @@ import { destacarAgendamento, LinkAgenda, ProvedorNavegacaoAgenda, useMovimentoA
 import { SemanaLista } from "./SemanaLista";
 import { VISUAL_DATA } from "@/features/agenda/visual";
 import { FormAgendamento, type ClienteResumo, type InicialForm } from "./FormAgendamento";
+import { LimparAgenda } from "@/features/importar/components/LimparAgenda";
 
 type Props = {
   visao: Visao;
@@ -189,9 +190,9 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
   }, [visao, data]);
 
   return (
-    // pb-16 no celular: espaço para o botão flutuante "Marcar" não cobrir o fim da página
+    // pb-20 no celular: espaço para os botões flutuantes ("Marcar" e "Assistente", um em cima do outro) não cobrirem o fim da página
     <ProvedorNavegacaoAgenda value={navegar}>
-    <div className="grid gap-4 pb-16 sm:pb-0">
+    <div className="grid gap-4 pb-20 sm:pb-0">
       <BarraAgenda visao={visao} data={data} aoMarcar={() => abrirNovo("atendimento")} aoBloquear={() => abrirNovo("bloqueio")} />
 
       {/* conteúdo do período: desliza ao trocar e esmaece enquanto o próximo carrega (movimento.tsx) */}
@@ -325,6 +326,9 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
           </Button>
         </div>
       ) : null}
+
+      {/* importou errado? apaga e começa de novo */}
+      <LimparAgenda />
 
       {/* Marcar ao alcance do polegar (no celular o botão do topo fica longe) */}
       <Flutuante>
