@@ -31,9 +31,14 @@ export function assinaturaValida(corpo: string, cabecalho: string | null): boole
 }
 
 async function chamarMeta(corpo: Record<string, unknown>): Promise<boolean> {
+  return (await chamarMetaComId(corpo)) !== null;
+}
+
+/** Envia e devolve o id da mensagem na Meta (wamid), ou null se a Meta recusou. Sem chave: "simulado". */
+async function chamarMetaComId(corpo: Record<string, unknown>): Promise<string | null> {
   if (!envioConfigurado()) {
     console.log("[whatsapp simulado] →", JSON.stringify(corpo));
-    return true;
+    return "simulado";
   }
   try {
     const r = await fetch(`https://graph.facebook.com/${VERSAO}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
@@ -42,12 +47,54 @@ async function chamarMeta(corpo: Record<string, unknown>): Promise<boolean> {
       body: JSON.stringify({ messaging_product: "whatsapp", ...corpo }),
       signal: AbortSignal.timeout(15_000),
     });
-    if (!r.ok) console.error("[whatsapp] envio recusado", r.status, (await r.text()).slice(0, 500));
-    return r.ok;
+    if (!r.ok) {
+      console.error("[whatsapp] envio recusado", r.status, (await r.text()).slice(0, 500));
+      return null;
+    }
+    const json = (await r.json().catch(() => ({}))) as { messages?: { id?: string }[] };
+    return json.messages?.[0]?.id ?? "";
   } catch (e) {
     console.error("[whatsapp] falha no envio", e);
-    return false;
+    return null;
   }
+}
+
+/** Sobe um arquivo para a Meta (vale 30 dias lá) e devolve o id para mandar na mensagem. */
+export async function subirMidia(dados: Buffer, mime: string, nome: string): Promise<string | null> {
+  if (!envioConfigurado()) return "simulado";
+  try {
+    const form = new FormData();
+    form.append("messaging_product", "whatsapp");
+    form.append("type", mime);
+    form.append("file", new Blob([new Uint8Array(dados)], { type: mime }), nome);
+    const r = await fetch(`https://graph.facebook.com/${VERSAO}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/media`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` },
+      body: form,
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!r.ok) {
+      console.error("[whatsapp] upload de mídia recusado", r.status, (await r.text()).slice(0, 500));
+      return null;
+    }
+    return ((await r.json()) as { id?: string }).id ?? null;
+  } catch (e) {
+    console.error("[whatsapp] falha no upload de mídia", e);
+    return null;
+  }
+}
+
+/** Manda foto, áudio ou documento já subido (subirMidia). Devolve o wamid ou null. */
+export async function enviarMidia(
+  para: string,
+  tipo: "image" | "audio" | "document",
+  mediaId: string,
+  extra: { legenda?: string; nome?: string } = {},
+): Promise<string | null> {
+  const conteudo: Record<string, unknown> = { id: mediaId };
+  if (extra.legenda && tipo !== "audio") conteudo.caption = extra.legenda.slice(0, 1024);
+  if (tipo === "document" && extra.nome) conteudo.filename = extra.nome.slice(0, 200);
+  return chamarMetaComId({ to: para, type: tipo, [tipo]: conteudo });
 }
 
 /**

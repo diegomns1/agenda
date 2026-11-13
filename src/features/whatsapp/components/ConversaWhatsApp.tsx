@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { BotIcon, ExternalLinkIcon, Loader2Icon, MegaphoneIcon, SendHorizontalIcon, UserRoundIcon } from "lucide-react";
+import { BotIcon, ExternalLinkIcon, Loader2Icon, MegaphoneIcon, UserRoundIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,11 +11,11 @@ import { abrirConversa, moverContato, mudarAtendimento, responderContato, type C
 import { descreverNumero } from "../numero";
 import { COLUNAS, colunaDe, nomeDe, quando } from "./colunas";
 import { MidiaMensagem } from "./MidiaMensagem";
+import { Compositor } from "./Compositor";
 
 /** Conversa de um contato na Central: histórico, assumir / devolver ao robô, mover de coluna e responder. */
 export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: ContatoCentral; aoFechar: () => void; aoMudar: () => void }) {
   const [mensagens, setMensagens] = useState<MensagemCentral[] | null>(null);
-  const [texto, setTexto] = useState("");
   const [enviando, iniciar] = useTransition();
   const fimRef = useRef<HTMLDivElement>(null);
   const tel = contato.telefone;
@@ -45,19 +45,10 @@ export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: Cont
     fimRef.current?.scrollIntoView({ block: "end" });
   }, [total]);
 
-  function enviar() {
-    const limpo = texto.trim();
-    if (!limpo) return;
-    iniciar(async () => {
-      const r = await responderContato(tel, limpo);
-      if (!r.ok) {
-        toast.error(r.erro ?? "Não foi.");
-        return;
-      }
-      setTexto("");
-      await carregar();
-      aoMudar();
-    });
+  async function enviarTexto(limpo: string) {
+    const r = await responderContato(tel, limpo);
+    if (!r.ok) toast.error(r.erro ?? "Não foi.");
+    return r.ok;
   }
 
   function atendimento(novo: "humano" | "robo") {
@@ -182,31 +173,15 @@ export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: Cont
               </select>
             </label>
           </div>
-          <form
-            className="flex items-end gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              enviar();
+          <Compositor
+            telefone={tel}
+            placeholder={comVoce ? "Escreva a resposta" : "Responder (o robô sai)"}
+            enviarTexto={enviarTexto}
+            aoEnviar={() => {
+              void carregar();
+              aoMudar();
             }}
-          >
-            <textarea
-              value={texto}
-              onChange={(e) => setTexto(e.target.value.slice(0, 4000))}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  enviar();
-                }
-              }}
-              rows={1}
-              placeholder={comVoce ? "Escreva a resposta" : "Responder (o robô sai)"}
-              aria-label="Resposta"
-              className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-background px-3.5 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/40 sm:text-sm"
-            />
-            <Button type="submit" size="icon" className="size-11 shrink-0 rounded-full" disabled={enviando || !texto.trim()} aria-label="Enviar">
-              {enviando ? <Loader2Icon className="animate-spin" /> : <SendHorizontalIcon />}
-            </Button>
-          </form>
+          />
         </div>
       </DialogContent>
     </Dialog>

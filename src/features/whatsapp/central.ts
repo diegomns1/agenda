@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { ehAdmin, obterUsuario } from "@/lib/auth";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import type { WhatsappContato, WhatsappMensagem } from "@/types/database";
+import { erroDeJanela } from "./janela";
 import { linksTemporarios } from "./midia";
 import { enviarTexto } from "./meta";
 
@@ -135,13 +136,8 @@ export async function responderContato(telefone: string, texto: string): Promise
   const admin = await exigirAdmin();
   const limpo = texto.trim().slice(0, 4000);
   if (!limpo) return { ok: false, erro: "Escreva a mensagem." };
-  const { data: c } = await admin.from("whatsapp_contatos").select("ultima_do_contato_em, origem").eq("telefone", telefone).maybeSingle();
-  if (!c) return { ok: false, erro: "Contato não encontrado." };
-  const janelaH = c.origem ? 72 : 24;
-  const ultima = c.ultima_do_contato_em ? new Date(c.ultima_do_contato_em).getTime() : 0;
-  if (Date.now() - ultima > janelaH * 3_600_000) {
-    return { ok: false, erro: `Passaram mais de ${janelaH} h desde a última mensagem dessa pessoa: a Meta só deixa responder depois que ela escrever de novo.` };
-  }
+  const janela = await erroDeJanela(admin, telefone);
+  if (janela) return { ok: false, erro: janela };
   if (!(await enviarTexto(telefone, limpo))) return { ok: false, erro: "A Meta não aceitou a mensagem. Tente de novo; se continuar, me mande um print." };
   await admin.from("whatsapp_mensagens").insert({ telefone, de: "equipe", texto: limpo });
   await admin
