@@ -9,8 +9,10 @@ export function normalizar(t: string) {
 /** Frases de resposta automática (WhatsApp Business, chatbots de menu). Comparadas sem acento e em minúsculas. */
 const FRASE_AUTOMATICA = new RegExp(
   [
-    "mensagem automatica",
-    "resposta automatica",
+    // "mensagem automática" sozinha não serve: gente pergunta "vocês mandam mensagem automática?" (simulação, 12/11/2026)
+    "(esta|essa) (e|eh) uma (mensagem|resposta) automatica",
+    "^\\W*(mensagem|resposta) automatica",
+    "(mensagem|resposta) automatica[,.!:]? (por favor,? )?nao (responda|e necessario)",
     "obrigad[oa] por (entrar em )?contato",
     "agradecemos (o seu|seu|o) contato",
     "retornaremos (o mais breve|em breve|assim que|seu contato)",

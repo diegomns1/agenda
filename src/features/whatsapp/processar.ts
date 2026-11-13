@@ -440,6 +440,12 @@ async function atender(
   if (r.mandouLink && contato.etapa === "robo") mudar.etapa = "link";
   await admin.from("whatsapp_contatos").update(mudar).eq("telefone", contato.telefone);
 
+  // nada a dizer (a pessoa só agradeceu depois da despedida): fica quieta, como gente
+  if (r.silencio) {
+    if (r.chamarEquipe) await chamarDiego(admin, contato, r.chamarEquipe);
+    return;
+  }
+
   // a Serena "digita" no ritmo de uma pessoa (com o "digitando..." aparecendo) em vez de responder na hora
   const falta = tempoDeResposta(r.texto) - (Date.now() - chegouEm);
   if (falta > 0) {
