@@ -1,4 +1,5 @@
-import { LightbulbIcon, MessageCircleIcon, MessageSquareWarningIcon } from "lucide-react";
+import Link from "next/link";
+import { GraduationCapIcon, LightbulbIcon, MessageCircleIcon, MessageSquareWarningIcon } from "lucide-react";
 import { NOME_APP, SUPORTE_WHATSAPP } from "@/lib/constantes";
 import { linkWhatsApp } from "@/lib/telefone";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,9 +26,15 @@ export function FalarComSuporte({ nome, email }: Props) {
     <Card>
       <CardHeader>
         <CardTitle>Falar com o suporte</CardTitle>
-        <CardDescription>Dúvidas ou algo que não funcionou: fale com a gente pelo WhatsApp. Ideias: mande por aqui mesmo.</CardDescription>
+        <CardDescription>Veja os tutoriais, tire dúvidas pelo WhatsApp ou mande uma ideia por aqui mesmo.</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-2 sm:grid-cols-3">
+      <CardContent className="grid gap-2 sm:grid-cols-2">
+        <Link href="/tutoriais" className={OPCAO}>
+          <span className={ICONE}>
+            <GraduationCapIcon className="size-4" />
+          </span>
+          Ver os tutoriais
+        </Link>
         {opcoes.map(({ Icone, titulo, texto }) => (
           <a key={titulo} href={linkWhatsApp(SUPORTE_WHATSAPP, texto)} target="_blank" rel="noopener noreferrer" className={OPCAO}>
             <span className={ICONE}>

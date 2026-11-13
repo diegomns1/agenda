@@ -17,6 +17,8 @@ import { listarAgendamentosDias, listarProximosAtendimentos, listarSolicitacoesP
 import { SolicitacoesPendentes } from "@/features/agenda/components/SolicitacoesPendentes";
 import { contarLembretesPendentes } from "@/features/lembretes/queries";
 import { Button } from "@/components/ui/button";
+import { criarClienteServidor } from "@/lib/supabase/server";
+import { PrimeirosPassos, type Passo } from "@/features/tutoriais/components/PrimeirosPassos";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Hoje" };
@@ -26,7 +28,15 @@ export default async function PaginaHoje() {
   const hoje = hojeISO();
   const podeLembretes = temRecurso(perfil?.plano, "lembretes");
   const podeRelatorios = temRecurso(perfil?.plano, "relatorios");
-  const [deHoje, proximos, lembretes, solicitacoes, vagas, resumo, whatsapp] = await Promise.all([
+  const supabase = await criarClienteServidor();
+  const contar = async (tabela: "servicos" | "clientes" | "agendamentos") => {
+    const r =
+      tabela === "agendamentos"
+        ? await supabase.from("agendamentos").select("id", { count: "exact", head: true }).eq("tipo", "atendimento")
+        : await supabase.from(tabela).select("id", { count: "exact", head: true });
+    return r.count ?? 0;
+  };
+  const [deHoje, proximos, lembretes, solicitacoes, vagas, resumo, whatsapp, nServicos, nClientes, nAtendimentos] = await Promise.all([
     listarAgendamentosDias(hoje),
     listarProximosAtendimentos(5),
     podeLembretes ? contarLembretesPendentes() : Promise.resolve(0),
@@ -34,13 +44,36 @@ export default async function PaginaHoje() {
     podeRelatorios ? listarVagas() : Promise.resolve([]),
     podeRelatorios ? resumoDoMes().catch(() => null) : Promise.resolve(null),
     estadoWhatsApp().catch(() => ({ via: "painel" as const })),
+    contar("servicos"),
+    contar("clientes"),
+    contar("agendamentos"),
   ]);
 
   const termos = termosDoRamo(perfil?.ramo);
   const semRamo = Boolean(perfil && !perfil.ramo);
   const atendimentosHoje = deHoje.filter((a) => a.tipo === "atendimento" && a.status !== "cancelado");
   const faturamentoHoje = atendimentosHoje.filter((a) => a.status !== "faltou").reduce((s, a) => s + (a.valor ?? 0), 0);
-  const perfilIncompleto = !perfil?.nome_negocio || !perfil?.logo_url || !perfil?.telefone;
+  const passos: Passo[] = [
+    {
+      feito: Boolean(perfil?.nome_negocio && perfil?.telefone),
+      titulo: "Seus dados",
+      texto: "Nome do negócio, WhatsApp e horário de atendimento.",
+      href: "/perfil",
+      botao: "Preencher",
+    },
+    { feito: nServicos > 0, titulo: "Seus serviços", texto: "Cada serviço com o tempo que leva e o valor.", href: "/servicos", botao: "Cadastrar" },
+    {
+      feito: nClientes > 0,
+      titulo: "Seus clientes",
+      texto: "Usa o Google Agenda? Traga tudo de uma vez. Se não, cadastre os clientes.",
+      href: "/agenda/importar",
+      botao: "Importar",
+    },
+    { feito: nAtendimentos > 0, titulo: "Primeiro horário", texto: "Marque um atendimento na agenda.", href: "/agenda?novo=atendimento", botao: "Marcar" },
+  ];
+  const comecando = passos.some((p) => !p.feito);
+  // o "Complete seu perfil" (logo) só aparece depois dos primeiros passos, para não competir com eles
+  const perfilIncompleto = !comecando && (!perfil?.nome_negocio || !perfil?.logo_url || !perfil?.telefone);
   const hora = Number(formatarData(new Date(), "H"));
   const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
 
@@ -72,6 +105,8 @@ export default async function PaginaHoje() {
           </p>
         ) : null}
       </section>
+
+      <PrimeirosPassos passos={passos} />
 
       <SolicitacoesPendentes solicitacoes={solicitacoes} />
 

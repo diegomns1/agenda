@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import {
   BotMessageSquareIcon,
   ChartColumnIcon,
+  GraduationCapIcon,
   LifeBuoyIcon,
   LightbulbIcon,
   LogOutIcon,
@@ -61,6 +62,12 @@ export function MenuConta({ admin, linkSuporte }: Props) {
             <Link href="/relatorios">
               <ChartColumnIcon />
               Relatórios do mês
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className={ITEM}>
+            <Link href="/tutoriais">
+              <GraduationCapIcon />
+              Tutoriais
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className={ITEM}>
