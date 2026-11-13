@@ -13,6 +13,7 @@ import { aplicarProposta, processarMensagem } from "@/features/assistente/nucleo
 import { esquemaProposta, type MensagemChat, type Proposta } from "@/features/assistente/tipos";
 import type { Json, Profile, WhatsappContato } from "@/types/database";
 import { responderAtendimento, type ModoAtendimento } from "./atendimento";
+import { normalizar, pareceRespostaAutomatica } from "./robo";
 import { enviarBotoes, enviarTexto, mostrarDigitando } from "./meta";
 
 /*
@@ -56,22 +57,6 @@ const LIMITE_ROBO_HORA = 30;
 const SEGUNDOS_INSTANTANEA = 6;
 const MIN_CARACTERES_INSTANTANEA = 25;
 const LIMITE_INSTANTANEAS = 3;
-
-/** Frases de resposta automática (WhatsApp Business, chatbots de menu). Comparadas sem acento e em minúsculas. */
-const FRASE_AUTOMATICA = new RegExp(
-  [
-    "mensagem automatica",
-    "resposta automatica",
-    "obrigad[oa] por (entrar em )?contato",
-    "agradecemos (o seu|seu|o) contato",
-    "retornaremos (o mais breve|em breve|assim que|seu contato)",
-    "em breve (retornaremos|responderemos|um (de nossos|dos nossos) atendentes)",
-    "digite o numero d[ae]",
-    "escolha uma das opcoes",
-    "selecione uma das opcoes",
-    "responda com o numero",
-  ].join("|"),
-);
 
 /** Lê o corpo do webhook da Meta e devolve só as mensagens recebidas (ignora avisos de entrega/leitura). */
 export function lerWebhook(corpo: unknown): Recebida[] {
@@ -175,16 +160,12 @@ async function historicoRecente(admin: Admin, telefone: string): Promise<Mensage
   return falas;
 }
 
-function normalizar(t: string) {
-  return t.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
-}
-
 /**
  * Do outro lado parece ser outro robô (resposta automática de outra empresa)? Se a IA continuar respondendo,
  * os dois ficam conversando o dia inteiro. Olha as últimas 6 h desta conversa (a mensagem atual já está gravada).
  */
 export async function motivoRobo(admin: Admin, telefone: string, texto: string): Promise<string | null> {
-  if (FRASE_AUTOMATICA.test(normalizar(texto))) return "a mensagem parece resposta automática";
+  if (pareceRespostaAutomatica(texto)) return "a mensagem parece resposta automática";
   const { data } = await admin
     .from("whatsapp_mensagens")
     .select("de, texto, criado_em")

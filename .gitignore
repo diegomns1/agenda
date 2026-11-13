@@ -44,3 +44,6 @@ next-env.d.ts
 # arquivos locais com segredos
 *.local.sql
 
+
+# simulações da Serena (conversas e custos)
+/scripts/serena/resultados/
