@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { assistenteConfigurado, clienteAnthropic, custoEmDolar, MODELO_ATENDIMENTO, PRECO_ATENDIMENTO } from "@/lib/anthropic";
 import { formatarData } from "@/lib/datas";
 import { PLANOS } from "@/lib/planos";
+import { primeiroNome } from "@/lib/texto";
 import type { Profile } from "@/types/database";
 import type { MensagemChat } from "@/features/assistente/tipos";
 import { CONHECIMENTO, LINK_CADASTRO } from "./conhecimento";
@@ -56,7 +57,9 @@ Regras de ouro:
 - Nunca invente preço, desconto, prazo ou recurso. Nunca peça senha, cartão ou documento.
 - Você não se apresenta como robô, mas também nunca finge ser gente: se perguntarem se é robô ou pessoa, diga a verdade
   com leveza: você é a Serena, assistente virtual do Vaguinha, e a equipe acompanha as conversas.
-- Use chamar_equipe quando: a pessoa pedir para falar com uma pessoa; estiver irritada ou reclamando; o assunto for pagamento,
+- Perguntar com quem está falando, ou se você é robô, NÃO é pedido para falar com uma pessoa: só responda.
+- Fale que a equipe acompanha as conversas no máximo uma vez na conversa toda.
+- Use chamar_equipe quando: a pessoa pedir claramente para falar com uma pessoa; estiver irritada ou reclamando; o assunto for pagamento,
   cobrança, troca de plano, cancelamento, reembolso, desconto, parceria ou erro no sistema; ou você não souber responder.
   Depois de chamar, diga que a equipe vai responder por aqui mesmo assim que possível. Se a equipe JÁ foi chamada, não chame de novo:
   diga que já avisou e continue ajudando no que puder.
@@ -124,6 +127,17 @@ function contextoDaPessoa(e: EntradaAtendimento) {
     linhas.push(`Cadastro: ${e.perfil.nome}, plano ${PLANOS[e.perfil.plano as keyof typeof PLANOS]?.nome ?? e.perfil.plano}, conta ${e.perfil.status}${e.perfil.ativa_ate ? `, acesso até ${e.perfil.ativa_ate}` : ""}.`);
   }
   if (e.jaSabe.linkEnviado) linhas.push("O link de cadastro JÁ foi mandado nesta conversa: não mande de novo, a não ser que a pessoa peça ou diga que não abriu.");
+
+  // o modelo tende a imitar o próprio histórico (nome em toda mensagem, mesmas frases): avisos concretos ajudam mais que regra geral
+  const minhas = e.historico.filter((m) => m.papel === "assistente").slice(-4).map((m) => m.texto);
+  const nome = primeiroNome(e.jaSabe.nome || e.jaSabe.nomeWhatsapp || "");
+  if (nome && minhas.slice(-3).some((t) => normalizarTexto(t).includes(normalizarTexto(nome)))) {
+    linhas.push(`Você já chamou a pessoa de ${nome} nas últimas mensagens: NÃO use o nome dela nesta resposta.`);
+  }
+  if (minhas.length) {
+    const lista = minhas.map((t) => `- ${t.replace(/\s+/g, " ").slice(0, 300)}`).join("\n");
+    linhas.push(`Suas últimas mensagens (não repita frases, aberturas nem finais delas):\n${lista}`);
+  }
   linhas.push(e.jaSabe.equipeChamada ? "A equipe JÁ foi chamada nesta conversa." : "A equipe ainda não foi chamada.");
   return linhas.join("\n");
 }
@@ -134,6 +148,27 @@ export function montarSistema(e: EntradaAtendimento): Anthropic.Beta.BetaTextBlo
     { type: "text", text: `${INSTRUCOES}\n\nBASE DE CONHECIMENTO:\n${CONHECIMENTO}`, cache_control: { type: "ephemeral" } },
     { type: "text", text: `${MODO[e.modo]}\n\n${contextoDaPessoa(e)}` },
   ];
+}
+
+function normalizarTexto(t: string) {
+  return t.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+}
+
+/** Sequências de 5 palavras da resposta nova que já apareceram nas mensagens anteriores da Serena. */
+export function trechosRepetidos(texto: string, anteriores: string[]): string[] {
+  const palavras = (t: string) => normalizarTexto(t).split(" ").filter(Boolean);
+  const usados = new Set<string>();
+  for (const a of anteriores) {
+    const p = palavras(a);
+    for (let i = 0; i + 5 <= p.length; i++) usados.add(p.slice(i, i + 5).join(" "));
+  }
+  const p = palavras(texto);
+  const achados = new Set<string>();
+  for (let i = 0; i + 5 <= p.length; i++) {
+    const g = p.slice(i, i + 5).join(" ");
+    if (usados.has(g)) achados.add(g);
+  }
+  return [...achados];
 }
 
 /** Garante o https:// nos endereços do Vaguinha (sem ele, alguns celulares não deixam tocar no link). */
@@ -220,6 +255,35 @@ export async function responderAtendimento(e: EntradaAtendimento): Promise<Resul
   }
 
   if (!resultado.texto) resultado.texto = resultado.mandouLink ? `Aqui está o link para criar sua conta com teste grátis: ${LINK_CADASTRO}` : "Pode me contar um pouco mais?";
+
+  // repetiu frase de antes? reescreve uma vez com outras palavras (menos quando tem link, para não estragar o endereço)
+  const anteriores = e.historico.filter((m) => m.papel === "assistente").map((m) => m.texto);
+  const repetidos = trechosRepetidos(resultado.texto, anteriores);
+  if (repetidos.length && !/https?:\/\//.test(resultado.texto)) {
+    try {
+      const msg = await cliente.beta.messages.create({
+        model: MODELO_ATENDIMENTO,
+        max_tokens: 2048,
+        output_config: { effort: "low" },
+        system:
+          "Você reescreve uma mensagem de WhatsApp da Serena, atendente do Vaguinha, para ela não repetir o que já disse. " +
+          "Mesmo sentido e mesmas informações, outras palavras, tom natural e informal do Brasil, no máximo 2 frases curtas, " +
+          "sem markdown. Não use o nome da pessoa. Responda só com a mensagem reescrita.",
+        messages: [
+          {
+            role: "user",
+            content: `Mensagem:\n${resultado.texto}\n\nTrechos que ela já usou e não podem aparecer de novo:\n${repetidos.map((t) => `- ${t}`).join("\n")}`,
+          },
+        ],
+      });
+      tokens.entrada += msg.usage.input_tokens;
+      tokens.saida += msg.usage.output_tokens;
+      const nova = msg.content.filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text").map((b) => b.text.trim()).join(" ").trim();
+      if (msg.stop_reason === "end_turn" && nova) resultado.texto = nova;
+    } catch (erro) {
+      console.error("[whatsapp] reescrever resposta repetida", erro);
+    }
+  }
   resultado.texto = linksClicaveis(resultado.texto);
   resultado.custoUsd = custoEmDolar(tokens, PRECO_ATENDIMENTO);
   return resultado;
