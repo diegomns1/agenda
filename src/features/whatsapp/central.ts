@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { ehAdmin, obterUsuario } from "@/lib/auth";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
-import type { WhatsappContato } from "@/types/database";
+import type { WhatsappContato, WhatsappMensagem } from "@/types/database";
+import { linksTemporarios } from "./midia";
 import { enviarTexto } from "./meta";
 
 /*
@@ -17,7 +18,15 @@ export type ContatoCentral = WhatsappContato & {
   ultima: { de: string; texto: string } | null;
 };
 
-export type MensagemCentral = { id: number; de: "contato" | "robo" | "equipe" | "sistema"; texto: string; criado_em: string };
+export type MensagemCentral = Pick<
+  WhatsappMensagem,
+  "id" | "de" | "texto" | "criado_em" | "tipo" | "midia_mime" | "midia_nome" | "transcricao" | "status"
+> & {
+  /** link temporário (1 h) do arquivo; null se não tem arquivo ou já foi apagado (90 dias) */
+  url: string | null;
+  /** tinha arquivo, mas não está mais disponível */
+  semArquivo: boolean;
+};
 
 const DIAS_ESFRIAR = 3;
 const ETAPAS = ["robo", "link", "cadastrou", "assinou", "sem_resposta"] as const;
@@ -75,12 +84,20 @@ export async function abrirConversa(telefone: string): Promise<MensagemCentral[]
   const admin = await exigirAdmin();
   const { data } = await admin
     .from("whatsapp_mensagens")
-    .select("id, de, texto, criado_em")
+    .select("id, de, texto, criado_em, tipo, midia_path, midia_mime, midia_nome, transcricao, status")
     .eq("telefone", telefone)
     .order("criado_em", { ascending: false })
     .limit(300);
   await admin.from("whatsapp_contatos").update({ nao_lidas: 0 }).eq("telefone", telefone);
-  return ((data ?? []) as MensagemCentral[]).reverse();
+  const linhas = (data ?? []) as (Omit<MensagemCentral, "url" | "semArquivo"> & { midia_path: string | null })[];
+  const links = await linksTemporarios(admin, linhas.map((m) => m.midia_path).filter((x): x is string => Boolean(x)));
+  return linhas
+    .map(({ midia_path, ...m }) => ({
+      ...m,
+      url: midia_path ? (links.get(midia_path) ?? null) : null,
+      semArquivo: !midia_path && m.tipo !== "texto" && m.tipo !== "localizacao" && m.tipo !== "contato",
+    }))
+    .reverse();
 }
 
 /** Assumir (o robô fica quieto) ou devolver ao robô. */

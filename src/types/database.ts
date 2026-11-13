@@ -240,6 +240,26 @@ export type WhatsappContato = {
   criado_em: string;
   ultima_msg_em: string;
   ultima_do_contato_em: string | null;
+  bloqueado: boolean;
+  bloqueado_em: string | null;
+};
+
+export type TipoMensagemWhatsapp = "texto" | "imagem" | "audio" | "video" | "documento" | "figurinha" | "localizacao" | "contato" | "outro";
+
+export type WhatsappMensagem = {
+  id: number;
+  telefone: string;
+  de: "contato" | "robo" | "equipe" | "sistema";
+  texto: string;
+  wamid: string | null;
+  criado_em: string;
+  tipo: TipoMensagemWhatsapp;
+  midia_path: string | null;
+  midia_mime: string | null;
+  midia_nome: string | null;
+  midia_bytes: number | null;
+  transcricao: string | null;
+  status: "enviada" | "entregue" | "lida" | "falhou" | null;
 };
 
 export type Database = {
@@ -346,9 +366,9 @@ export type Database = {
         Relationships: [];
       };
       whatsapp_mensagens: {
-        Row: { id: number; telefone: string; de: "contato" | "robo" | "equipe" | "sistema"; texto: string; wamid: string | null; criado_em: string };
-        Insert: { telefone: string; de: "contato" | "robo" | "equipe" | "sistema"; texto: string; wamid?: string | null; criado_em?: string };
-        Update: Partial<{ texto: string }>;
+        Row: WhatsappMensagem;
+        Insert: Pick<WhatsappMensagem, "telefone" | "de" | "texto"> & Partial<Omit<WhatsappMensagem, "id">>;
+        Update: Partial<Omit<WhatsappMensagem, "id" | "telefone">>;
         Relationships: [];
       };
       whatsapp_recebidas: {

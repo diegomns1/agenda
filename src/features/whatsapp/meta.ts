@@ -50,6 +50,35 @@ async function chamarMeta(corpo: Record<string, unknown>): Promise<boolean> {
   }
 }
 
+/**
+ * Baixa um arquivo recebido (foto, áudio, documento): a Meta manda só o id; o endereço do arquivo vale por
+ * alguns minutos e também pede a chave. null se não deu (sem chave, arquivo grande demais ou fora do ar).
+ */
+export async function baixarMidia(mediaId: string, limiteBytes = 16 * 1024 * 1024): Promise<{ dados: Buffer; mime: string } | null> {
+  if (!envioConfigurado()) return null;
+  const auth = { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` };
+  try {
+    const info = await fetch(`https://graph.facebook.com/${VERSAO}/${encodeURIComponent(mediaId)}`, { headers: auth, signal: AbortSignal.timeout(15_000) });
+    if (!info.ok) {
+      console.error("[whatsapp] mídia: info recusada", info.status, (await info.text()).slice(0, 300));
+      return null;
+    }
+    const { url, mime_type, file_size } = (await info.json()) as { url?: string; mime_type?: string; file_size?: number };
+    if (!url || (file_size && file_size > limiteBytes)) return null;
+    const arquivo = await fetch(url, { headers: auth, signal: AbortSignal.timeout(60_000) });
+    if (!arquivo.ok) {
+      console.error("[whatsapp] mídia: download recusado", arquivo.status);
+      return null;
+    }
+    const dados = Buffer.from(await arquivo.arrayBuffer());
+    if (dados.length > limiteBytes) return null;
+    return { dados, mime: (mime_type || arquivo.headers.get("content-type") || "application/octet-stream").split(";")[0].trim() };
+  } catch (e) {
+    console.error("[whatsapp] mídia: falha ao baixar", e);
+    return null;
+  }
+}
+
 /** Corta em pedaços sem quebrar no meio de uma linha, quando possível. */
 function emPedacos(texto: string, limite: number) {
   const pedacos: string[] = [];

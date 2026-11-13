@@ -11,9 +11,10 @@ import { primeiroNome } from "@/lib/texto";
 import { interpretar } from "@/features/assistente/interpretar";
 import { aplicarProposta, processarMensagem } from "@/features/assistente/nucleo";
 import { esquemaProposta, type MensagemChat, type Proposta } from "@/features/assistente/tipos";
-import type { Json, Profile, WhatsappContato } from "@/types/database";
+import type { Json, Profile, TipoMensagemWhatsapp, WhatsappContato } from "@/types/database";
 import { responderAtendimento, type ModoAtendimento } from "./atendimento";
 import { normalizar, pareceRespostaAutomatica } from "./robo";
+import { apagarMidiaVelha, guardarMidiaRecebida, rotuloMidia } from "./midia";
 import { enviarBotoes, enviarTexto, mostrarDigitando } from "./meta";
 
 /*
@@ -32,8 +33,12 @@ export type Recebida = {
   wamid: string;
   /** número de quem mandou, como a Meta informa (wa_id: só dígitos) */
   de: string;
-  tipo: "texto" | "botao" | "audio" | "outro";
+  tipo: "texto" | "botao" | Exclude<TipoMensagemWhatsapp, "texto">;
   texto?: string;
+  /** foto, áudio, vídeo, documento, figurinha: o id do arquivo na Meta (baixado em registrarEntrada) */
+  midia?: { id: string; nome?: string };
+  /** legenda da foto/vídeo/documento */
+  legenda?: string;
   botaoId?: string;
   /** nome do perfil do WhatsApp da pessoa */
   nome?: string;
@@ -76,8 +81,17 @@ export function lerWebhook(corpo: unknown): Recebida[] {
           interactive?: { button_reply?: { id?: string; title?: string } };
           button?: { payload?: string; text?: string };
           referral?: Record<string, unknown>;
+          image?: { id?: string; caption?: string };
+          audio?: { id?: string };
+          video?: { id?: string; caption?: string };
+          document?: { id?: string; caption?: string; filename?: string };
+          sticker?: { id?: string };
+          location?: { latitude?: number; longitude?: number; name?: string; address?: string };
+          contacts?: { name?: { formatted_name?: string }; phones?: { phone?: string }[] }[];
         };
         if (!m.id || !m.from) continue;
+        // reação (👍 numa mensagem): não é conversa, não precisa de resposta
+        if (m.type === "reaction") continue;
         const de = m.from.replace(/\D/g, "");
         const base: Recebida = { wamid: m.id, de, tipo: "outro", nome: nomes.get(m.from) ?? undefined };
         if (m.referral && typeof m.referral === "object") {
@@ -88,8 +102,20 @@ export function lerWebhook(corpo: unknown): Recebida[] {
         else if (m.type === "interactive" && m.interactive?.button_reply?.id)
           saida.push({ ...base, tipo: "botao", botaoId: m.interactive.button_reply.id, texto: m.interactive.button_reply.title });
         else if (m.type === "button" && m.button?.payload) saida.push({ ...base, tipo: "botao", botaoId: m.button.payload, texto: m.button.text });
-        else if (m.type === "audio") saida.push({ ...base, tipo: "audio" });
-        else saida.push(base);
+        else if (m.type === "image" && m.image?.id) saida.push({ ...base, tipo: "imagem", midia: { id: m.image.id }, legenda: m.image.caption });
+        else if (m.type === "audio" && m.audio?.id) saida.push({ ...base, tipo: "audio", midia: { id: m.audio.id } });
+        else if (m.type === "video" && m.video?.id) saida.push({ ...base, tipo: "video", midia: { id: m.video.id }, legenda: m.video.caption });
+        else if (m.type === "document" && m.document?.id)
+          saida.push({ ...base, tipo: "documento", midia: { id: m.document.id, nome: m.document.filename }, legenda: m.document.caption });
+        else if (m.type === "sticker" && m.sticker?.id) saida.push({ ...base, tipo: "figurinha", midia: { id: m.sticker.id } });
+        else if (m.type === "location" && m.location) {
+          const l = m.location;
+          const onde = [l.name, l.address].filter(Boolean).join(", ");
+          saida.push({ ...base, tipo: "localizacao", texto: `${onde ? `${onde} ` : ""}(https://maps.google.com/?q=${l.latitude},${l.longitude})` });
+        } else if (m.type === "contacts" && m.contacts?.length) {
+          const c = m.contacts[0];
+          saida.push({ ...base, tipo: "contato", texto: [c.name?.formatted_name, c.phones?.[0]?.phone].filter(Boolean).join(" · ") });
+        } else saida.push(base);
       }
     }
   }
@@ -140,8 +166,28 @@ async function registrarEntrada(admin: Admin, m: Recebida): Promise<WhatsappCont
     ? await admin.from("whatsapp_contatos").update(mudar).eq("telefone", m.de).select("*").single()
     : await admin.from("whatsapp_contatos").insert({ telefone: m.de, ...mudar }).select("*").single();
 
-  const texto = m.tipo === "texto" ? m.texto ?? "" : m.tipo === "botao" ? `[botão] ${m.texto ?? ""}` : m.tipo === "audio" ? "[áudio]" : "[mídia]";
-  await admin.from("whatsapp_mensagens").insert({ telefone: m.de, de: "contato", texto: texto.slice(0, 4000), wamid: m.wamid });
+  const tipo: TipoMensagemWhatsapp = m.tipo === "botao" ? "texto" : m.tipo;
+  const texto =
+    m.tipo === "texto"
+      ? m.texto ?? ""
+      : m.tipo === "botao"
+        ? `[botão] ${m.texto ?? ""}`
+        : m.tipo === "localizacao" || m.tipo === "contato"
+          ? rotuloMidia(m.tipo, m.texto)
+          : rotuloMidia(m.tipo, m.legenda);
+  // foto, áudio, documento...: guarda o arquivo no bucket privado (se não der, a mensagem fica registrada sem ele)
+  const arquivo = m.midia ? await guardarMidiaRecebida(admin, m.de, m.wamid, m.midia.id, m.midia.nome) : null;
+  await admin.from("whatsapp_mensagens").insert({
+    telefone: m.de,
+    de: "contato",
+    texto: texto.slice(0, 4000),
+    wamid: m.wamid,
+    tipo,
+    midia_path: arquivo?.path ?? null,
+    midia_mime: arquivo?.mime ?? null,
+    midia_bytes: arquivo?.bytes ?? null,
+    midia_nome: m.midia?.nome?.slice(0, 200) ?? null,
+  });
   return data as WhatsappContato;
 }
 
@@ -477,6 +523,8 @@ async function faxina(admin: Admin) {
     admin.from("whatsapp_propostas").update({ situacao: "vencida" }).eq("situacao", "pendente").lt("criada_em", doisDias),
     // conversa de leads guardada por 1 ano
     admin.from("whatsapp_mensagens").delete().lt("criado_em", new Date(Date.now() - 365 * HORAS_24).toISOString()),
+    // fotos e áudios: 90 dias (fica o texto e a transcrição)
+    apagarMidiaVelha(admin),
   ]);
 }
 
@@ -517,7 +565,8 @@ export async function tratarMensagem(m: Recebida): Promise<void> {
 
     // 4) Áudio e mídia: ainda só texto
     if (m.tipo === "audio") return await responder(admin, m.de, "Por enquanto eu só leio mensagens escritas. 🙏 Me manda por texto?");
-    if (m.tipo === "outro") return await responder(admin, m.de, "Por enquanto eu só entendo mensagens de texto. Me conta por escrito o que você precisa?");
+    if (m.tipo !== "texto" && m.tipo !== "botao")
+      return await responder(admin, m.de, "Por enquanto eu só entendo mensagens de texto. Me conta por escrito o que você precisa?");
 
     const umaVez = contato;
     const chamarEquipe = (motivo: string) => void chamarDiego(admin, umaVez, motivo);

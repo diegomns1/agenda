@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { abrirConversa, moverContato, mudarAtendimento, responderContato, type ContatoCentral, type MensagemCentral } from "../central";
 import { descreverNumero } from "../numero";
 import { COLUNAS, colunaDe, nomeDe, quando } from "./colunas";
+import { MidiaMensagem } from "./MidiaMensagem";
 
 /** Conversa de um contato na Central: histórico, assumir / devolver ao robô, mover de coluna e responder. */
 export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: ContatoCentral; aoFechar: () => void; aoMudar: () => void }) {
@@ -21,7 +22,12 @@ export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: Cont
 
   const carregar = useCallback(async () => {
     try {
-      setMensagens(await abrirConversa(tel));
+      const novas = await abrirConversa(tel);
+      // mantém o link da foto/áudio que já estava na tela (vale 1 h): senão a imagem recarregaria a cada 5 s
+      setMensagens((antes) => {
+        const urls = new Map((antes ?? []).filter((m) => m.url).map((m) => [m.id, m.url]));
+        return novas.map((m) => (m.url && urls.has(m.id) ? { ...m, url: urls.get(m.id)! } : m));
+      });
     } catch {
       /* tenta de novo no próximo ciclo */
     }
@@ -132,7 +138,7 @@ export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: Cont
                         {m.de === "robo" ? "Robô" : "Você"}
                       </p>
                     ) : null}
-                    <p>{m.texto}</p>
+                    {m.tipo === "texto" || !m.tipo ? <p>{m.texto}</p> : <MidiaMensagem m={m} escuro={m.de === "equipe"} />}
                     <p className={cn("mt-0.5 text-right text-mini", m.de === "equipe" ? "text-primary-foreground/70" : "text-muted-foreground")}>{quando(m.criado_em)}</p>
                   </div>
                 </div>
