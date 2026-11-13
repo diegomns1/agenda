@@ -3,6 +3,7 @@ import Link from "next/link";
 import { STATUS_CONTA, type StatusConta } from "@/lib/constantes";
 import { contarPorStatus, listarContas } from "@/features/admin/queries";
 import { ListaContas } from "@/features/admin/components/ListaContas";
+import { NIVEL_USO, usoDasContas, type NivelUso } from "@/features/admin/uso";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Contas" };
@@ -15,7 +16,12 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
   const { status } = await searchParams;
   const filtro = ehStatus(status) ? status : undefined;
 
-  const [contas, contagem] = await Promise.all([listarContas(filtro), contarPorStatus()]);
+  const [contas, contagem, uso] = await Promise.all([listarContas(filtro), contarPorStatus(), usoDasContas()]);
+  const porNivel = { usando: 0, configurando: 0, parou: 0, so_entrou: 0 } as Record<NivelUso, number>;
+  for (const c of contas) {
+    const u = uso.get(c.id);
+    if (u && c.status === "aprovada") porNivel[u.nivel]++;
+  }
   const total = Object.values(contagem).reduce((a, b) => a + b, 0);
 
   const filtros: { chave?: StatusConta; rotulo: string; qtd: number }[] = [
@@ -58,7 +64,22 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
         })}
       </nav>
 
-      <ListaContas contas={contas} />
+      <section className="grid gap-2 rounded-xl border bg-card p-3" aria-label="Quem está usando">
+        <p className="text-sm font-medium">Contas liberadas: quem está usando</p>
+        <div className="flex flex-wrap gap-2 text-xs">
+          {(Object.keys(NIVEL_USO) as NivelUso[]).map((n) => (
+            <span key={n} className={cn("rounded-full px-2.5 py-1 font-semibold", NIVEL_USO[n].tom)} title={NIVEL_USO[n].explica}>
+              {NIVEL_USO[n].rotulo} {porNivel[n]}
+            </span>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Usando = marcou 3 horários ou mais nos últimos 3 dias (ou recebeu pelo link). Configurando = cadastrou serviços ou clientes,
+          mas ainda marca pouco. Parou = nada nos últimos 3 dias. Só entrou = não cadastrou nada. Só números: ninguém vê os dados das clientes.
+        </p>
+      </section>
+
+      <ListaContas contas={contas} uso={uso} />
     </div>
   );
 }
