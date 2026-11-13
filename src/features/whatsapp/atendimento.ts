@@ -25,7 +25,14 @@ export type EntradaAtendimento = {
   perfil?: Pick<Profile, "nome" | "plano" | "status" | "ativa_ate"> | null;
   /** nome/ramo já anotados e se a equipe já foi chamada (para a IA não repetir) */
   jaSabe: { nome: string | null; nomeWhatsapp: string | null; ramo: string | null; equipeChamada: boolean; linkEnviado?: boolean };
+  /** a última mensagem veio por áudio (o texto é a transcrição) */
+  veioDeAudio?: boolean;
+  /** foto ou PDF que a pessoa mandou junto (a IA vê) */
+  anexo?: AnexoIA | null;
 };
+
+/** Foto (JPEG/PNG/WebP/GIF) ou PDF em base64, para o Claude ver. */
+export type AnexoIA = { tipo: "imagem" | "pdf"; mime: string; base64: string };
 
 export type ResultadoAtendimento = {
   texto: string;
@@ -165,6 +172,22 @@ function contextoDaPessoa(e: EntradaAtendimento) {
     linhas.push(`Suas últimas mensagens (não repita frases, aberturas nem finais delas):\n${lista}`);
   }
   linhas.push(e.jaSabe.equipeChamada ? "A equipe JÁ foi chamada nesta conversa." : "A equipe ainda não foi chamada.");
+  if (e.veioDeAudio) {
+    linhas.push(
+      "A última mensagem veio por ÁUDIO, transcrito automaticamente (pode ter palavras trocadas: entenda pelo sentido). " +
+        "Responda por texto, normalmente, sem comentar que era áudio.",
+    );
+  }
+  if (e.anexo) {
+    linhas.push(
+      e.anexo.tipo === "imagem"
+        ? "A pessoa mandou uma FOTO (está na mensagem dela). Olhe com atenção e responda considerando o que aparece. " +
+            "Se for print de erro do Vaguinha, problema de pagamento ou algo que você não consegue resolver, chame a equipe. " +
+            "Se não der para entender o que ela quer com a foto, pergunte."
+        : "A pessoa mandou um PDF (está na mensagem dela). Leia e responda considerando o conteúdo; " +
+            "comprovante de pagamento ou assunto de cobrança vai para a equipe.",
+    );
+  }
   return linhas.join("\n");
 }
 
@@ -249,10 +272,20 @@ export async function responderAtendimento(e: EntradaAtendimento): Promise<Resul
   while (messages.length && messages[0].role !== "user") messages.shift();
   // falas seguidas do mesmo lado viram uma só (a API pede alternância)
   const juntas: Anthropic.Beta.BetaMessageParam[] = [];
-  for (const m of [...messages, { role: "user" as const, content: e.texto }]) {
+  const textoAtual = e.texto.trim() || (e.anexo ? (e.anexo.tipo === "imagem" ? "(mandou esta foto, sem texto)" : "(mandou este PDF, sem texto)") : "");
+  for (const m of [...messages, { role: "user" as const, content: textoAtual }]) {
     const ultima = juntas[juntas.length - 1];
     if (ultima && ultima.role === m.role && typeof ultima.content === "string" && typeof m.content === "string") ultima.content += `\n${m.content}`;
     else juntas.push({ ...m });
+  }
+  // a foto/PDF vai junto da última fala da pessoa
+  if (e.anexo) {
+    const ultima = juntas[juntas.length - 1];
+    const bloco: Anthropic.Beta.BetaContentBlockParam =
+      e.anexo.tipo === "imagem"
+        ? { type: "image", source: { type: "base64", media_type: e.anexo.mime as "image/jpeg" | "image/png" | "image/gif" | "image/webp", data: e.anexo.base64 } }
+        : { type: "document", source: { type: "base64", media_type: "application/pdf", data: e.anexo.base64 } };
+    ultima.content = [bloco, { type: "text", text: typeof ultima.content === "string" ? ultima.content : textoAtual }];
   }
 
   const tokens = { entrada: 0, saida: 0, cacheLeitura: 0, cacheEscrita: 0 };

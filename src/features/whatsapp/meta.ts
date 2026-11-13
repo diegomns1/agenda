@@ -94,6 +94,7 @@ export async function enviarMidia(
   const conteudo: Record<string, unknown> = { id: mediaId };
   if (extra.legenda && tipo !== "audio") conteudo.caption = extra.legenda.slice(0, 1024);
   if (tipo === "document" && extra.nome) conteudo.filename = extra.nome.slice(0, 200);
+  if (tipo === "audio") conteudo.voice = true; // áudio de voz (bolinha de play), não arquivo de música
   return chamarMetaComId({ to: para, type: tipo, [tipo]: conteudo });
 }
 

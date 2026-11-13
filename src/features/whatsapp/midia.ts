@@ -58,16 +58,14 @@ export async function guardarMidiaRecebida(
   wamid: string,
   mediaId: string,
   nome?: string | null,
-): Promise<{ path: string; mime: string; bytes: number } | null> {
+): Promise<{ path: string; mime: string; bytes: number; dados: Buffer } | null> {
   const baixada = await baixarMidia(mediaId);
   if (!baixada) return null;
   const path = `${telefone}/${wamid.replace(/[^\w.-]/g, "_").slice(-80)}.${extensaoDe(baixada.mime, nome)}`;
   const { error } = await admin.storage.from(BUCKET_WHATSAPP).upload(path, baixada.dados, { contentType: baixada.mime, upsert: true });
-  if (error) {
-    console.error("[whatsapp] mídia: não guardou no bucket", error.message);
-    return null;
-  }
-  return { path, mime: baixada.mime, bytes: baixada.dados.length };
+  if (error) console.error("[whatsapp] mídia: não guardou no bucket", error.message);
+  // mesmo sem guardar, os bytes seguem para a IA (transcrever o áudio, ver a foto)
+  return { path: error ? "" : path, mime: baixada.mime, bytes: baixada.dados.length, dados: baixada.dados };
 }
 
 /** Links temporários (1 hora) para a Central mostrar fotos e tocar áudios. */

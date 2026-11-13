@@ -12,9 +12,10 @@ import { interpretar } from "@/features/assistente/interpretar";
 import { aplicarProposta, processarMensagem } from "@/features/assistente/nucleo";
 import { esquemaProposta, type MensagemChat, type Proposta } from "@/features/assistente/tipos";
 import type { Json, Profile, TipoMensagemWhatsapp, WhatsappContato } from "@/types/database";
-import { responderAtendimento, type ModoAtendimento } from "./atendimento";
+import { responderAtendimento, type AnexoIA, type ModoAtendimento } from "./atendimento";
 import { normalizar, pareceRespostaAutomatica } from "./robo";
-import { apagarMidiaVelha, guardarMidiaRecebida, rotuloMidia } from "./midia";
+import { apagarMidiaVelha, BUCKET_WHATSAPP, guardarMidiaRecebida, rotuloMidia } from "./midia";
+import { transcreverAudio } from "./transcrever";
 import { enviarBotoes, enviarTexto, mostrarDigitando } from "./meta";
 
 /*
@@ -149,8 +150,11 @@ async function avisarNaoEntregue(admin: Admin, para: string) {
   await registrar(admin, para, "sistema", "⚠️ A Meta não entregou a última resposta (veja o log do servidor)");
 }
 
-/** Cria/atualiza o card de quem escreveu e guarda a mensagem recebida. */
-async function registrarEntrada(admin: Admin, m: Recebida): Promise<WhatsappContato> {
+/** O que chegou junto com a mensagem: o arquivo (para a IA ver) e a transcrição do áudio. */
+type Entrada = { contato: WhatsappContato; arquivo: { dados: Buffer; mime: string } | null; transcricao: string | null };
+
+/** Cria/atualiza o card de quem escreveu e guarda a mensagem recebida (áudio já sai transcrito). */
+async function registrarEntrada(admin: Admin, m: Recebida): Promise<Entrada> {
   const agora = new Date().toISOString();
   const { data: atual } = await admin.from("whatsapp_contatos").select("*").eq("telefone", m.de).maybeSingle();
   const mudar: Partial<Omit<WhatsappContato, "telefone">> = {
@@ -177,31 +181,38 @@ async function registrarEntrada(admin: Admin, m: Recebida): Promise<WhatsappCont
           : rotuloMidia(m.tipo, m.legenda);
   // foto, áudio, documento...: guarda o arquivo no bucket privado (se não der, a mensagem fica registrada sem ele)
   const arquivo = m.midia ? await guardarMidiaRecebida(admin, m.de, m.wamid, m.midia.id, m.midia.nome) : null;
+  // áudio vira texto (OpenAI) para a IA entender e para a Central mostrar embaixo do player
+  const transcricao = m.tipo === "audio" && arquivo ? await transcreverAudio(arquivo.dados, arquivo.mime) : null;
   await admin.from("whatsapp_mensagens").insert({
     telefone: m.de,
     de: "contato",
     texto: texto.slice(0, 4000),
     wamid: m.wamid,
     tipo,
-    midia_path: arquivo?.path ?? null,
+    midia_path: arquivo?.path || null,
     midia_mime: arquivo?.mime ?? null,
     midia_bytes: arquivo?.bytes ?? null,
     midia_nome: m.midia?.nome?.slice(0, 200) ?? null,
+    transcricao: transcricao?.slice(0, 4000) ?? null,
   });
-  return data as WhatsappContato;
+  return { contato: data as WhatsappContato, arquivo: arquivo ? { dados: arquivo.dados, mime: arquivo.mime } : null, transcricao };
 }
 
 /** Últimas falas das 24 h, da mais antiga para a mais nova (memória da conversa). Não inclui a mensagem atual. */
 async function historicoRecente(admin: Admin, telefone: string): Promise<MensagemChat[]> {
   const { data } = await admin
     .from("whatsapp_mensagens")
-    .select("de, texto")
+    .select("de, texto, tipo, transcricao")
     .eq("telefone", telefone)
     .neq("de", "sistema")
     .gt("criado_em", new Date(Date.now() - HORAS_24).toISOString())
     .order("criado_em", { ascending: false })
     .limit(15);
-  const falas = (data ?? []).reverse().map((f) => ({ papel: f.de === "contato" ? ("voce" as const) : ("assistente" as const), texto: f.texto }));
+  const falas = (data ?? []).reverse().map((f) => ({
+    papel: f.de === "contato" ? ("voce" as const) : ("assistente" as const),
+    // áudio entra como o que foi dito
+    texto: f.tipo === "audio" && f.transcricao ? `(áudio) ${f.transcricao}` : f.texto,
+  }));
   falas.pop(); // a última é a mensagem que está sendo respondida agora
   return falas;
 }
@@ -438,6 +449,37 @@ async function chegouOutraDepois(admin: Admin, telefone: string, wamid: string, 
   return Boolean(data?.wamid && data.wamid !== wamid);
 }
 
+/** Foto (até 5 MB) ou PDF (até 10 MB) no formato que o Claude aceita; null se não dá para mandar para a IA. */
+function anexoParaIA(arquivo: { dados: Buffer; mime: string } | null): AnexoIA | null {
+  if (!arquivo) return null;
+  if (["image/jpeg", "image/png", "image/gif", "image/webp"].includes(arquivo.mime) && arquivo.dados.length <= 5 * 1024 * 1024) {
+    return { tipo: "imagem", mime: arquivo.mime, base64: arquivo.dados.toString("base64") };
+  }
+  if (arquivo.mime === "application/pdf" && arquivo.dados.length <= 10 * 1024 * 1024) {
+    return { tipo: "pdf", mime: arquivo.mime, base64: arquivo.dados.toString("base64") };
+  }
+  return null;
+}
+
+/** Foto ou PDF que a pessoa mandou nos últimos 2 minutos e que ainda não teve resposta (vem junto da mensagem seguinte). */
+async function fotoRecenteSemResposta(admin: Admin, telefone: string): Promise<AnexoIA | null> {
+  const { data } = await admin
+    .from("whatsapp_mensagens")
+    .select("de, tipo, midia_path, midia_mime")
+    .eq("telefone", telefone)
+    .gt("criado_em", new Date(Date.now() - 120_000).toISOString())
+    .order("criado_em", { ascending: false })
+    .limit(6);
+  for (const msg of data ?? []) {
+    if (msg.de !== "contato") return null; // já houve resposta depois dela
+    if ((msg.tipo === "imagem" || msg.tipo === "documento") && msg.midia_path && msg.midia_mime) {
+      const { data: blob } = await admin.storage.from(BUCKET_WHATSAPP).download(msg.midia_path);
+      return blob ? anexoParaIA({ dados: Buffer.from(await blob.arrayBuffer()), mime: msg.midia_mime }) : null;
+    }
+  }
+  return null;
+}
+
 /**
  * Quanto tempo, desde que a mensagem chegou, uma pessoa levaria para ler e digitar esta resposta no celular.
  * Com uma variação, para não ficar mecânico. Entre 8 e 20 segundos.
@@ -456,8 +498,11 @@ async function atender(
   perfil: Profile | null,
   wamid: string,
   chegouEm: number,
+  extra: { anexo: AnexoIA | null; veioDeAudio: boolean } = { anexo: null, veioDeAudio: false },
 ) {
   if (await chegouOutraDepois(admin, contato.telefone, wamid)) return;
+  // mandou foto e logo depois escreveu ("quanto fica isso?"): a resposta sai nesta mensagem, então a foto vem junto
+  const anexo = extra.anexo ?? (await fotoRecenteSemResposta(admin, contato.telefone));
   // limite diário de IA por contato
   const hoje = hojeISO();
   const usadasHoje = contato.ia_dia === hoje ? contato.ia_mensagens_dia : 0;
@@ -474,6 +519,8 @@ async function atender(
     historico,
     texto,
     perfil,
+    anexo,
+    veioDeAudio: extra.veioDeAudio,
     jaSabe: {
       nome: contato.nome,
       nomeWhatsapp: contato.nome_whatsapp,
@@ -538,7 +585,8 @@ export async function tratarMensagem(m: Recebida): Promise<void> {
 
   let contato: WhatsappContato | null = null;
   try {
-    contato = await registrarEntrada(admin, m);
+    const entrada = await registrarEntrada(admin, m);
+    contato = entrada.contato;
 
     // 1) Conectar a assistente (código gerado no Perfil)
     const codigo = m.tipo === "texto" && m.texto ? codigoDeConexao(m.texto) : null;
@@ -559,14 +607,30 @@ export async function tratarMensagem(m: Recebida): Promise<void> {
 
     // 3b) Robô conversando com robô: para antes de gastar IA (a profissional conectada fica de fora: é ela mesma)
     if (!comAssistente) {
-      const robo = await motivoRobo(admin, m.de, m.texto ?? "");
+      const robo = await motivoRobo(admin, m.de, m.texto ?? entrada.transcricao ?? m.legenda ?? "");
       if (robo) return await chamarDiego(admin, contato, robo, true);
     }
 
-    // 4) Áudio e mídia: ainda só texto
-    if (m.tipo === "audio") return await responder(admin, m.de, "Por enquanto eu só leio mensagens escritas. 🙏 Me manda por texto?");
-    if (m.tipo !== "texto" && m.tipo !== "botao")
-      return await responder(admin, m.de, "Por enquanto eu só entendo mensagens de texto. Me conta por escrito o que você precisa?");
+    // 4) Áudio vira texto (transcrição); foto e PDF vão junto para a IA ver; o resto, pede por escrito
+    let textoRecebido = m.texto ?? "";
+    let anexo: AnexoIA | null = null;
+    if (m.tipo === "audio") {
+      if (!entrada.transcricao) return await responder(admin, m.de, "Não consegui ouvir esse áudio direito. 🙏 Pode mandar de novo ou escrever?");
+      textoRecebido = entrada.transcricao;
+    } else if (m.tipo === "imagem" || m.tipo === "documento") {
+      anexo = anexoParaIA(entrada.arquivo);
+      if (!anexo) {
+        const oQue = m.tipo === "imagem" ? "essa foto" : "esse arquivo";
+        return await responder(admin, m.de, `Não consegui abrir ${oQue} aqui. 🙏 Me conta por escrito o que você precisa?`);
+      }
+      textoRecebido = m.legenda ?? "";
+    } else if (m.tipo === "localizacao" || m.tipo === "contato") {
+      textoRecebido = rotuloMidia(m.tipo, m.texto);
+    } else if (m.tipo === "figurinha") {
+      textoRecebido = "(mandou uma figurinha)";
+    } else if (m.tipo !== "texto" && m.tipo !== "botao") {
+      return await responder(admin, m.de, "Vídeo eu ainda não consigo ver. 🙏 Me conta por escrito ou manda um áudio?");
+    }
 
     const umaVez = contato;
     const chamarEquipe = (motivo: string) => void chamarDiego(admin, umaVez, motivo);
@@ -577,7 +641,8 @@ export async function tratarMensagem(m: Recebida): Promise<void> {
         const [acao, id] = m.botaoId.split(":");
         if ((acao === "sim" || acao === "nao") && id) return await decidir(admin, perfil, m.de, id, acao === "sim");
       }
-      const texto = (m.texto ?? "").trim().slice(0, 1500);
+      if (anexo) return await responder(admin, m.de, "Por aqui eu ainda não consigo ver fotos e arquivos. 🙏 Me conta por escrito ou por áudio?");
+      const texto = textoRecebido.trim().slice(0, 1500);
       if (!texto) return;
 
       // 6) "sim" / "não" respondendo a uma mudança que está esperando
@@ -596,9 +661,9 @@ export async function tratarMensagem(m: Recebida): Promise<void> {
       else await responder(admin, m.de, resposta);
     } else {
       // 8) Vendas (lead) ou suporte (já tem cadastro)
-      const texto = (m.texto ?? "").trim().slice(0, 1500);
-      if (!texto) return;
-      await atender(admin, contato, texto, perfil ? "suporte" : "lead", perfil, m.wamid, chegouEm);
+      const texto = textoRecebido.trim().slice(0, 1500);
+      if (!texto && !anexo) return;
+      await atender(admin, contato, texto, perfil ? "suporte" : "lead", perfil, m.wamid, chegouEm, { anexo, veioDeAudio: m.tipo === "audio" });
     }
 
     await faxina(admin);

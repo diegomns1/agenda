@@ -52,7 +52,7 @@ export function MidiaMensagem({ m, escuro }: { m: MensagemCentral; escuro?: bool
     case "audio":
       return (
         <div className="grid gap-1.5">
-          <audio controls preload="none" src={m.url!} className="h-10 w-64 max-w-full" />
+          <audio controls preload="metadata" src={m.url!} className="h-10 w-64 max-w-full" />
           {m.transcricao ? <p className={cn("text-xs", sub)}>“{m.transcricao}”</p> : null}
         </div>
       );

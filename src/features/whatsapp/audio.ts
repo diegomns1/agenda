@@ -25,7 +25,11 @@ export async function paraAudioDeVoz(dados: Buffer, mimeEntrada: string): Promis
   try {
     await writeFile(entrada, dados);
     await new Promise<void>((ok, falha) => {
-      const p = spawn(FFMPEG, ["-hide_banner", "-loglevel", "error", "-y", "-i", entrada, "-vn", "-ac", "1", "-ar", "48000", "-c:a", "libopus", "-b:a", "32k", "-application", "voip", saida], {
+      // sem metadados e com o tempo começando do zero: o WhatsApp do Android recusava o arquivo
+      // ("há algo errado com o arquivo de áudio", 13/11/2026) com a versão anterior (32k, -application voip)
+      const args = ["-hide_banner", "-loglevel", "error", "-y", "-i", entrada, "-vn", "-map_metadata", "-1", "-ac", "1", "-ar", "48000"];
+      args.push("-c:a", "libopus", "-b:a", "64k", "-vbr", "on", "-avoid_negative_ts", "make_zero", "-f", "ogg", saida);
+      const p = spawn(FFMPEG, args, {
         stdio: ["ignore", "ignore", "pipe"],
       });
       let erro = "";
