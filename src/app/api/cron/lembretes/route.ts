@@ -3,6 +3,7 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { enviarPush, pushConfigurado } from "@/lib/push";
 import { emailConfigurado, enviarEmail } from "@/lib/email";
 import { emailVencimentoProximo } from "@/features/emails/modelos";
+import { rodarAtivacao } from "@/features/ativacao/automatico";
 import { diasEntre, formatarData, hojeISO, horaDe, somarDias } from "@/lib/datas";
 import { primeiroNome } from "@/lib/texto";
 import { temRecurso } from "@/lib/planos";
@@ -47,6 +48,11 @@ async function executar(request: NextRequest) {
     console.error("[cron] vencimentos", e);
     return 0;
   });
+  // Ativação de quem só entrou / fim do teste (age uma vez por hora, das 9h às 20h)
+  const ativacao = await rodarAtivacao(admin).catch((e) => {
+    console.error("[cron] ativação", e);
+    return { enviados: 0 };
+  });
 
   const agora = new Date();
   const em1h = new Date(agora.getTime() + 60 * 60_000);
@@ -82,7 +88,7 @@ async function executar(request: NextRequest) {
   }
 
   if (envios.length === 0) {
-    return NextResponse.json({ ok: true, enviados: 0, verificados: linhas.length, vencimentosAvisados });
+    return NextResponse.json({ ok: true, enviados: 0, verificados: linhas.length, vencimentosAvisados, ativacao: ativacao.enviados });
   }
 
   // Só profissionais cujo plano inclui lembretes

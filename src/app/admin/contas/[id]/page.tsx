@@ -12,6 +12,8 @@ import { formatarCpfCnpj } from "@/features/assinatura/regras";
 import { formatarTelefone, linkWhatsApp } from "@/lib/telefone";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
+import { BotoesAtivacaoConta } from "@/features/ativacao/components/BotoesAtivacao";
 
 export const metadata: Metadata = { title: "Conta" };
 
@@ -19,6 +21,12 @@ export default async function PaginaConta({ params }: PageProps<"/admin/contas/[
   const { id } = await params;
   const conta = await obterConta(id);
   if (!conta) notFound();
+  const { data: envios } = await criarClienteAdmin()
+    .from("ativacao_envios")
+    .select("tipo, canal, ok, erro, manual, enviado_em")
+    .eq("profissional_id", id)
+    .order("enviado_em", { ascending: false })
+    .limit(10);
 
   const linhas: [string, React.ReactNode][] = [
     ["E-mail", conta.email],
@@ -68,6 +76,27 @@ export default async function PaginaConta({ params }: PageProps<"/admin/contas/[
           </dl>
         </CardContent>
       </Card>
+
+      <section className="grid gap-2">
+        <h2 className="font-semibold">Chamar esta conta</h2>
+        <p className="text-sm text-muted-foreground">
+          Pelo WhatsApp (modelo aprovado pela Meta) ou, sem número, por e-mail. A resposta cai na Central do WhatsApp e a Serena atende.
+        </p>
+        <BotoesAtivacaoConta id={conta.id} />
+        {envios?.length ? (
+          <ul className="grid gap-1 text-xs text-muted-foreground">
+            {envios.map((e) => (
+              <li key={e.enviado_em + e.canal}>
+                {formatarData(e.enviado_em, "dd/MM HH:mm")} · {e.tipo === "ajuda_inicio" ? "oferta de ajuda" : "pedido de feedback"} ·{" "}
+                {e.canal === "whatsapp" ? "WhatsApp" : "e-mail"} · {e.ok ? "enviada" : `não foi (${e.erro ?? "erro"})`}
+                {e.manual ? " · pelo botão" : " · automática"}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-muted-foreground">Ainda não foi chamada.</p>
+        )}
+      </section>
 
       <Separator />
 

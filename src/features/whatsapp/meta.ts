@@ -36,9 +36,17 @@ async function chamarMeta(corpo: Record<string, unknown>): Promise<boolean> {
 
 /** Envia e devolve o id da mensagem na Meta (wamid), ou null se a Meta recusou. Sem chave: "simulado". */
 async function chamarMetaComId(corpo: Record<string, unknown>): Promise<string | null> {
+  return (await chamarMetaCompleto(corpo))?.wamid ?? null;
+}
+
+/**
+ * Envia e devolve o wamid e o número como a Meta identifica a pessoa (wa_id). No Brasil o wa_id às vezes
+ * vem sem o 9 da frente: é ele que a resposta da pessoa vai usar, então é a chave certa da conversa.
+ */
+async function chamarMetaCompleto(corpo: Record<string, unknown>): Promise<{ wamid: string; waId: string | null } | null> {
   if (!envioConfigurado()) {
     console.log("[whatsapp simulado] →", JSON.stringify(corpo));
-    return "simulado";
+    return { wamid: "simulado", waId: null };
   }
   try {
     const r = await fetch(`https://graph.facebook.com/${VERSAO}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
@@ -51,8 +59,8 @@ async function chamarMetaComId(corpo: Record<string, unknown>): Promise<string |
       console.error("[whatsapp] envio recusado", r.status, (await r.text()).slice(0, 500));
       return null;
     }
-    const json = (await r.json().catch(() => ({}))) as { messages?: { id?: string }[] };
-    return json.messages?.[0]?.id ?? "";
+    const json = (await r.json().catch(() => ({}))) as { messages?: { id?: string }[]; contacts?: { wa_id?: string }[] };
+    return { wamid: json.messages?.[0]?.id ?? "", waId: json.contacts?.[0]?.wa_id ?? null };
   } catch (e) {
     console.error("[whatsapp] falha no envio", e);
     return null;
@@ -96,6 +104,28 @@ export async function enviarMidia(
   if (tipo === "document" && extra.nome) conteudo.filename = extra.nome.slice(0, 200);
   if (tipo === "audio") conteudo.voice = true; // áudio de voz (bolinha de play), não arquivo de música
   return chamarMetaComId({ to: para, type: tipo, [tipo]: conteudo });
+}
+
+/**
+ * Mensagem por MODELO aprovado pela Meta (WhatsApp Manager → Modelos de mensagem). É o único jeito de chamar
+ * alguém que não escreveu nas últimas 24 h. `variaveis` preenche {{1}}, {{2}}... do corpo, na ordem.
+ * Devolve o wamid ou null (modelo não aprovado, nome errado, número inválido...).
+ */
+export async function enviarModelo(
+  para: string,
+  nome: string,
+  variaveis: string[],
+  idioma = "pt_BR",
+): Promise<{ wamid: string; waId: string | null } | null> {
+  return chamarMetaCompleto({
+    to: para,
+    type: "template",
+    template: {
+      name: nome,
+      language: { code: idioma },
+      components: variaveis.length ? [{ type: "body", parameters: variaveis.map((text) => ({ type: "text", text })) }] : [],
+    },
+  });
 }
 
 /**

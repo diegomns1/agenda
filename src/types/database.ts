@@ -365,6 +365,29 @@ export type Database = {
         Update: Partial<Omit<WhatsappContato, "telefone">>;
         Relationships: [];
       };
+      ativacao_envios: {
+        Row: {
+          id: number;
+          profissional_id: string;
+          tipo: "ajuda_inicio" | "feedback_teste";
+          canal: "whatsapp" | "email";
+          ok: boolean;
+          erro: string | null;
+          manual: boolean;
+          enviado_em: string;
+        };
+        Insert: {
+          profissional_id: string;
+          tipo: "ajuda_inicio" | "feedback_teste";
+          canal: "whatsapp" | "email";
+          ok?: boolean;
+          erro?: string | null;
+          manual?: boolean;
+          enviado_em?: string;
+        };
+        Update: Partial<{ ok: boolean; erro: string | null }>;
+        Relationships: [];
+      };
       whatsapp_mensagens: {
         Row: WhatsappMensagem;
         Insert: Pick<WhatsappMensagem, "telefone" | "de" | "texto"> & Partial<Omit<WhatsappMensagem, "id">>;

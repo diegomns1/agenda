@@ -204,3 +204,39 @@ export function emailVencimentoProximo(para: string, nome: string, plano: Plano,
     observacao: "Se você já renovou, pode ignorar este aviso.",
   });
 }
+
+// --------------------------------------------------------------------------- ativação (13/11/2026)
+
+/** 1 dia depois do cadastro, para quem ainda não cadastrou nada (sem WhatsApp no cadastro). */
+export function emailAjudaInicio(para: string, nome: string): Email {
+  return montar({
+    para,
+    assunto: "Conseguiu montar sua agenda?",
+    previa: "Leva uns 5 minutos: serviços, horários e pronto. Se travar, é só responder este e-mail.",
+    titulo: "Bora deixar sua agenda pronta?",
+    saudacao: `Oi, ${primeiroNome(nome)}!`,
+    paragrafos: [
+      "Vi que você criou sua conta no Vaguinha, mas ainda não cadastrou nada. Leva uns 5 minutos: cadastre seus serviços com valor e duração, e já pode marcar o primeiro horário.",
+      "Se você usa o Google Agenda, dá para trazer tudo de uma vez em Agenda → Importar agenda.",
+      "Travou em alguma parte ou ficou com dúvida? É só responder este e-mail que a gente te ajuda.",
+    ],
+    botao: { texto: "Abrir minha agenda", url: `${URL_APP}/agenda` },
+  });
+}
+
+/** No último dia do teste, pedindo o que faltou (sem WhatsApp no cadastro). */
+export function emailFeedbackTeste(para: string, nome: string): Email {
+  return montar({
+    para,
+    assunto: "Me conta: o que faltou?",
+    previa: "Seu teste grátis termina hoje. Sua opinião ajuda muito a gente a melhorar.",
+    titulo: "Seu teste termina hoje",
+    saudacao: `Oi, ${primeiroNome(nome)}!`,
+    paragrafos: [
+      "Seu teste grátis do Vaguinha termina hoje. Posso te pedir 1 minutinho?",
+      "O que faltou para a agenda funcionar pra você? Pode ser qualquer coisa: algo que não entendeu, um recurso que faltou, o preço. É só responder este e-mail.",
+      "Se quiser continuar, seus clientes, serviços e horários ficam guardados: é só escolher um plano.",
+    ],
+    botao: { texto: "Ver os planos", url: `${URL_APP}/assinatura` },
+  });
+}

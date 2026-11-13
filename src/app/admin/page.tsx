@@ -4,6 +4,8 @@ import { STATUS_CONTA, type StatusConta } from "@/lib/constantes";
 import { contarPorStatus, listarContas } from "@/features/admin/queries";
 import { ListaContas } from "@/features/admin/components/ListaContas";
 import { NIVEL_USO, usoDasContas, type NivelUso } from "@/features/admin/uso";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
+import { BotaoChamarTodas } from "@/features/ativacao/components/BotoesAtivacao";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Contas" };
@@ -16,7 +18,17 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
   const { status } = await searchParams;
   const filtro = ehStatus(status) ? status : undefined;
 
-  const [contas, contagem, uso] = await Promise.all([listarContas(filtro), contarPorStatus(), usoDasContas()]);
+  const [contas, contagem, uso, { data: envios }] = await Promise.all([
+    listarContas(filtro),
+    contarPorStatus(),
+    usoDasContas(),
+    criarClienteAdmin().from("ativacao_envios").select("profissional_id, tipo, canal, enviado_em").eq("ok", true).order("enviado_em", { ascending: false }),
+  ]);
+  // última chamada de cada conta (mensagem de ativação)
+  const chamadas = new Map<string, { tipo: string; canal: string; enviado_em: string }>();
+  for (const e of envios ?? []) if (!chamadas.has(e.profissional_id)) chamadas.set(e.profissional_id, e);
+  const ajudaRecebida = new Set((envios ?? []).filter((e) => e.tipo === "ajuda_inicio").map((e) => e.profissional_id));
+  const paraChamar = contas.filter((c) => c.status === "aprovada" && c.plano === "teste" && uso.get(c.id)?.nivel === "so_entrou" && !ajudaRecebida.has(c.id)).length;
   const porNivel = { usando: 0, configurando: 0, parou: 0, so_entrou: 0 } as Record<NivelUso, number>;
   for (const c of contas) {
     const u = uso.get(c.id);
@@ -77,9 +89,14 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
           Usando = marcou 3 horários ou mais nos últimos 3 dias (ou recebeu pelo link). Configurando = cadastrou serviços ou clientes,
           mas ainda marca pouco. Parou = nada nos últimos 3 dias. Só entrou = não cadastrou nada. Só números: ninguém vê os dados das clientes.
         </p>
+        <p className="text-xs text-muted-foreground">
+          Automático: quem só entrou recebe uma oferta de ajuda 1 dia depois do cadastro, e no último dia do teste vai um pedido de
+          feedback (WhatsApp, ou e-mail para quem não deu o número). Das 9h às 20h, uma vez por conta.
+        </p>
+        <BotaoChamarTodas quantas={paraChamar} />
       </section>
 
-      <ListaContas contas={contas} uso={uso} />
+      <ListaContas contas={contas} uso={uso} chamadas={chamadas} />
     </div>
   );
 }

@@ -24,7 +24,9 @@ function plural(n: number, um: string, varios: string) {
 }
 
 /** Linha de uso: só números (o admin não vê nomes nem horários de ninguém). */
-function LinhaUso({ u }: { u: UsoConta }) {
+type Chamada = { tipo: string; canal: string; enviado_em: string };
+
+function LinhaUso({ u, chamada }: { u: UsoConta; chamada?: Chamada }) {
   const nivel = NIVEL_USO[u.nivel];
   const partes = [
     plural(u.servicos, "serviço", "serviços"),
@@ -43,12 +45,15 @@ function LinhaUso({ u }: { u: UsoConta }) {
       <span className="text-muted-foreground">
         {partes.join(" · ")} · último acesso {haQuanto(u.ultimoAcesso)}
         {u.ultimaAtividade ? ` · mexeu ${haQuanto(u.ultimaAtividade)}` : ""}
+        {chamada
+          ? ` · chamada (${chamada.tipo === "ajuda_inicio" ? "ajuda" : "feedback"}, ${chamada.canal === "whatsapp" ? "WhatsApp" : "e-mail"}) ${haQuanto(chamada.enviado_em)}`
+          : ""}
       </span>
     </div>
   );
 }
 
-export function ListaContas({ contas, uso }: { contas: Profile[]; uso?: Map<string, UsoConta> }) {
+export function ListaContas({ contas, uso, chamadas }: { contas: Profile[]; uso?: Map<string, UsoConta>; chamadas?: Map<string, Chamada> }) {
   if (contas.length === 0) {
     return (
       <p className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
@@ -81,7 +86,7 @@ export function ListaContas({ contas, uso }: { contas: Profile[]; uso?: Map<stri
                 {" · cadastro em "}
                 {formatarData(c.created_at, "dd/MM/yyyy")}
               </p>
-              {uso?.get(c.id) ? <LinhaUso u={uso.get(c.id)!} /> : null}
+              {uso?.get(c.id) ? <LinhaUso u={uso.get(c.id)!} chamada={chamadas?.get(c.id)} /> : null}
             </div>
             <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
           </Link>
