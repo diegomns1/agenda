@@ -13,6 +13,8 @@ const FRASE_AUTOMATICA = new RegExp(
     "(esta|essa) (e|eh) uma (mensagem|resposta) automatica",
     "^\\W*(mensagem|resposta) automatica",
     "(mensagem|resposta) automatica[,.!:]? (por favor,? )?nao (responda|e necessario)",
+    "no momento nao estamos disponiveis",
+    "nosso horario de atendimento e de",
     "obrigad[oa] por (entrar em )?contato",
     "agradecemos (o seu|seu|o) contato",
     "retornaremos (o mais breve|em breve|assim que|seu contato)",
