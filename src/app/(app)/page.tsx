@@ -18,7 +18,9 @@ import { SolicitacoesPendentes } from "@/features/agenda/components/Solicitacoes
 import { contarLembretesPendentes } from "@/features/lembretes/queries";
 import { Button } from "@/components/ui/button";
 import { criarClienteServidor } from "@/lib/supabase/server";
-import { PrimeirosPassos, type Passo } from "@/features/tutoriais/components/PrimeirosPassos";
+import { cookies } from "next/headers";
+import { PrimeirosPassos } from "@/features/tutoriais/components/PrimeirosPassos";
+import { COOKIE_PASSOS, lerEstadoPassos, type Passo } from "@/features/tutoriais/passos";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Hoje" };
@@ -53,25 +55,29 @@ export default async function PaginaHoje() {
   const semRamo = Boolean(perfil && !perfil.ramo);
   const atendimentosHoje = deHoje.filter((a) => a.tipo === "atendimento" && a.status !== "cancelado");
   const faturamentoHoje = atendimentosHoje.filter((a) => a.status !== "faltou").reduce((s, a) => s + (a.valor ?? 0), 0);
+  const estadoPassos = lerEstadoPassos((await cookies()).get(COOKIE_PASSOS)?.value);
   const passos: Passo[] = [
     {
+      id: "dados",
       feito: Boolean(perfil?.nome_negocio && perfil?.telefone),
       titulo: "Seus dados",
       texto: "Nome do negócio, WhatsApp e horário de atendimento.",
       href: "/perfil",
       botao: "Preencher",
     },
-    { feito: nServicos > 0, titulo: "Seus serviços", texto: "Cada serviço com o tempo que leva e o valor.", href: "/servicos", botao: "Cadastrar" },
+    { id: "servicos", feito: nServicos > 0, titulo: "Seus serviços", texto: "Cada serviço com o tempo que leva e o valor.", href: "/servicos", botao: "Cadastrar" },
     {
+      id: "clientes",
       feito: nClientes > 0,
       titulo: "Seus clientes",
-      texto: "Usa o Google Agenda? Traga tudo de uma vez. Se não, cadastre os clientes.",
-      href: "/agenda/importar",
-      botao: "Importar",
+      texto: "Cadastre os clientes que você mais atende (nome e WhatsApp).",
+      href: "/clientes",
+      botao: "Cadastrar",
+      extra: { href: "/agenda/importar", rotulo: "Usa o Google Agenda? Importar tudo de uma vez" },
     },
-    { feito: nAtendimentos > 0, titulo: "Primeiro horário", texto: "Marque um atendimento na agenda.", href: "/agenda?novo=atendimento", botao: "Marcar" },
+    { id: "horario", feito: nAtendimentos > 0, titulo: "Primeiro horário", texto: "Marque um atendimento na agenda.", href: "/agenda?novo=atendimento", botao: "Marcar" },
   ];
-  const comecando = passos.some((p) => !p.feito);
+  const comecando = !estadoPassos.oculto && passos.some((p) => !p.feito && !estadoPassos.pulados.includes(p.id));
   // o "Complete seu perfil" (logo) só aparece depois dos primeiros passos, para não competir com eles
   const perfilIncompleto = !comecando && (!perfil?.nome_negocio || !perfil?.logo_url || !perfil?.telefone);
   const hora = Number(formatarData(new Date(), "H"));
@@ -106,7 +112,7 @@ export default async function PaginaHoje() {
         ) : null}
       </section>
 
-      <PrimeirosPassos passos={passos} />
+      <PrimeirosPassos passos={passos} estado={estadoPassos} />
 
       <SolicitacoesPendentes solicitacoes={solicitacoes} />
 

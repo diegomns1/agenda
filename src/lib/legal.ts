@@ -3,7 +3,7 @@
 /** Versão vigente dos termos. Mude a data quando o texto mudar de forma relevante. */
 export const VERSAO_TERMOS = "2026-11-11"; // 11/11: teste grátis liberado sozinho (sem aprovação manual)
 /** Data da última mudança na Política de Privacidade (não pede novo aceite; 11/11: WhatsApp oficial, IA, Meta). */
-export const ATUALIZACAO_PRIVACIDADE = "2026-11-12"; // 12/11: tag do Google Ads
+export const ATUALIZACAO_PRIVACIDADE = "2026-11-13"; // 12/11: tag do Google Ads
 
 /** E-mail de contato/suporte que aparece nos textos legais e nos e-mails. */
 export const EMAIL_CONTATO = process.env.NEXT_PUBLIC_EMAIL_CONTATO ?? "contato@vaguinha.app";

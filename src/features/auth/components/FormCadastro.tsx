@@ -134,15 +134,16 @@ export function FormCadastro() {
           erro={estado.erros?.tratamento?.[0]}
         />
         <Campo
-          rotulo="WhatsApp (opcional)"
+          rotulo="Seu WhatsApp"
           nome="telefone"
           type="tel"
           autoComplete="tel"
           inputMode="tel"
           placeholder="(11) 99999-9999"
-          dica="Só para falarmos com você sobre a conta."
+          dica="Com DDD. É por ele que a gente te ajuda a começar e avisa sobre a conta."
           defaultValue={estado.valores?.telefone}
           erros={estado.erros?.telefone}
+          required
         />
       </fieldset>
 

@@ -11,11 +11,15 @@ export const esquemaLogin = z.object({
 export const esquemaCadastro = z
   .object({
     nome: z.string().trim().min(2, "Informe seu nome"),
+    // obrigatório desde 13/11/2026: é por ele que a Serena ajuda quem acabou de entrar (ativação)
     telefone: z
-      .string()
+      .string({ error: "Informe seu WhatsApp com DDD" })
       .trim()
-      .optional()
-      .refine((v) => !v || v.replace(/\D/g, "").length >= 10, "Telefone incompleto"),
+      .min(1, "Informe seu WhatsApp com DDD")
+      .refine((v) => {
+        const d = v.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+        return d.length === 10 || d.length === 11;
+      }, "WhatsApp incompleto: coloque o DDD e o número, ex.: (11) 99999-9999"),
     email,
     senha,
     aceite: z

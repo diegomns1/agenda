@@ -31,7 +31,7 @@ export default function PaginaPrivacidade() {
         <tbody>
           <tr>
             <td>Nome, e-mail, senha (criptografada) e WhatsApp</td>
-            <td>Criar e proteger sua conta, falar com você sobre o serviço</td>
+            <td>Criar e proteger sua conta, falar com você sobre o serviço (inclusive oferecer ajuda para começar e pedir sua opinião no fim do teste)</td>
           </tr>
           <tr>
             <td>Nome do negócio, logo, cores, Instagram, horários de atendimento, serviços e valores</td>
