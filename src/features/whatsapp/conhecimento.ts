@@ -43,6 +43,23 @@ Site: ${LINK_SITE}
   + WhatsApp com a mensagem pronta + lista de quem falta avisar.
 - Premium: ${preco("premium")}. Tudo do Profissional + assistente de IA no WhatsApp + stories + relatório do mês.
 - Se cancelar, os dados continuam guardados.
+- Quando o teste acaba: nada é cobrado (o teste não pede cartão). A agenda fica pausada até escolher um plano,
+  e clientes, serviços e horários continuam guardados. Não existe teste dos planos Profissional e Premium.
+- Para assinar: no painel, em Assinatura, escolhendo o plano e pagando por Pix ou cartão.
+
+# Perguntas frequentes (confirmado no sistema, 12/11/2026)
+- Internet: precisa de internet para marcar e ver a agenda atualizada (sem sinal, pode mostrar a última versão vista
+  ou um aviso de sem conexão; o que já está salvo não se perde).
+- Duração dos serviços: cada serviço pode durar de 5 minutos a 10 horas (dá para sessão longa, trança, tatuagem).
+  Para o dia todo ou vários dias (férias, evento), dá para marcar um compromisso/bloqueio do dia inteiro.
+- Equipe/salão: cada conta é de uma profissional, com a própria agenda. Ainda não tem agenda de equipe com várias
+  profissionais na mesma conta (cada uma pode ter a sua conta).
+- Não tem: pagamento ou sinal pelo link, controle de caixa, comanda, estoque, nota fiscal, integração com o direct do
+  Instagram, versão nas lojas de aplicativos (é pelo navegador e fica na tela de início como app). No Instagram dá para
+  colocar o link de agendamento na bio (planos Profissional e Premium).
+- Logo, cores e tema do painel: no Perfil.
+- Dois clientes no mesmo horário: o sistema não deixa marcar; o horário ocupado aparece recusado.
+- Cliente da profissional não precisa baixar nada nem criar conta para marcar pelo link.
 
 # Como começar
 1. Criar a conta em ${LINK_CADASTRO} (nome, ramo, WhatsApp, e-mail e senha).
@@ -63,8 +80,9 @@ Empresa: DIG STUDIO CRIATIVO LTDA (CNPJ 64.540.250/0001-05), Ourinhos/SP.
 - Link de agendamento: aparece em Perfil (planos Profissional e Premium); dá para ligar e desligar o agendamento online.
 - Conectar a assistente no WhatsApp (Premium): no painel, Perfil → "Assistente no WhatsApp" → Conectar meu WhatsApp.
 - Pagamento, troca de plano, cancelamento, reembolso, erro no sistema: chamar a equipe.
-- Pedido para apagar os dados ou a conversa ("quero apagar meus dados"): chamar a equipe com o motivo
-  "pedido de exclusão de dados" e dizer que será feito em até 15 dias (instruções: ${LINK_SITE}/exclusao-de-dados).
+- Pedido para apagar os dados ou a conversa ("quero apagar meus dados"): SEMPRE chamar a equipe com o motivo
+  "pedido de exclusão de dados" (não basta mandar o link) e dizer que será feito em até 15 dias
+  (instruções: ${LINK_SITE}/exclusao-de-dados).
 
 # O que NÃO prometer
 - Não existe desconto, cupom nem plano anual: se pedirem, diga que vai chamar a equipe.

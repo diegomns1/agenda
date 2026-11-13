@@ -202,6 +202,14 @@ export async function motivoRobo(admin: Admin, telefone: string, texto: string):
  * (não manda nem "vou chamar a equipe", que só alimentaria o outro robô). O Diego devolve ao robô na Central.
  */
 async function chamarDiego(admin: Admin, contato: WhatsappContato, motivo: string, silenciar = false) {
+  // já chamada e surgiu outro assunto: o recado novo aparece na conversa e no card (sem outro e-mail)
+  if (!silenciar && contato.atendimento === "precisa" && motivo !== contato.motivo_ajuda) {
+    const motivos = [contato.motivo_ajuda, motivo].filter(Boolean).join(" · ").slice(0, 300);
+    await admin.from("whatsapp_contatos").update({ motivo_ajuda: motivos }).eq("telefone", contato.telefone);
+    contato.motivo_ajuda = motivos;
+    await registrar(admin, contato.telefone, "sistema", `🙋 Mais um pedido para a equipe: ${motivo}`);
+    return;
+  }
   if (silenciar ? contato.atendimento === "humano" : contato.atendimento !== "robo") return; // já foi chamado (ou já está com ele)
   await admin
     .from("whatsapp_contatos")
