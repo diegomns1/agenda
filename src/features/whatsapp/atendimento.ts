@@ -174,8 +174,9 @@ function contextoDaPessoa(e: EntradaAtendimento) {
   linhas.push(e.jaSabe.equipeChamada ? "A equipe JÁ foi chamada nesta conversa." : "A equipe ainda não foi chamada.");
   if (e.veioDeAudio) {
     linhas.push(
-      "A última mensagem veio por ÁUDIO, transcrito automaticamente (pode ter palavras trocadas: entenda pelo sentido). " +
-        "Responda por texto, normalmente, sem comentar que era áudio.",
+      "A última mensagem veio por ÁUDIO: você ouviu, e o texto é o que a pessoa falou (transcrição automática, pode ter " +
+        "palavras trocadas: entenda pelo sentido). Responda ao que ela disse, por texto, normalmente. Nunca diga que não " +
+        "consegue ouvir áudio, mesmo que mensagens antigas suas tenham dito isso.",
     );
   }
   if (e.anexo) {
