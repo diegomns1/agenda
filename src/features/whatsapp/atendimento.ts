@@ -40,6 +40,10 @@ const INSTRUCOES = `Você é a Serena, do atendimento do WhatsApp oficial do Vag
 Antes de responder, leia com atenção a última mensagem e a conversa inteira: entenda o que a pessoa quer de verdade
 (o que perguntou, o que já contou, o clima da conversa) e responda exatamente isso. Na dúvida sobre o que ela quis dizer, pergunte.
 
+IMPORTANTE: todo texto que você escrever vai direto e inteiro para o WhatsApp da pessoa. Pense e confira tudo antes, em silêncio,
+e escreva só a mensagem final, já certa. Nunca escreva rascunho, correção, comentário sobre a própria resposta,
+"corrigi", "resposta final" ou duas versões da mesma mensagem.
+
 Jeito de falar: como uma pessoa simpática do Brasil no WhatsApp, não como robô nem como empresa.
 - Curto: no máximo 2 frases curtas por mensagem. Sem textão, sem markdown, sem listas, no máximo 1 emoji (e nem sempre).
 - Natural e informal: pode usar "tá", "pra", "show", "beleza", "imagina". Evite frases de robô ou de telemarketing, como
@@ -171,6 +175,27 @@ export function trechosRepetidos(texto: string, anteriores: string[]): string[] 
   return [...achados];
 }
 
+/** Comentário da IA sobre a própria resposta ("Corrigi a última frase...", "Obs.: ..."), que nunca pode ir para a pessoa. */
+const PARAGRAFO_DE_REVISAO = /^(corrigi|corrigindo|corre[cç][aã]o|revisando|revisei|ajustei|ajuste:|obs\.?:|observa[cç][aã]o:|nota:|rascunho)/i;
+
+/**
+ * Deixa só a mensagem que vai para a pessoa. Às vezes o modelo revisa a resposta "em voz alta" e escreve rascunho,
+ * correção e "Resposta final:" no mesmo texto (12/11/2026, pergunta sobre stories). Fica o que vem depois do último
+ * "resposta/versão/mensagem final:" e saem os parágrafos de comentário.
+ */
+export function soMensagemFinal(texto: string): string {
+  let t = texto.trim();
+  const marcas = [...t.matchAll(/(resposta|vers[aã]o|mensagem|texto)\s+(final|corrigida|certa)[^\n:]*:\s*/gi)];
+  if (marcas.length) {
+    const ultima = marcas[marcas.length - 1];
+    const depois = t.slice((ultima.index ?? 0) + ultima[0].length).trim();
+    if (depois) t = depois;
+  }
+  const paragrafos = t.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const limpos = paragrafos.filter((p) => !PARAGRAFO_DE_REVISAO.test(p));
+  return (limpos.length ? limpos : paragrafos).join("\n\n");
+}
+
 /** Garante o https:// nos endereços do Vaguinha (sem ele, alguns celulares não deixam tocar no link). */
 export function linksClicaveis(texto: string) {
   return texto
@@ -254,6 +279,7 @@ export async function responderAtendimento(e: EntradaAtendimento): Promise<Resul
     resultado.chamarEquipe = "a IA falhou ao responder";
   }
 
+  resultado.texto = soMensagemFinal(resultado.texto);
   if (!resultado.texto) resultado.texto = resultado.mandouLink ? `Aqui está o link para criar sua conta com teste grátis: ${LINK_CADASTRO}` : "Pode me contar um pouco mais?";
 
   // repetiu frase de antes? reescreve uma vez com outras palavras (menos quando tem link, para não estragar o endereço)
