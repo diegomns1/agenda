@@ -86,3 +86,10 @@ export async function apagarMidiaVelha(admin: Admin) {
   await admin.storage.from(BUCKET_WHATSAPP).remove(velhas.map((m) => m.midia_path));
   await admin.from("whatsapp_mensagens").update({ midia_path: null }).in("id", velhas.map((m) => m.id));
 }
+
+/** Apaga do bucket todos os arquivos (recebidos e enviados) de um contato. */
+export async function apagarArquivosDoContato(admin: Admin, telefone: string) {
+  const { data } = await admin.storage.from(BUCKET_WHATSAPP).list(telefone, { limit: 1000 });
+  const caminhos = (data ?? []).map((f) => `${telefone}/${f.name}`);
+  if (caminhos.length) await admin.storage.from(BUCKET_WHATSAPP).remove(caminhos);
+}

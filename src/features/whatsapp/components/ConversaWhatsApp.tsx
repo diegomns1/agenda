@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { BotIcon, ExternalLinkIcon, Loader2Icon, MegaphoneIcon, UserRoundIcon } from "lucide-react";
+import { BanIcon, BotIcon, ClockIcon, ExternalLinkIcon, Loader2Icon, MegaphoneIcon, SendIcon, UserRoundIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,11 +12,13 @@ import { descreverNumero } from "../numero";
 import { COLUNAS, colunaDe, nomeDe, quando } from "./colunas";
 import { MidiaMensagem } from "./MidiaMensagem";
 import { Compositor } from "./Compositor";
+import { DialogoMensagemPronta, OpcoesConversa } from "./OpcoesConversa";
 
 /** Conversa de um contato na Central: histórico, assumir / devolver ao robô, mover de coluna e responder. */
 export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: ContatoCentral; aoFechar: () => void; aoMudar: () => void }) {
   const [mensagens, setMensagens] = useState<MensagemCentral[] | null>(null);
   const [enviando, iniciar] = useTransition();
+  const [pronta, setPronta] = useState(false);
   const fimRef = useRef<HTMLDivElement>(null);
   const tel = contato.telefone;
 
@@ -69,11 +71,39 @@ export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: Cont
 
   const origem = contato.origem as { titulo?: string; url?: string } | null;
   const comVoce = contato.atendimento === "humano";
+  // a Meta só deixa mensagem livre até 24 h (72 h se veio de anúncio) depois da última mensagem da pessoa
+  const janelaH = origem ? 72 : 24;
+  const ultimaDela = contato.ultima_do_contato_em ? new Date(contato.ultima_do_contato_em).getTime() : 0;
+  // eslint-disable-next-line react-hooks/purity -- a janela depende da hora atual; a conversa recarrega a cada 5 s
+  const janelaAberta = Date.now() - ultimaDela <= janelaH * 3_600_000;
 
   return (
     <Dialog open onOpenChange={(aberto) => !aberto && aoFechar()}>
       <DialogContent className="flex h-[92svh] flex-col gap-0 p-0 sm:h-[85svh] sm:max-w-2xl">
-        <DialogHeader className="gap-1 border-b px-4 pt-4 pb-3 pr-12 text-left">
+        <div className="absolute top-2.5 right-12 z-10">
+          <OpcoesConversa
+            contato={contato}
+            aoAbrirPronta={() => setPronta(true)}
+            aoMudar={() => {
+              void carregar();
+              aoMudar();
+            }}
+            aoExcluir={() => {
+              aoMudar();
+              aoFechar();
+            }}
+          />
+        </div>
+        <DialogoMensagemPronta
+          contato={contato}
+          aberto={pronta}
+          aoMudarAberto={setPronta}
+          aoEnviar={() => {
+            void carregar();
+            aoMudar();
+          }}
+        />
+        <DialogHeader className="gap-1 border-b px-4 pt-4 pb-3 pr-24 text-left">
           <DialogTitle className="truncate">{nomeDe(contato)}</DialogTitle>
           <DialogDescription className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="tabular-nums">{descreverNumero(tel)}</span>
@@ -173,6 +203,21 @@ export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: Cont
               </select>
             </label>
           </div>
+          {contato.bloqueado ? (
+            <p className="flex items-center gap-2 rounded-xl bg-muted px-3 py-2 text-sm text-muted-foreground">
+              <BanIcon className="size-4 shrink-0" aria-hidden />
+              Contato bloqueado: o robô não responde e não dá para mandar mensagem. Para desbloquear, use o menu ⋮.
+            </p>
+          ) : !janelaAberta ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-xl bg-aviso px-3 py-2 text-sm text-aviso-texto">
+              <ClockIcon className="size-4 shrink-0" aria-hidden />
+              <span className="min-w-0 flex-1">Passou de {janelaH} h sem a pessoa escrever: só dá para chamar com mensagem pronta.</span>
+              <Button size="sm" onClick={() => setPronta(true)}>
+                <SendIcon />
+                Mensagem pronta
+              </Button>
+            </div>
+          ) : null}
           <Compositor
             telefone={tel}
             placeholder={comVoce ? "Escreva a resposta" : "Responder (o robô sai)"}

@@ -129,6 +129,36 @@ export async function enviarModelo(
 }
 
 /**
+ * Bloqueia (ou desbloqueia) o número na Meta: bloqueado, a pessoa não consegue mais escrever para o WhatsApp oficial.
+ * A Meta só bloqueia quem escreveu nas últimas 24 h (erro 131047); nesse caso o bloqueio fica só no painel.
+ */
+export async function bloquearNaMeta(telefone: string, bloquear: boolean): Promise<{ ok: boolean; erro?: string }> {
+  if (!envioConfigurado()) return { ok: true };
+  try {
+    const r = await fetch(`https://graph.facebook.com/${VERSAO}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/block_users`, {
+      method: bloquear ? "POST" : "DELETE",
+      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ messaging_product: "whatsapp", block_users: [{ user: `+${telefone}` }] }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    const json = (await r.json().catch(() => ({}))) as {
+      error?: { code?: number; message?: string };
+      block_users?: { failed_users?: { errors?: { code?: number; message?: string }[] }[] };
+    };
+    const falha = json.block_users?.failed_users?.[0]?.errors?.[0] ?? (r.ok ? undefined : json.error);
+    if (!falha) return { ok: true };
+    console.error("[whatsapp] bloqueio recusado", r.status, JSON.stringify(falha).slice(0, 300));
+    return {
+      ok: false,
+      erro: falha.code === 131047 ? "a Meta só bloqueia quem escreveu nas últimas 24 h" : (falha.message ?? `erro ${falha.code ?? r.status}`),
+    };
+  } catch (e) {
+    console.error("[whatsapp] falha no bloqueio", e);
+    return { ok: false, erro: "a Meta não respondeu" };
+  }
+}
+
+/**
  * Baixa um arquivo recebido (foto, áudio, documento): a Meta manda só o id; o endereço do arquivo vale por
  * alguns minutos e também pede a chave. null se não deu (sem chave, arquivo grande demais ou fora do ar).
  */

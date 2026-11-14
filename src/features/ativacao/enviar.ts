@@ -5,6 +5,7 @@ import { normalizarTelefone, variacoesCelular } from "@/lib/telefone";
 import { primeiroNome } from "@/lib/texto";
 import { emailAjudaInicio, emailFeedbackTeste } from "@/features/emails/modelos";
 import { enviarModelo } from "@/features/whatsapp/meta";
+import { MODELOS } from "@/features/whatsapp/modelos";
 import type { Profile } from "@/types/database";
 
 /*
@@ -21,21 +22,16 @@ export type TipoAtivacao = "ajuda_inicio" | "feedback_teste";
 type Admin = ReturnType<typeof criarClienteAdmin>;
 type Pessoa = Pick<Profile, "id" | "nome" | "email" | "telefone">;
 
-/** Nomes dos modelos cadastrados no WhatsApp Manager (dá para trocar pela VPS sem mexer no código). */
+/** Nomes dos modelos no WhatsApp Manager (dá para trocar pela VPS sem mexer no código). Textos em whatsapp/modelos.ts. */
 export const MODELO_WHATSAPP: Record<TipoAtivacao, string> = {
-  ajuda_inicio: process.env.WHATSAPP_MODELO_AJUDA || "vaguinha_ajuda_inicio",
-  feedback_teste: process.env.WHATSAPP_MODELO_FEEDBACK || "vaguinha_feedback_teste",
+  ajuda_inicio: process.env.WHATSAPP_MODELO_AJUDA || MODELOS.ajuda_inicio.nome,
+  feedback_teste: process.env.WHATSAPP_MODELO_FEEDBACK || MODELOS.feedback_teste.nome,
 };
 
-/**
- * Texto dos modelos, IGUAL ao cadastrado na Meta ({{1}} = primeiro nome). Serve para a conversa aparecer na Central
- * e para a Serena saber o que foi perguntado quando a pessoa responder.
- */
+/** Texto dos modelos, IGUAL ao cadastrado na Meta (fica em whatsapp/modelos.ts, um lugar só). */
 export const TEXTO_MODELO: Record<TipoAtivacao, (nome: string) => string> = {
-  ajuda_inicio: (nome) =>
-    `Oi, ${nome}! Aqui é a Serena, da Vaguinha 😊 Vi que você criou sua conta. Conseguiu cadastrar seus serviços e marcar o primeiro horário? Se travou em alguma parte, me responde aqui que eu te ajudo.`,
-  feedback_teste: (nome) =>
-    `Oi, ${nome}! Seu teste grátis da Vaguinha termina hoje. Posso te pedir 1 minutinho? O que faltou pra agenda funcionar pra você? Sua resposta ajuda muito a gente a melhorar.`,
+  ajuda_inicio: MODELOS.ajuda_inicio.texto,
+  feedback_teste: MODELOS.feedback_teste.texto,
 };
 
 export type ResultadoAtivacao = { canal: "whatsapp" | "email" | null; ok: boolean; erro?: string };

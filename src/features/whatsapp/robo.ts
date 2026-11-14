@@ -23,9 +23,26 @@ const FRASE_AUTOMATICA = new RegExp(
     "escolha uma das opcoes",
     "selecione uma das opcoes",
     "responda com o numero",
+    // chatbots de banco/empresa (Itaú, 14/11/2026)
+    "vou encerrar (esse|este|o|nosso|nossa) (atendimento|conversa)",
+    "(atendimento|conversa) (foi )?encerrad[oa]",
+    "e so dizer em frases curtas",
+    "e so chamar o whatsapp",
+    "nao entendi (sua|a sua) (mensagem|solicitacao)",
+    "este (numero|canal) (nao|e exclusivo)",
+    "digite menu",
+    "para voltar ao menu",
   ].join("|"),
 );
 
 export function pareceRespostaAutomatica(texto: string) {
   return FRASE_AUTOMATICA.test(normalizar(texto));
+}
+
+/**
+ * Número de central de empresa (4004, 4003, 4002, 3003, 3004...): nunca é uma pessoa interessada na agenda,
+ * é o robô de atendimento de banco, operadora, loja. wa_id: 55 + DDD + 8 dígitos começando com 300x/400x.
+ */
+export function numeroDeEmpresa(telefone: string) {
+  return /^55\d{2}(300\d|400\d)\d{4}$/.test(telefone.replace(/\D/g, ""));
 }

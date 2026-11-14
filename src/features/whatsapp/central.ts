@@ -5,8 +5,10 @@ import { ehAdmin, obterUsuario } from "@/lib/auth";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import type { WhatsappContato, WhatsappMensagem } from "@/types/database";
 import { erroDeJanela } from "./janela";
-import { linksTemporarios } from "./midia";
-import { enviarTexto } from "./meta";
+import { apagarArquivosDoContato, linksTemporarios } from "./midia";
+import { bloquearNaMeta, enviarModelo, enviarTexto } from "./meta";
+import { MODELOS, type IdModelo } from "./modelos";
+import { primeiroNome } from "@/lib/texto";
 
 /*
  * Central do WhatsApp (só admin): kanban de contatos, conversa, assumir / devolver ao robô e responder.
@@ -145,4 +147,67 @@ export async function responderContato(telefone: string, texto: string): Promise
     .update({ atendimento: "humano", ultima_msg_em: new Date().toISOString(), nao_lidas: 0 })
     .eq("telefone", telefone);
   return { ok: true };
+}
+
+// ---------------------------------------------------------------- opções da conversa (14/11/2026)
+
+/**
+ * Mensagem pronta (modelo aprovado pela Meta): funciona mesmo depois das 24 h. {{1}} = primeiro nome.
+ * Quem tem conta e recebe ajuda/feedback também fica registrada na ativação (não recebe de novo no automático).
+ */
+export async function mandarMensagemPronta(telefone: string, id: IdModelo): Promise<{ ok: boolean; erro?: string }> {
+  const admin = await exigirAdmin();
+  const modelo = MODELOS[id];
+  if (!modelo) return { ok: false, erro: "Mensagem pronta desconhecida." };
+  const { data: c } = await admin.from("whatsapp_contatos").select("nome, nome_whatsapp, profissional_id, bloqueado").eq("telefone", telefone).maybeSingle();
+  if (!c) return { ok: false, erro: "Contato não encontrado." };
+  if (c.bloqueado) return { ok: false, erro: "Este contato está bloqueado. Desbloqueie para mandar mensagem." };
+  const nome = primeiroNome(c.nome || c.nome_whatsapp || "").replace(/[^\p{L}' -]/gu, "") || "tudo bem";
+  const r = await enviarModelo(telefone, modelo.nome, [nome]);
+  if (!r) return { ok: false, erro: `A Meta recusou. O modelo "${modelo.nome}" já está Ativo no WhatsApp Manager?` };
+  await admin.from("whatsapp_mensagens").insert({ telefone, de: "equipe", texto: modelo.texto(nome), wamid: r.wamid && r.wamid !== "simulado" ? r.wamid : null, status: "enviada" });
+  await admin.from("whatsapp_contatos").update({ ultima_msg_em: new Date().toISOString(), nao_lidas: 0 }).eq("telefone", telefone);
+  if (c.profissional_id && (id === "ajuda_inicio" || id === "feedback_teste")) {
+    await admin.from("ativacao_envios").insert({ profissional_id: c.profissional_id, tipo: id, canal: "whatsapp", ok: true, manual: true });
+  }
+  return { ok: true };
+}
+
+/**
+ * Bloquear: o robô ignora a pessoa e a Meta bloqueia o número (ela não consegue mais escrever).
+ * A Meta só bloqueia quem escreveu nas últimas 24 h; fora disso, o bloqueio vale só no painel (o robô ignora).
+ */
+export async function bloquearContato(telefone: string, bloquear: boolean): Promise<{ ok: boolean; aviso?: string }> {
+  const admin = await exigirAdmin();
+  const meta = await bloquearNaMeta(telefone, bloquear);
+  await admin
+    .from("whatsapp_contatos")
+    .update(bloquear ? { bloqueado: true, bloqueado_em: new Date().toISOString(), atendimento: "humano" } : { bloqueado: false, bloqueado_em: null })
+    .eq("telefone", telefone);
+  await admin.from("whatsapp_mensagens").insert({
+    telefone,
+    de: "sistema",
+    texto: bloquear ? `🚫 Contato bloqueado${meta.ok ? "" : ` só no painel (${meta.erro})`}` : "✅ Contato desbloqueado",
+  });
+  revalidatePath("/admin/whatsapp");
+  return { ok: true, aviso: meta.ok ? undefined : `Bloqueado só no painel: ${meta.erro}. O robô não responde mais essa pessoa.` };
+}
+
+/** Limpar: apaga as mensagens e os arquivos da conversa; o contato (card) continua. */
+export async function limparConversa(telefone: string): Promise<{ ok: boolean }> {
+  const admin = await exigirAdmin();
+  await apagarArquivosDoContato(admin, telefone);
+  const { error } = await admin.from("whatsapp_mensagens").delete().eq("telefone", telefone);
+  await admin.from("whatsapp_contatos").update({ nao_lidas: 0 }).eq("telefone", telefone);
+  revalidatePath("/admin/whatsapp");
+  return { ok: !error };
+}
+
+/** Excluir: apaga o contato, a conversa e os arquivos. Se a pessoa escrever de novo, vira um card novo. */
+export async function excluirContato(telefone: string): Promise<{ ok: boolean }> {
+  const admin = await exigirAdmin();
+  await apagarArquivosDoContato(admin, telefone);
+  const { error } = await admin.from("whatsapp_contatos").delete().eq("telefone", telefone); // mensagens saem junto (cascade)
+  revalidatePath("/admin/whatsapp");
+  return { ok: !error };
 }

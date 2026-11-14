@@ -13,7 +13,7 @@ import { aplicarProposta, processarMensagem } from "@/features/assistente/nucleo
 import { esquemaProposta, type MensagemChat, type Proposta } from "@/features/assistente/tipos";
 import type { Json, Profile, TipoMensagemWhatsapp, WhatsappContato } from "@/types/database";
 import { responderAtendimento, type AnexoIA, type ModoAtendimento } from "./atendimento";
-import { normalizar, pareceRespostaAutomatica } from "./robo";
+import { normalizar, numeroDeEmpresa, pareceRespostaAutomatica } from "./robo";
 import { apagarMidiaVelha, BUCKET_WHATSAPP, guardarMidiaRecebida, rotuloMidia } from "./midia";
 import { transcreverAudio } from "./transcrever";
 import { enviarBotoes, enviarTexto, mostrarDigitando } from "./meta";
@@ -222,14 +222,16 @@ async function historicoRecente(admin: Admin, telefone: string): Promise<Mensage
  * os dois ficam conversando o dia inteiro. Olha as últimas 6 h desta conversa (a mensagem atual já está gravada).
  */
 export async function motivoRobo(admin: Admin, telefone: string, texto: string): Promise<string | null> {
+  if (numeroDeEmpresa(telefone)) return "número de central de empresa (4004/3003)";
   if (pareceRespostaAutomatica(texto)) return "a mensagem parece resposta automática";
+  // 7 dias: robô de empresa repete a mesma mensagem espaçada (ontem e hoje), não só em sequência
   const { data } = await admin
     .from("whatsapp_mensagens")
     .select("de, texto, criado_em")
     .eq("telefone", telefone)
-    .gt("criado_em", new Date(Date.now() - 6 * 3_600_000).toISOString())
+    .gt("criado_em", new Date(Date.now() - 7 * 86_400_000).toISOString())
     .order("criado_em", { ascending: false })
-    .limit(80);
+    .limit(150);
   const msgs = data ?? [];
   const agora = Date.now();
   const doRobo = msgs.filter((x) => x.de === "robo");
@@ -583,6 +585,10 @@ export async function tratarMensagem(m: Recebida): Promise<void> {
   const { error: repetida } = await admin.from("whatsapp_recebidas").insert({ wamid: m.wamid });
   if (repetida) return;
 
+  // bloqueado na Central: nada é guardado e o robô não responde
+  const { data: bloqueio } = await admin.from("whatsapp_contatos").select("bloqueado").eq("telefone", m.de).maybeSingle();
+  if (bloqueio?.bloqueado) return;
+
   let contato: WhatsappContato | null = null;
   try {
     const entrada = await registrarEntrada(admin, m);
@@ -628,8 +634,10 @@ export async function tratarMensagem(m: Recebida): Promise<void> {
       textoRecebido = rotuloMidia(m.tipo, m.texto);
     } else if (m.tipo === "figurinha") {
       textoRecebido = "(mandou uma figurinha)";
-    } else if (m.tipo !== "texto" && m.tipo !== "botao") {
+    } else if (m.tipo === "video") {
       return await responder(admin, m.de, "Vídeo eu ainda não consigo ver. 🙏 Me conta por escrito ou manda um áudio?");
+    } else if (m.tipo !== "texto" && m.tipo !== "botao") {
+      return; // tipo que não reconhecemos (menu de outro robô, enquete...): fica quieta
     }
 
     const umaVez = contato;
