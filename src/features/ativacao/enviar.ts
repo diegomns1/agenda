@@ -41,9 +41,33 @@ export const TEXTO_MODELO: Record<TipoAtivacao, (nome: string) => string> = {
 export type ResultadoAtivacao = { canal: "whatsapp" | "email" | null; ok: boolean; erro?: string };
 
 /** Já recebeu este tipo (com sucesso, por qualquer canal)? */
-export async function jaRecebeu(admin: Admin, profissionalId: string, tipo: TipoAtivacao) {
-  const { count } = await admin.from("ativacao_envios").select("id", { count: "exact", head: true }).eq("profissional_id", profissionalId).eq("tipo", tipo).eq("ok", true);
+export async function jaRecebeu(admin: Admin, profissionalId: string, tipo: TipoAtivacao, canal?: "whatsapp" | "email") {
+  let q = admin.from("ativacao_envios").select("id", { count: "exact", head: true }).eq("profissional_id", profissionalId).eq("tipo", tipo).eq("ok", true);
+  if (canal) q = q.eq("canal", canal);
+  const { count } = await q;
   return (count ?? 0) > 0;
+}
+
+/** Quantas vezes a Meta recusou o WhatsApp para esta conta (o automático desiste depois de 3). */
+async function falhasWhatsapp(admin: Admin, profissionalId: string, tipo: TipoAtivacao) {
+  const { count } = await admin
+    .from("ativacao_envios")
+    .select("id", { count: "exact", head: true })
+    .eq("profissional_id", profissionalId)
+    .eq("tipo", tipo)
+    .eq("canal", "whatsapp")
+    .eq("ok", false);
+  return count ?? 0;
+}
+
+/**
+ * O automático deve mandar? Quem tem WhatsApp precisa receber POR WhatsApp (o e-mail de quando o modelo ainda
+ * não estava aprovado não conta), mas desiste depois de 3 recusas da Meta. Sem WhatsApp: basta ter recebido o e-mail.
+ */
+export async function precisaReceber(admin: Admin, p: Pessoa, tipo: TipoAtivacao) {
+  if (!normalizarTelefone(p.telefone)) return !(await jaRecebeu(admin, p.id, tipo));
+  if (await jaRecebeu(admin, p.id, tipo, "whatsapp")) return false;
+  return (await falhasWhatsapp(admin, p.id, tipo)) < 3;
 }
 
 async function registrarEnvio(admin: Admin, p: Pessoa, tipo: TipoAtivacao, canal: "whatsapp" | "email", ok: boolean, erro: string | null, manual: boolean) {
@@ -68,8 +92,15 @@ async function registrarNaCentral(admin: Admin, p: Pessoa, numeroPedido: string,
  * Manda a mensagem de ativação: WhatsApp se tiver número (e a Meta aceitar o modelo), senão e-mail.
  * `manual`: mandada pelo botão do Admin (manda mesmo se já recebeu antes).
  */
-export async function enviarAtivacao(admin: Admin, p: Pessoa, tipo: TipoAtivacao, manual = false): Promise<ResultadoAtivacao> {
-  if (!manual && (await jaRecebeu(admin, p.id, tipo))) return { canal: null, ok: false, erro: "já recebeu" };
+export async function enviarAtivacao(
+  admin: Admin,
+  p: Pessoa,
+  tipo: TipoAtivacao,
+  manual = false,
+  /** só WhatsApp: se a Meta recusar, NÃO cai no e-mail */
+  soWhatsapp = false,
+): Promise<ResultadoAtivacao> {
+  if (!manual && !(await precisaReceber(admin, p, tipo))) return { canal: null, ok: false, erro: "já recebeu" };
   const nome = primeiroNome(p.nome) || "tudo bem";
   const numero = normalizarTelefone(p.telefone);
 
@@ -81,9 +112,14 @@ export async function enviarAtivacao(admin: Admin, p: Pessoa, tipo: TipoAtivacao
       return { canal: "whatsapp", ok: true };
     }
     await registrarEnvio(admin, p, tipo, "whatsapp", false, "a Meta recusou (modelo não aprovado ou número inválido)", manual);
+    if (soWhatsapp) return { canal: "whatsapp", ok: false, erro: "a Meta recusou (modelo ainda não aprovado ou número inválido)" };
+  } else if (soWhatsapp) {
+    return { canal: null, ok: false, erro: "sem WhatsApp no cadastro" };
   }
 
   if (!p.email) return { canal: null, ok: false, erro: "sem WhatsApp aceito e sem e-mail" };
+  // e-mail é só uma vez por tipo (o WhatsApp recusado volta a ser tentado, o e-mail não se repete)
+  if (!manual && (await jaRecebeu(admin, p.id, tipo, "email"))) return { canal: "email", ok: false, erro: "e-mail já enviado" };
   const email = tipo === "ajuda_inicio" ? emailAjudaInicio(p.email, p.nome) : emailFeedbackTeste(p.email, p.nome);
   const r = await enviarEmail(email);
   await registrarEnvio(admin, p, tipo, "email", r.enviado, r.enviado ? null : (r.motivo ?? "falhou"), manual);

@@ -49,7 +49,7 @@ export function BotaoChamarTodas({ quantas }: { quantas: number }) {
       className="w-fit"
     >
       {pendente ? <Loader2Icon className="animate-spin" /> : <SendIcon />}
-      Chamar agora as {quantas} que só entraram
+      Chamar no WhatsApp {quantas === 1 ? "a que só entrou" : `as ${quantas} que só entraram`}
     </Button>
   );
 }

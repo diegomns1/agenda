@@ -28,28 +28,30 @@ export async function chamarConta(id: string, tipo: TipoAtivacao): Promise<{ ok:
     : { ok: false, mensagem: `Não foi: ${r.erro ?? "erro desconhecido"}.` };
 }
 
-/** Manda a mensagem de ajuda para todas as contas em teste que só entraram e ainda não receberam. */
+/**
+ * Chama no WhatsApp (só WhatsApp, nunca cai no e-mail) todas as contas em teste que só entraram, têm número e ainda
+ * não receberam a ajuda POR WhatsApp (quem só recebeu o e-mail entra de novo).
+ */
 export async function chamarTodasQueSoEntraram(): Promise<{ ok: boolean; mensagem: string }> {
   const admin = await exigirAdmin();
   const [{ data: contas }, uso] = await Promise.all([
-    admin.from("profiles").select("id, nome, email, telefone").eq("status", "aprovada").eq("plano", "teste"),
+    admin.from("profiles").select("id, nome, email, telefone").eq("status", "aprovada").eq("plano", "teste").not("telefone", "is", null),
     usoDasContas(),
   ]);
-  let whatsapp = 0;
-  let email = 0;
-  let falhas = 0;
+  let enviadas = 0;
+  let recusadas = 0;
   for (const c of contas ?? []) {
-    if (uso.get(c.id)?.nivel !== "so_entrou" || (await jaRecebeu(admin, c.id, "ajuda_inicio"))) continue;
-    const r = await enviarAtivacao(admin, c, "ajuda_inicio", true);
-    if (!r.ok) falhas++;
-    else if (r.canal === "whatsapp") whatsapp++;
-    else email++;
+    if (uso.get(c.id)?.nivel !== "so_entrou" || (await jaRecebeu(admin, c.id, "ajuda_inicio", "whatsapp"))) continue;
+    const r = await enviarAtivacao(admin, c, "ajuda_inicio", true, true);
+    if (r.ok) enviadas++;
+    else recusadas++;
   }
   revalidatePath("/admin");
-  const total = whatsapp + email;
-  if (!total && !falhas) return { ok: true, mensagem: "Ninguém para chamar: todas que só entraram já receberam." };
-  return {
-    ok: total > 0,
-    mensagem: `${total} chamada${total === 1 ? "" : "s"} (${whatsapp} pelo WhatsApp, ${email} por e-mail)${falhas ? `, ${falhas} não foram` : ""}.`,
-  };
+  if (!enviadas && !recusadas) return { ok: true, mensagem: "Ninguém para chamar: todas que só entraram já receberam no WhatsApp." };
+  if (!enviadas)
+    return {
+      ok: false,
+      mensagem: `A Meta recusou as ${recusadas}. O modelo "vaguinha_ajuda_inicio" já está Ativo no WhatsApp Manager? Se ainda estiver em análise, espere e tente de novo.`,
+    };
+  return { ok: true, mensagem: `${enviadas} chamada${enviadas === 1 ? "" : "s"} no WhatsApp${recusadas ? ` (${recusadas} a Meta recusou: número inválido?)` : ""}.` };
 }

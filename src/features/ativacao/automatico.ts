@@ -3,7 +3,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { hojeISO } from "@/lib/datas";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { usoDasContas } from "@/features/admin/uso";
-import { enviarAtivacao, jaRecebeu, type TipoAtivacao } from "./enviar";
+import { enviarAtivacao, precisaReceber, type TipoAtivacao } from "./enviar";
 
 /*
  * Ativação automática (13/11/2026), chamada pela tarefa de 5 em 5 min (api/cron/lembretes), mas só age
@@ -45,7 +45,7 @@ export async function rodarAtivacao(admin: ReturnType<typeof criarClienteAdmin>,
   let enviados = 0;
   for (const { conta, tipo } of fila) {
     if (enviados >= MAXIMO_POR_RODADA) break;
-    if (await jaRecebeu(admin, conta.id, tipo)) continue;
+    if (!(await precisaReceber(admin, conta, tipo))) continue;
     const r = await enviarAtivacao(admin, conta, tipo);
     if (r.ok) enviados++;
   }

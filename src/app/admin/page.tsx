@@ -27,8 +27,11 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
   // última chamada de cada conta (mensagem de ativação)
   const chamadas = new Map<string, { tipo: string; canal: string; enviado_em: string }>();
   for (const e of envios ?? []) if (!chamadas.has(e.profissional_id)) chamadas.set(e.profissional_id, e);
-  const ajudaRecebida = new Set((envios ?? []).filter((e) => e.tipo === "ajuda_inicio").map((e) => e.profissional_id));
-  const paraChamar = contas.filter((c) => c.status === "aprovada" && c.plano === "teste" && uso.get(c.id)?.nivel === "so_entrou" && !ajudaRecebida.has(c.id)).length;
+  // botão "Chamar no WhatsApp": quem só entrou, tem número e ainda não recebeu a ajuda POR WhatsApp
+  const ajudaNoZap = new Set((envios ?? []).filter((e) => e.tipo === "ajuda_inicio" && e.canal === "whatsapp").map((e) => e.profissional_id));
+  const paraChamar = contas.filter(
+    (c) => c.status === "aprovada" && c.plano === "teste" && c.telefone && uso.get(c.id)?.nivel === "so_entrou" && !ajudaNoZap.has(c.id),
+  ).length;
   const porNivel = { usando: 0, configurando: 0, parou: 0, so_entrou: 0 } as Record<NivelUso, number>;
   for (const c of contas) {
     const u = uso.get(c.id);
