@@ -48,7 +48,8 @@ export default function PaginaPrivacidade() {
           <tr>
             <td>De onde você veio (anúncio ou link, com os parâmetros utm), se aceitou os cookies de medição, IP e navegador do cadastro</td>
             <td>
-              Saber quais anúncios trazem profissionais e, se você aceitou, avisar a Meta do cadastro, da liberação e da assinatura
+              Saber quais anúncios trazem profissionais e, se você aceitou, avisar a Meta do cadastro, da liberação, da etapa de uso
+              (configurando, usando) e da assinatura
               e o Google do cadastro
             </td>
           </tr>
@@ -112,7 +113,9 @@ export default function PaginaPrivacidade() {
         <li>
           <strong>Meta (WhatsApp Business Platform)</strong>, para enviar e receber as mensagens do WhatsApp oficial do Vaguinha.
           E, só se você aceitou os cookies de medição, o <strong>Pixel da Meta e a API de Conversões</strong>: avisamos a Meta
-          quando há cadastro, aprovação ou assinatura, mandando e-mail e telefone embaralhados (hash), para medir os anúncios.
+          quando há cadastro, aprovação, mudança de etapa (começou a configurar, está usando) ou assinatura, mandando e-mail e
+          telefone embaralhados (hash), para medir os anúncios e mostrá-los a quem tem mais chance de usar a agenda. Nunca
+          mandamos nada da sua agenda nem das suas clientes, só o nome da etapa.
         </li>
         <li>
           <strong>Google (Google Ads)</strong>, só se você aceitou os cookies de medição: a tag do Google mede as visitas ao site

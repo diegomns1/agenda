@@ -4,6 +4,8 @@ import { enviarPush, pushConfigurado } from "@/lib/push";
 import { emailConfigurado, enviarEmail } from "@/lib/email";
 import { emailVencimentoProximo } from "@/features/emails/modelos";
 import { rodarAtivacao } from "@/features/ativacao/automatico";
+import { usoDasContas } from "@/features/admin/uso";
+import { sincronizarEtapasCrm } from "@/features/rastreio/servidor";
 import { diasEntre, formatarData, hojeISO, horaDe, somarDias } from "@/lib/datas";
 import { primeiroNome } from "@/lib/texto";
 import { temRecurso } from "@/lib/planos";
@@ -54,6 +56,17 @@ async function executar(request: NextRequest) {
     return { enviados: 0 };
   });
 
+  // Etapas do funil para a Meta (Configurando, Usando, Assinou): uma vez por hora
+  const etapasMeta =
+    new Date().getMinutes() < 5
+      ? await usoDasContas()
+          .then((uso) => sincronizarEtapasCrm(admin, (id) => uso.get(id)?.nivel))
+          .catch((e) => {
+            console.error("[cron] etapas Meta", e);
+            return { enviadas: 0 };
+          })
+      : null;
+
   const agora = new Date();
   const em1h = new Date(agora.getTime() + 60 * 60_000);
   const em24h = new Date(agora.getTime() + 24 * 60 * 60_000);
@@ -88,7 +101,7 @@ async function executar(request: NextRequest) {
   }
 
   if (envios.length === 0) {
-    return NextResponse.json({ ok: true, enviados: 0, verificados: linhas.length, vencimentosAvisados, ativacao: ativacao.enviados });
+    return NextResponse.json({ ok: true, enviados: 0, verificados: linhas.length, vencimentosAvisados, ativacao: ativacao.enviados, etapasMeta });
   }
 
   // Só profissionais cujo plano inclui lembretes
@@ -130,7 +143,7 @@ async function executar(request: NextRequest) {
   if (marcar1h.length) await admin.from("agendamentos").update({ lembrete_1h_enviado_em: marcadoEm }).in("id", marcar1h);
   if (mortos.size) await admin.from("push_subscriptions").delete().in("endpoint", [...mortos]);
 
-  return NextResponse.json({ ok: true, enviados, avisos: envios.length, verificados: linhas.length, inscricoesRemovidas: mortos.size, vencimentosAvisados });
+  return NextResponse.json({ ok: true, enviados, avisos: envios.length, verificados: linhas.length, inscricoesRemovidas: mortos.size, vencimentosAvisados, ativacao: ativacao.enviados, etapasMeta });
 }
 
 /**

@@ -65,7 +65,9 @@ export type Profile = {
   /** de onde veio (anúncio, utm, consentimento) — migração 0021 */
   origem_anuncio: OrigemAnuncio | null;
   /** eventos já enviados à Meta: { lead?: data, start_trial?: data, subscribe?: data } */
-  eventos_meta: Partial<Record<"lead" | "start_trial" | "subscribe", string>>;
+  eventos_meta: Partial<
+    Record<"lead" | "start_trial" | "subscribe" | "crm_cadastrou" | "crm_configurando" | "crm_usando" | "crm_assinou", string>
+  >;
   slug: string | null;
   agendamento_online: boolean;
   confirmacao_online: "automatica" | "manual";

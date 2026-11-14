@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers";
 import { URL_APP } from "@/lib/constantes";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import type { OrigemAnuncio, Profile } from "@/types/database";
+import type { NivelUso } from "@/features/admin/uso";
 import { COOKIE_CONSENTIMENTO, COOKIE_ORIGEM, lerOrigemCookie } from "./comum";
 
 /*
@@ -51,9 +52,8 @@ export async function origemDoPedido(): Promise<OrigemAnuncio> {
 
 type Pessoa = Pick<Profile, "id" | "email" | "telefone" | "nome">;
 
-/** Manda um evento para a Meta. Nunca lança. */
-async function enviar(evento: Evento, eventId: string, pessoa: Pessoa, origem: OrigemAnuncio | null, valor?: number) {
-  if (!origem?.consentiu) return { enviado: false, motivo: "sem consentimento" };
+/** Dados da pessoa para a Meta achar quem é (e-mail, telefone e nome com hash; cookies da Meta; IP e navegador). */
+function dadosDaPessoa(pessoa: Pessoa, origem: OrigemAnuncio) {
   const userData: Record<string, unknown> = { external_id: [hash(pessoa.id)] };
   if (pessoa.email) userData.em = [hash(pessoa.email.trim().toLowerCase())];
   if (pessoa.telefone) userData.ph = [hash(pessoa.telefone.replace(/\D/g, ""))];
@@ -63,42 +63,49 @@ async function enviar(evento: Evento, eventId: string, pessoa: Pessoa, origem: O
   if (origem.navegador) userData.client_user_agent = origem.navegador;
   if (origem.fbc) userData.fbc = origem.fbc;
   if (origem.fbp) userData.fbp = origem.fbp;
+  return userData;
+}
 
-  const corpo = {
-    data: [
-      {
-        event_name: evento,
-        event_time: Math.floor(Date.now() / 1000),
-        event_id: eventId,
-        action_source: "website",
-        event_source_url: origem.pagina ?? `${URL_APP}/cadastro`,
-        user_data: userData,
-        ...(valor != null ? { custom_data: { value: Number(valor.toFixed(2)), currency: "BRL" } } : {}),
-      },
-    ],
-    ...(process.env.META_TEST_EVENT_CODE ? { test_event_code: process.env.META_TEST_EVENT_CODE } : {}),
-  };
-
+/** Posta um lote de eventos na API de Conversões. Nunca lança. */
+async function postarEventos(nome: string, data: Record<string, unknown>[]): Promise<{ enviado: boolean; motivo?: string }> {
+  if (!data.length) return { enviado: true };
   if (!capiConfigurada()) {
-    console.log(`[meta simulado] ${evento} ${eventId}`);
+    console.log(`[meta simulado] ${nome} (${data.length})`);
     return { enviado: false, motivo: "API de Conversões não configurada" };
   }
+  const corpo = { data, ...(process.env.META_TEST_EVENT_CODE ? { test_event_code: process.env.META_TEST_EVENT_CODE } : {}) };
   try {
     const r = await fetch(`https://graph.facebook.com/${VERSAO}/${process.env.META_PIXEL_ID}/events?access_token=${encodeURIComponent(process.env.META_CAPI_TOKEN!)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(corpo),
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(15_000),
     });
     if (!r.ok) {
-      console.error("[meta] evento recusado", evento, r.status, (await r.text()).slice(0, 400));
+      console.error("[meta] evento recusado", nome, r.status, (await r.text()).slice(0, 400));
       return { enviado: false, motivo: `Meta respondeu ${r.status}` };
     }
     return { enviado: true };
   } catch (e) {
-    console.error("[meta] falha ao enviar", evento, e);
+    console.error("[meta] falha ao enviar", nome, e);
     return { enviado: false, motivo: "falha de rede" };
   }
+}
+
+/** Manda um evento do site (Lead, StartTrial, Subscribe) para a Meta. Nunca lança. */
+async function enviar(evento: Evento, eventId: string, pessoa: Pessoa, origem: OrigemAnuncio | null, valor?: number) {
+  if (!origem?.consentiu) return { enviado: false, motivo: "sem consentimento" };
+  return postarEventos(evento, [
+    {
+      event_name: evento,
+      event_time: Math.floor(Date.now() / 1000),
+      event_id: eventId,
+      action_source: "website",
+      event_source_url: origem.pagina ?? `${URL_APP}/cadastro`,
+      user_data: dadosDaPessoa(pessoa, origem),
+      ...(valor != null ? { custom_data: { value: Number(valor.toFixed(2)), currency: "BRL" } } : {}),
+    },
+  ]);
 }
 
 /** Manda o evento uma vez só por profissional (marca em eventos_meta). */
@@ -128,4 +135,79 @@ export async function registrarAprovacao(profissionalId: string) {
 /** Primeiro pagamento confirmado pelo Asaas: virou cliente (Subscribe com o valor). */
 export async function registrarPrimeiroPagamento(profissionalId: string, valor: number) {
   await enviarUmaVez(profissionalId, "Subscribe", valor);
+}
+
+/*
+ * Etapas do funil para a Meta ("conectar o CRM", 14/11/2026). A Meta só via o cadastro (Lead); com as etapas,
+ * a campanha pode otimizar por "leads qualificados": gente parecida com quem USA a agenda, não com quem só se cadastra.
+ * Formato de CRM da API de Conversões: action_source "system_generated", custom_data.event_source "crm" e o nome
+ * da etapa como event_name. As etapas são escolhidas no Gerenciador de Eventos (conjunto "Vaguinha Site" → CRM).
+ * Mesma regra dos outros eventos: só de quem aceitou os cookies de medição. Nenhum dado da agenda vai junto, só a etapa.
+ */
+
+export const ETAPAS_CRM = [
+  { chave: "crm_cadastrou", nome: "Cadastrou" },
+  { chave: "crm_configurando", nome: "Configurando" },
+  { chave: "crm_usando", nome: "Usando" },
+  { chave: "crm_assinou", nome: "Assinou" },
+] as const;
+
+/** Até onde a conta chegou no funil (índice em ETAPAS_CRM). Etapa não volta: quem "Parou" já passou por "Configurando". */
+export function etapaAlcancada(nivel: NivelUso | undefined, assinou: boolean) {
+  if (assinou) return 3;
+  if (nivel === "usando") return 2;
+  if (nivel && nivel !== "so_entrou") return 1;
+  return 0;
+}
+
+/** Só olha contas recentes: lead velho não ajuda a Meta a aprender. */
+const DIAS_FUNIL = 60;
+
+/**
+ * Manda para a Meta as etapas novas de cada conta (uma vez por etapa, marcado em eventos_meta).
+ * Chamado pela tarefa de 5 em 5 min, mas só age uma vez por hora (minutos 0 a 4).
+ */
+export async function sincronizarEtapasCrm(admin: ReturnType<typeof criarClienteAdmin>, nivelDe: (id: string) => NivelUso | undefined) {
+  const desde = new Date(Date.now() - DIAS_FUNIL * 86_400_000).toISOString();
+  const { data: perfis } = await admin
+    .from("profiles")
+    .select("id, email, telefone, nome, origem_anuncio, eventos_meta")
+    .gte("created_at", desde)
+    .not("origem_anuncio", "is", null);
+
+  const agora = Math.floor(Date.now() / 1000);
+  const eventos: Record<string, unknown>[] = [];
+  const marcar: { id: string; eventos: Profile["eventos_meta"] }[] = [];
+  for (const p of perfis ?? []) {
+    const origem = p.origem_anuncio as OrigemAnuncio | null;
+    if (!origem?.consentiu) continue;
+    const ja = (p.eventos_meta ?? {}) as Profile["eventos_meta"];
+    const ate = etapaAlcancada(nivelDe(p.id), Boolean(ja.subscribe));
+    const novas = ETAPAS_CRM.slice(0, ate + 1).filter((e) => !ja[e.chave]);
+    if (!novas.length) continue;
+    const userData = dadosDaPessoa(p as Pessoa, origem);
+    const quando = new Date().toISOString();
+    novas.forEach((e, i) => {
+      eventos.push({
+        event_name: e.nome,
+        // etapas na ordem do funil, com 1 s de diferença
+        event_time: agora - (novas.length - 1 - i),
+        event_id: `${e.chave}:${p.id}`,
+        action_source: "system_generated",
+        user_data: userData,
+        custom_data: { event_source: "crm", lead_event_source: "Vaguinha" },
+      });
+    });
+    marcar.push({ id: p.id, eventos: { ...ja, ...Object.fromEntries(novas.map((e) => [e.chave, quando])) } });
+  }
+
+  let enviadas = 0;
+  // a Meta aceita até 1000 eventos por pedido
+  for (let i = 0; i < eventos.length; i += 500) {
+    const r = await postarEventos("etapas CRM", eventos.slice(i, i + 500));
+    if (!r.enviado) return { enviadas, erro: r.motivo };
+    enviadas += Math.min(500, eventos.length - i);
+  }
+  for (const m of marcar) await admin.from("profiles").update({ eventos_meta: m.eventos }).eq("id", m.id);
+  return { enviadas, contas: marcar.length };
 }
