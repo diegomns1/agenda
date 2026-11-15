@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarDaysIcon, ChartPieIcon, LightbulbIcon, ShieldCheckIcon, UsersIcon } from "lucide-react";
+import { CalendarDaysIcon, ChartPieIcon, LightbulbIcon, ShieldCheckIcon, TriangleAlertIcon, UsersIcon } from "lucide-react";
+import { saudeDoEnvio } from "@/features/whatsapp/meta";
 import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { ehAdmin, obterUsuario } from "@/lib/auth";
@@ -24,6 +25,9 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
     .select("id", { count: "exact", head: true })
     .is("lida_em", null)
     .then((r) => r, () => ({ count: 0 }));
+
+  // a Meta está barrando as mensagens que a gente inicia (ex.: forma de pagamento)? consulta guardada por 10 min
+  const saude = await saudeDoEnvio();
 
   return (
     <div className="flex flex-1 flex-col overflow-x-clip">
@@ -82,6 +86,21 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
           </Link>
         </Button>
       </nav>
+      {saude?.bloqueado ? (
+        <div className="mx-auto mt-4 w-full max-w-3xl px-4">
+          <div role="alert" className="flex items-start gap-2.5 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">
+            <TriangleAlertIcon className="mt-0.5 size-4 shrink-0 text-destructive" />
+            <div className="min-w-0">
+              <p className="font-semibold text-destructive">A Meta está bloqueando as mensagens prontas do WhatsApp</p>
+              <p className="text-muted-foreground">
+                Motivo: {saude.motivos.join("; ") || "a conta do WhatsApp não pode iniciar conversas"}. Oferta de ajuda, pedido de
+                feedback e retomar conversa não chegam em ninguém até resolver. Responder quem escreveu nas últimas 24 h continua
+                funcionando.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">{children}</main>
     </div>
   );

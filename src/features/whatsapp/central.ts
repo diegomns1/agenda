@@ -6,7 +6,8 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 import type { WhatsappContato, WhatsappMensagem } from "@/types/database";
 import { erroDeJanela } from "./janela";
 import { apagarArquivosDoContato, linksTemporarios } from "./midia";
-import { bloquearNaMeta, enviarModelo, enviarTexto } from "./meta";
+import { bloquearNaMeta, enviarModelo, enviarTexto, saudeDoEnvio } from "./meta";
+import { registrarEnvio } from "@/features/ativacao/enviar";
 import { MODELOS, type IdModelo } from "./modelos";
 import { primeiroNome } from "@/lib/texto";
 
@@ -25,6 +26,8 @@ export type MensagemCentral = Pick<
   WhatsappMensagem,
   "id" | "de" | "texto" | "criado_em" | "tipo" | "midia_mime" | "midia_nome" | "transcricao" | "status"
 > & {
+  /** por que a Meta não entregou (status "falhou") */
+  erro?: string | null;
   /** link temporário (1 h) do arquivo; null se não tem arquivo ou já foi apagado (90 dias) */
   url: string | null;
   /** tinha arquivo, mas não está mais disponível */
@@ -85,14 +88,25 @@ export async function listarContatos(): Promise<ContatoCentral[]> {
 /** Mensagens da conversa (marca como lidas). */
 export async function abrirConversa(telefone: string): Promise<MensagemCentral[]> {
   const admin = await exigirAdmin();
-  const { data } = await admin
+  type Linha = Omit<MensagemCentral, "url" | "semArquivo"> & { midia_path: string | null };
+  const comErro = await admin
     .from("whatsapp_mensagens")
-    .select("id, de, texto, criado_em, tipo, midia_path, midia_mime, midia_nome, transcricao, status")
+    .select("id, de, texto, criado_em, tipo, midia_path, midia_mime, midia_nome, transcricao, status, erro")
     .eq("telefone", telefone)
     .order("criado_em", { ascending: false })
     .limit(300);
+  let linhas = (comErro.data ?? []) as Linha[];
+  if (comErro.error) {
+    // sem a migração 0031 a coluna "erro" não existe: busca sem ela
+    const { data } = await admin
+      .from("whatsapp_mensagens")
+      .select("id, de, texto, criado_em, tipo, midia_path, midia_mime, midia_nome, transcricao, status")
+      .eq("telefone", telefone)
+      .order("criado_em", { ascending: false })
+      .limit(300);
+    linhas = (data ?? []) as Linha[];
+  }
   await admin.from("whatsapp_contatos").update({ nao_lidas: 0 }).eq("telefone", telefone);
-  const linhas = (data ?? []) as (Omit<MensagemCentral, "url" | "semArquivo"> & { midia_path: string | null })[];
   const links = await linksTemporarios(admin, linhas.map((m) => m.midia_path).filter((x): x is string => Boolean(x)));
   return linhas
     .map(({ midia_path, ...m }) => ({
@@ -162,13 +176,17 @@ export async function mandarMensagemPronta(telefone: string, id: IdModelo): Prom
   const { data: c } = await admin.from("whatsapp_contatos").select("nome, nome_whatsapp, profissional_id, bloqueado").eq("telefone", telefone).maybeSingle();
   if (!c) return { ok: false, erro: "Contato não encontrado." };
   if (c.bloqueado) return { ok: false, erro: "Este contato está bloqueado. Desbloqueie para mandar mensagem." };
+  const saude = await saudeDoEnvio();
+  if (saude?.bloqueado) {
+    return { ok: false, erro: `A Meta está bloqueando as mensagens prontas: ${saude.motivos[0] ?? "a conta do WhatsApp não pode iniciar conversas"}.` };
+  }
   const nome = primeiroNome(c.nome || c.nome_whatsapp || "").replace(/[^\p{L}' -]/gu, "") || "tudo bem";
   const r = await enviarModelo(telefone, modelo.nome, [nome]);
   if (!r) return { ok: false, erro: `A Meta recusou. O modelo "${modelo.nome}" já está Ativo no WhatsApp Manager?` };
   await admin.from("whatsapp_mensagens").insert({ telefone, de: "equipe", texto: modelo.texto(nome), wamid: r.wamid && r.wamid !== "simulado" ? r.wamid : null, status: "enviada" });
   await admin.from("whatsapp_contatos").update({ ultima_msg_em: new Date().toISOString(), nao_lidas: 0 }).eq("telefone", telefone);
   if (c.profissional_id && (id === "ajuda_inicio" || id === "feedback_teste")) {
-    await admin.from("ativacao_envios").insert({ profissional_id: c.profissional_id, tipo: id, canal: "whatsapp", ok: true, manual: true });
+    await registrarEnvio(admin, { id: c.profissional_id }, id, "whatsapp", true, null, true, r.wamid);
   }
   return { ok: true };
 }

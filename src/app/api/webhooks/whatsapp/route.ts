@@ -1,6 +1,7 @@
 import { after, NextResponse, type NextRequest } from "next/server";
 import { assinaturaValida } from "@/features/whatsapp/meta";
 import { lerWebhook, tratarMensagem } from "@/features/whatsapp/processar";
+import { lerAvisosDeEntrega, registrarAvisosDeEntrega } from "@/features/whatsapp/entrega";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,8 @@ export const dynamic = "force-dynamic";
  * URL: https://painel.vaguinha.app/api/webhooks/whatsapp · campo assinado: "messages".
  *
  * GET: a Meta confere a URL uma vez (hub.verify_token = WHATSAPP_VERIFY_TOKEN).
- * POST: cada mensagem recebida. Responde 200 na hora (senão a Meta reenvia) e trata depois, com `after`.
+ * POST: cada mensagem recebida e cada aviso de entrega (entregue, lida, falhou) das que saíram.
+ * Responde 200 na hora (senão a Meta reenvia) e trata depois, com `after`.
  */
 export async function GET(request: NextRequest) {
   const p = request.nextUrl.searchParams;
@@ -34,8 +36,10 @@ export async function POST(request: NextRequest) {
   }
 
   const mensagens = lerWebhook(json);
-  if (mensagens.length) {
+  const avisos = lerAvisosDeEntrega(json);
+  if (mensagens.length || avisos.length) {
     after(async () => {
+      await registrarAvisosDeEntrega(avisos).catch((e) => console.error("[whatsapp] avisos de entrega", e));
       // uma de cada vez, na ordem em que chegaram
       for (const m of mensagens) await tratarMensagem(m);
     });

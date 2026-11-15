@@ -276,6 +276,8 @@ export type WhatsappMensagem = {
   midia_bytes: number | null;
   transcricao: string | null;
   status: "enviada" | "entregue" | "lida" | "falhou" | null;
+  /** por que a Meta não entregou (migração 0031) */
+  erro?: string | null;
 };
 
 /** "Criar com IA" nos Stories: um pedido de imagem (migração 0029). */
@@ -438,6 +440,8 @@ export type Database = {
           erro: string | null;
           manual: boolean;
           enviado_em: string;
+          /** id da mensagem na Meta (migração 0031) */
+          wamid?: string | null;
         };
         Insert: {
           profissional_id: string;
@@ -447,6 +451,7 @@ export type Database = {
           erro?: string | null;
           manual?: boolean;
           enviado_em?: string;
+          wamid?: string | null;
         };
         Update: Partial<{ ok: boolean; erro: string | null }>;
         Relationships: [];

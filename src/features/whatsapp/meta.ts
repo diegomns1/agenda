@@ -128,6 +128,53 @@ export async function enviarModelo(
   });
 }
 
+export type SaudeDoEnvio = { bloqueado: boolean; motivos: string[] };
+let saudeGuardada: { em: number; valor: SaudeDoEnvio } | null = null;
+const SAUDE_VALE_MS = 10 * 60_000;
+
+/**
+ * A Meta está deixando este número INICIAR conversas (mensagens prontas / modelos)? Quando há problema na forma
+ * de pagamento da conta do WhatsApp, ela aceita o envio e descarta depois: só este "estado de saúde" avisa antes.
+ * Responder quem escreveu nas últimas 24 h continua funcionando mesmo bloqueado. Consulta guardada por 10 min.
+ * Devolve null se não deu para saber (sem chave, Meta fora do ar): nesse caso, segue como se estivesse tudo certo.
+ */
+export async function saudeDoEnvio(): Promise<SaudeDoEnvio | null> {
+  if (!envioConfigurado()) return null;
+  if (saudeGuardada && Date.now() - saudeGuardada.em < SAUDE_VALE_MS) return saudeGuardada.valor;
+  try {
+    const r = await fetch(`https://graph.facebook.com/${VERSAO}/${process.env.WHATSAPP_PHONE_NUMBER_ID}?fields=health_status`, {
+      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!r.ok) return null;
+    const json = (await r.json()) as {
+      health_status?: {
+        can_send_message?: string;
+        entities?: { can_send_message?: string; errors?: { error_code?: number; error_description?: string }[] }[];
+      };
+    };
+    const saude = json.health_status;
+    if (!saude) return null;
+    const bloqueado = saude.can_send_message === "BLOCKED";
+    const motivos = bloqueado
+      ? (saude.entities ?? [])
+          .filter((e) => e.can_send_message === "BLOCKED")
+          .flatMap((e) => e.errors ?? [])
+          .map((e) =>
+            e.error_code === 141006
+              ? "problema na forma de pagamento da conta do WhatsApp"
+              : `${e.error_description ?? "motivo não informado"}${e.error_code ? ` (código ${e.error_code})` : ""}`,
+          )
+      : [];
+    const valor = { bloqueado, motivos: [...new Set(motivos)] };
+    saudeGuardada = { em: Date.now(), valor };
+    return valor;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Bloqueia (ou desbloqueia) o número na Meta: bloqueado, a pessoa não consegue mais escrever para o WhatsApp oficial.
  * A Meta só bloqueia quem escreveu nas últimas 24 h (erro 131047); nesse caso o bloqueio fica só no painel.

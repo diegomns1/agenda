@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { BanIcon, BotIcon, ClockIcon, ExternalLinkIcon, Loader2Icon, MegaphoneIcon, SendIcon, UserRoundIcon } from "lucide-react";
+import { BanIcon, BotIcon, CheckCheckIcon, CheckIcon, ClockIcon, ExternalLinkIcon, Loader2Icon, MegaphoneIcon, SendIcon, TriangleAlertIcon, UserRoundIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -160,7 +160,23 @@ export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: Cont
                       </p>
                     ) : null}
                     {m.tipo === "texto" || !m.tipo ? <p>{m.texto}</p> : <MidiaMensagem m={m} escuro={m.de === "equipe"} />}
-                    <p className={cn("mt-0.5 text-right text-mini", m.de === "equipe" ? "text-primary-foreground/70" : "text-muted-foreground")}>{quando(m.criado_em)}</p>
+                    <p className={cn("mt-0.5 flex items-center justify-end gap-1 text-mini", m.de === "equipe" ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                      {quando(m.criado_em)}
+                      {/* situação que a Meta avisou (só as mensagens prontas são acompanhadas) */}
+                      {m.de !== "contato" && m.status === "enviada" ? <CheckIcon className="size-3" aria-label="Enviada, ainda sem confirmação de entrega" /> : null}
+                      {m.de !== "contato" && m.status === "entregue" ? <CheckCheckIcon className="size-3" aria-label="Entregue" /> : null}
+                      {m.de !== "contato" && m.status === "lida" ? (
+                        <>
+                          <CheckCheckIcon className="size-3" aria-hidden /> lida
+                        </>
+                      ) : null}
+                    </p>
+                    {m.de !== "contato" && m.status === "falhou" ? (
+                      <p className="mt-1 flex items-start gap-1 rounded-lg bg-destructive px-2 py-1 text-mini font-semibold text-white">
+                        <TriangleAlertIcon className="mt-px size-3 shrink-0" />
+                        <span>Não foi entregue{m.erro ? `: ${m.erro}` : ""}</span>
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               ),

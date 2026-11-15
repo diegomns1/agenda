@@ -21,12 +21,39 @@ export default async function PaginaConta({ params }: PageProps<"/admin/contas/[
   const { id } = await params;
   const conta = await obterConta(id);
   if (!conta) notFound();
-  const { data: envios } = await criarClienteAdmin()
+  const admin = criarClienteAdmin();
+  type Envio = { tipo: string; canal: string; ok: boolean; erro: string | null; manual: boolean; enviado_em: string; wamid?: string | null };
+  const comWamid = await admin
     .from("ativacao_envios")
-    .select("tipo, canal, ok, erro, manual, enviado_em")
+    .select("tipo, canal, ok, erro, manual, enviado_em, wamid")
     .eq("profissional_id", id)
     .order("enviado_em", { ascending: false })
     .limit(10);
+  let envios = comWamid.data as Envio[] | null;
+  if (comWamid.error) {
+    // sem a migração 0031 a coluna "wamid" não existe: lista sem a situação de entrega
+    const { data } = await admin
+      .from("ativacao_envios")
+      .select("tipo, canal, ok, erro, manual, enviado_em")
+      .eq("profissional_id", id)
+      .order("enviado_em", { ascending: false })
+      .limit(10);
+    envios = data;
+  }
+  // o que a Meta avisou depois do envio (entregue, lida): "enviada" sozinha ainda não quer dizer que chegou
+  const wamids = (envios ?? []).map((e) => e.wamid).filter((x): x is string => Boolean(x));
+  const { data: entregas } = wamids.length
+    ? await admin.from("whatsapp_mensagens").select("wamid, status").in("wamid", wamids)
+    : { data: [] as { wamid: string | null; status: string | null }[] };
+  const situacao = new Map((entregas ?? []).map((m) => [m.wamid, m.status]));
+  const comoFoi = (e: Envio) => {
+    if (!e.ok) return `não foi (${e.erro ?? "erro"})`;
+    if (e.canal !== "whatsapp") return "enviada";
+    const s = e.wamid ? situacao.get(e.wamid) : null;
+    if (s === "lida") return "lida";
+    if (s === "entregue") return "entregue";
+    return e.wamid ? "enviada, sem confirmação de entrega" : "enviada";
+  };
 
   const linhas: [string, React.ReactNode][] = [
     ["E-mail", conta.email],
@@ -88,7 +115,7 @@ export default async function PaginaConta({ params }: PageProps<"/admin/contas/[
             {envios.map((e) => (
               <li key={e.enviado_em + e.canal}>
                 {formatarData(e.enviado_em, "dd/MM HH:mm")} · {e.tipo === "ajuda_inicio" ? "oferta de ajuda" : "pedido de feedback"} ·{" "}
-                {e.canal === "whatsapp" ? "WhatsApp" : "e-mail"} · {e.ok ? "enviada" : `não foi (${e.erro ?? "erro"})`}
+                {e.canal === "whatsapp" ? "WhatsApp" : "e-mail"} · <span className={e.ok ? undefined : "font-semibold text-destructive"}>{comoFoi(e)}</span>
                 {e.manual ? " · pelo botão" : " · automática"}
               </li>
             ))}
