@@ -123,6 +123,9 @@ services:
     env_file:
       - .env
     mem_limit: 700m
+    # A Evolution escreve no registro cada mensagem recebida. Por privacidade, o registro dela fica desligado.
+    logging:
+      driver: "none"
 
   evolution-postgres:
     container_name: evolution_postgres

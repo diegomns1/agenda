@@ -47,10 +47,34 @@ async function chamar<T>(metodo: "GET" | "POST" | "DELETE", caminho: string, cor
 const enc = encodeURIComponent;
 
 /**
+ * Avisos que a Evolution manda para o painel. Versão 2 (fase 3): conexão + mensagens recebidas.
+ * As mensagens chegam todas, mas o painel só usa a resposta de quem recebeu lembrete; o resto é descartado na hora.
+ */
+export const VERSAO_AVISOS = 2;
+const EVENTOS_AVISOS = ["CONNECTION_UPDATE", "MESSAGES_UPSERT"];
+
+function configAvisos(urlAvisos: string) {
+  return {
+    enabled: true,
+    url: urlAvisos,
+    byEvents: false,
+    base64: false,
+    headers: { "x-vaguinha-token": process.env.EVOLUTION_WEBHOOK_SECRET },
+    events: EVENTOS_AVISOS,
+  };
+}
+
+/** Atualiza os avisos de uma conexão que já existe (conexões criadas antes da fase 3). */
+export async function configurarAvisos(nome: string, urlAvisos: string): Promise<boolean> {
+  const r = await chamar("POST", `/webhook/set/${enc(nome)}`, { webhook: configAvisos(urlAvisos) });
+  return r.ok;
+}
+
+/**
  * Cria a conexão e já pede o QR Code. Com `numero`, a Evolution também gera o código de 8 letras
  * (WhatsApp → Dispositivos conectados → Conectar com número de telefone).
  * Configurada para não atrapalhar o celular dela: não marca nada como lido, não fica "online", ignora grupos,
- * não puxa o histórico. Só avisa o painel quando a conexão muda (nada de mensagens, por enquanto).
+ * não puxa o histórico. Avisa o painel da conexão e das mensagens recebidas (ver VERSAO_AVISOS).
  */
 export async function criarInstancia(nome: string, numero: string | null, urlAvisos: string): Promise<QrEvolution | null> {
   const r = await chamar<{ qrcode?: QrEvolution }>("POST", "/instance/create", {
@@ -64,14 +88,7 @@ export async function criarInstancia(nome: string, numero: string | null, urlAvi
     readMessages: false,
     readStatus: false,
     syncFullHistory: false,
-    webhook: {
-      enabled: true,
-      url: urlAvisos,
-      byEvents: false,
-      base64: false,
-      headers: { "x-vaguinha-token": process.env.EVOLUTION_WEBHOOK_SECRET },
-      events: ["CONNECTION_UPDATE"],
-    },
+    webhook: configAvisos(urlAvisos),
   });
   return r.ok ? (r.dados?.qrcode ?? {}) : null;
 }

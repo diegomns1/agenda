@@ -97,6 +97,20 @@ export function DetalheAgendamento({ agendamento: a, clientes, mensagens, aoFech
                 </DialogDescription>
               </DialogHeader>
 
+              {a.tipo === "atendimento" && (a.cliente_confirmou_em || a.resposta_cliente) ? (
+                <p
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-sm",
+                    a.cliente_confirmou_em ? "bg-sucesso text-sucesso-texto" : "bg-muted/60",
+                  )}
+                >
+                  {a.cliente_confirmou_em
+                    ? `✅ Confirmou pelo WhatsApp (${formatarData(a.cliente_confirmou_em, "dd/MM 'às' HH:mm")})`
+                    : "💬 Respondeu o lembrete:"}
+                  {a.resposta_cliente && !a.cliente_confirmou_em ? <span className="mt-0.5 block whitespace-pre-wrap">“{a.resposta_cliente}”</span> : null}
+                </p>
+              ) : null}
+
               {a.tipo === "atendimento" ? (
                 <dl className="grid grid-cols-2 gap-2 text-sm">
                   <div>

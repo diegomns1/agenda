@@ -2,13 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { obterPerfil, obterUsuario } from "@/lib/auth";
-import { URL_APP } from "@/lib/constantes";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { normalizarTelefone } from "@/lib/telefone";
 import type { WhatsappConexao } from "@/types/database";
 import { podeConectarWhatsappProprio } from "./acesso";
-import { HORAS_LEMBRETE } from "./opcoes";
-import { apagarInstancia, criarInstancia, estadoInstancia, infoInstancia, nomeInstancia, qrAtual, type QrEvolution } from "./evolution";
+import { HORAS_LEMBRETE, URL_AVISOS_EVOLUTION } from "./opcoes";
+import { apagarInstancia, criarInstancia, estadoInstancia, infoInstancia, nomeInstancia, qrAtual, VERSAO_AVISOS, type QrEvolution } from "./evolution";
 
 /*
  * Conectar o WhatsApp da própria profissional (15/11/2026). A tela chama `conectarWhatsapp` e depois
@@ -56,7 +55,7 @@ export async function conectarWhatsapp(entrada: { telefone?: string | null; acei
   // começa do zero: se havia uma conexão pela metade (ou caída), apaga antes
   if ((await estadoInstancia(nome)) !== "inexistente") await apagarInstancia(nome);
 
-  const q = await criarInstancia(nome, numero, `${URL_APP}/api/webhooks/evolution`);
+  const q = await criarInstancia(nome, numero, URL_AVISOS_EVOLUTION);
   if (!q) return { ...vazio, erro: "Não consegui falar com o servidor do WhatsApp. Tente de novo em instantes." };
 
   const agora = new Date().toISOString();
@@ -65,6 +64,7 @@ export async function conectarWhatsapp(entrada: { telefone?: string | null; acei
     instancia: nome,
     estado: "conectando",
     aceite_risco_em: agora,
+    avisos_versao: VERSAO_AVISOS,
     atualizado_em: agora,
   });
   return { ...vazio, estado: "conectando", ...deQr(q) };

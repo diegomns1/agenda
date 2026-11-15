@@ -2,12 +2,14 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { enviarPush } from "@/lib/push";
+import { tratarMensagemRecebida, type MensagemEvolution } from "@/features/whatsapp-proprio/respostas";
 
 /*
  * Avisos da Evolution API (WhatsApp da própria profissional), 15/11/2026.
- * Por enquanto só "connection.update": conectou → guarda o número; caiu → marca desconectado e avisa no celular.
+ * "connection.update": conectou → guarda o número; caiu → marca desconectado e avisa no celular.
+ * "messages.upsert": resposta da cliente ao lembrete automático (features/whatsapp-proprio/respostas.ts).
  * A Evolution manda o cabeçalho x-vaguinha-token (EVOLUTION_WEBHOOK_SECRET), configurado ao criar a conexão.
- * Mensagens NÃO são assinadas aqui: nada das conversas dela chega ao painel.
+ * Das mensagens, só a resposta a um lembrete é usada; as outras são descartadas sem gravar nem logar.
  */
 
 export const dynamic = "force-dynamic";
@@ -15,7 +17,7 @@ export const dynamic = "force-dynamic";
 type Aviso = {
   event?: string;
   instance?: string;
-  data?: { state?: string; statusReason?: number; wuid?: string; profileName?: string };
+  data?: { state?: string; statusReason?: number; wuid?: string; profileName?: string } & MensagemEvolution;
 };
 
 /** No máximo um aviso de queda a cada 6 horas. */
@@ -33,9 +35,17 @@ export async function POST(request: NextRequest) {
   if (!tokenValido(request.headers.get("x-vaguinha-token"))) return NextResponse.json({ erro: "Não autorizado" }, { status: 401 });
 
   const aviso = (await request.json().catch(() => ({}))) as Aviso;
-  if (aviso.event !== "connection.update" || !aviso.instance) return NextResponse.json({ ok: true });
+  if (!aviso.instance) return NextResponse.json({ ok: true });
 
   const admin = criarClienteAdmin();
+
+  // mensagem recebida: só serve a resposta a um lembrete automático; o resto é descartado (sem gravar nem logar)
+  if (aviso.event === "messages.upsert") {
+    if (aviso.data) await tratarMensagemRecebida(admin, aviso.instance, aviso.data).catch((e) => console.error("[evolution] resposta", e instanceof Error ? e.message : "erro"));
+    return NextResponse.json({ ok: true });
+  }
+  if (aviso.event !== "connection.update") return NextResponse.json({ ok: true });
+
   const { data: linha } = await admin.from("whatsapp_conexoes").select("*").eq("instancia", aviso.instance).maybeSingle();
   if (!linha) return NextResponse.json({ ok: true });
 

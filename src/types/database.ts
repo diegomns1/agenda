@@ -167,6 +167,8 @@ export type Cliente = {
   nome: string;
   telefone: string | null; // só dígitos com DDI: 5511999999999
   observacoes: string | null;
+  /** respondeu "parar" ao lembrete automático (migração 0027) */
+  sem_lembrete_auto?: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -201,6 +203,10 @@ export type Agendamento = {
   /** lembrete automático pelo WhatsApp da profissional (migração 0026) */
   lembrete_auto_em: string | null;
   lembrete_auto_erro: string | null;
+  /** resposta da cliente ao lembrete automático (migração 0027) */
+  cliente_confirmou_em: string | null;
+  resposta_cliente: string | null;
+  resposta_cliente_em: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -282,6 +288,8 @@ export type WhatsappConexao = {
   /** lembrete automático ligado e quantas horas antes (24, 12, 3 ou 2), migração 0026 */
   lembrete_ativo: boolean;
   lembrete_horas: number;
+  /** 1 = só conexão; 2 = conexão + respostas (migração 0027) */
+  avisos_versao: number;
   atualizado_em: string;
 };
 

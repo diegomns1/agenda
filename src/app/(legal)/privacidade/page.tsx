@@ -120,8 +120,11 @@ export default function PaginaPrivacidade() {
         <li>
           <strong>Seu próprio WhatsApp (plano Premium, só se você conectar)</strong>: a conexão fica num servidor nosso (Evolution
           API, no mesmo servidor do Vaguinha) e é usada só para mandar, do seu número, os lembretes das suas clientes com horário
-          marcado. Guardamos apenas o número conectado e o estado da conexão; não lemos nem guardamos suas conversas, contatos ou
-          fotos. Você desconecta quando quiser, na tela Lembretes ou no próprio WhatsApp (Dispositivos conectados).
+          marcado, e para receber a resposta dela ao lembrete (por exemplo, “SIM” para confirmar). As mensagens que chegam no seu
+          WhatsApp passam pelo nosso servidor só para achar essa resposta: as que não são resposta a um lembrete são descartadas na
+          hora, sem serem guardadas nem registradas. Guardamos o número conectado, o estado da conexão e, de cada lembrete, só a
+          resposta da cliente (até 300 letras), junto do atendimento. Você desconecta quando quiser, na tela Lembretes ou no
+          próprio WhatsApp (Dispositivos conectados).
         </li>
         <li>
           <strong>Google (Google Ads)</strong>, só se você aceitou os cookies de medição: a tag do Google mede as visitas ao site

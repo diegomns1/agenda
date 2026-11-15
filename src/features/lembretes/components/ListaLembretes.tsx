@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { BellIcon, BotIcon, ChevronDownIcon, PhoneOffIcon, TriangleAlertIcon } from "lucide-react";
+import { BellIcon, BotIcon, CheckCheckIcon, ChevronDownIcon, MessageCircleIcon, PhoneOffIcon, TriangleAlertIcon } from "lucide-react";
 import { BotaoLembrarCliente } from "./BotaoLembrarCliente";
 import { EstadoVazio } from "@/components/layout/EstadoVazio";
 import { dataDe, formatarData, horaDe, rotuloRelativo } from "@/lib/datas";
@@ -42,7 +42,15 @@ function Item({ a, mensagens, destaque }: { a: LembreteItem; mensagens: Mensagen
             </span>
           ) : null}
         </p>
-        {a.lembrete_auto_em && !a.lembrete_auto_erro && a.cliente_avisada_em ? (
+        {a.cliente_confirmou_em ? (
+          <p className="flex items-center gap-1 text-mini font-medium text-sucesso-forte">
+            <CheckCheckIcon className="size-3" /> confirmou pelo WhatsApp às {horaDe(a.cliente_confirmou_em)}
+          </p>
+        ) : a.resposta_cliente ? (
+          <p className="flex min-w-0 items-center gap-1 text-mini text-primary">
+            <MessageCircleIcon className="size-3 shrink-0" /> <span className="truncate">respondeu: “{a.resposta_cliente}”</span>
+          </p>
+        ) : a.lembrete_auto_em && !a.lembrete_auto_erro && a.cliente_avisada_em ? (
           <p className="flex items-center gap-1 text-mini text-sucesso-forte">
             <BotIcon className="size-3" /> enviado sozinho às {horaDe(a.lembrete_auto_em)}
           </p>

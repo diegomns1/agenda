@@ -6,7 +6,9 @@ import { temRecurso } from "@/lib/planos";
 import type { criarClienteAdmin } from "@/lib/supabase/admin";
 import { normalizarTelefone, variacoesCelular } from "@/lib/telefone";
 import { contextoDoPerfil, modeloDe, preencher, valoresDoAtendimento } from "@/features/mensagens/modelos";
-import { enviarTextoProprio, estadoInstancia, evolutionConfigurada } from "./evolution";
+import { configurarAvisos, enviarTextoProprio, estadoInstancia, evolutionConfigurada, VERSAO_AVISOS } from "./evolution";
+import { URL_AVISOS_EVOLUTION } from "./opcoes";
+import { LINHA_CONFIRMAR, pedeConfirmacao } from "./resposta";
 
 /*
  * Lembrete automático pelo WhatsApp da própria profissional (fase 2, 15/11/2026).
@@ -48,7 +50,7 @@ export async function rodarLembretesAutomaticos(admin: Admin, agora = new Date()
 
   const { data: conexoes } = await admin
     .from("whatsapp_conexoes")
-    .select("profissional_id, instancia, numero, lembrete_horas")
+    .select("profissional_id, instancia, numero, lembrete_horas, avisos_versao")
     .eq("estado", "conectado")
     .eq("lembrete_ativo", true);
   if (!conexoes?.length) return { enviados: 0 };
@@ -98,9 +100,16 @@ export async function rodarLembretesAutomaticos(admin: Admin, agora = new Date()
         .limit(5);
       if (!candidatos?.length) return;
 
+      // conexões criadas antes da fase 3: passam a avisar as respostas das clientes
+      if (c.avisos_versao < VERSAO_AVISOS && (await configurarAvisos(c.instancia, URL_AVISOS_EVOLUTION))) {
+        await admin.from("whatsapp_conexoes").update({ avisos_versao: VERSAO_AVISOS }).eq("profissional_id", c.profissional_id);
+      }
+
       const proprios = new Set(c.numero ? variacoesCelular(c.numero) : []);
       const contexto = contextoDoPerfil(perfil, URL_APP);
-      const modelo = modeloDe(perfil, "lembrete");
+      const textoBase = modeloDe(perfil, "lembrete");
+      // a resposta "SIM" confirma o horário: se o texto dela não pede confirmação, acrescenta uma linha
+      const modelo = pedeConfirmacao(textoBase) ? textoBase : textoBase + LINHA_CONFIRMAR;
 
       // tenta o primeiro que dá para mandar; os que não dão ficam anotados (e seguem na lista para mandar na mão)
       for (const a of candidatos) {
@@ -109,13 +118,21 @@ export async function rodarLembretesAutomaticos(admin: Admin, agora = new Date()
         const motivoPular = !a.cliente_id ? "sem cliente cadastrada" : null;
 
         let telefone: string | null = null;
+        let pediuParar = false;
         if (!motivoPular && a.cliente_id) {
-          const { data: cli } = await admin.from("clientes").select("telefone").eq("id", a.cliente_id).maybeSingle();
+          const { data: cli } = await admin.from("clientes").select("telefone, sem_lembrete_auto").eq("id", a.cliente_id).maybeSingle();
           telefone = normalizarTelefone(cli?.telefone);
+          pediuParar = Boolean(cli?.sem_lembrete_auto);
         }
         const motivo =
           motivoPular ??
-          (!telefone || !/^55\d{10,11}$/.test(telefone) ? "sem telefone" : proprios.has(telefone) ? "é o seu próprio número" : null);
+          (pediuParar
+            ? "a cliente pediu para não receber"
+            : !telefone || !/^55\d{10,11}$/.test(telefone)
+              ? "sem telefone"
+              : proprios.has(telefone)
+                ? "é o seu próprio número"
+                : null);
 
         // "reserva" o atendimento antes de mandar: se duas rodadas se cruzarem, só uma manda
         const { data: reservado } = await admin
