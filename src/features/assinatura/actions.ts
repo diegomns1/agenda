@@ -10,6 +10,7 @@ import {
   asaasConfigurado,
   atualizarAssinatura,
   atualizarCliente,
+  avisosSoPorEmail,
   buscarClientePorReferencia,
   cancelarAssinatura as cancelarNoAsaas,
   clienteExiste,
@@ -116,6 +117,8 @@ export async function assinar(_: EstadoForm, formData: FormData): Promise<Result
     } else if (perfil.cpf_cnpj !== cpfCnpj) {
       await atualizarCliente(customerId, { cpfCnpj });
     }
+    // avisos do Asaas só por e-mail, antes de criar a cobrança (sem SMS com o nome da conta; não trava se falhar)
+    await avisosSoPorEmail(customerId).catch((e) => console.error("[asaas] avisos só por e-mail", e instanceof Error ? e.message : e));
 
     // 2) assinatura: troca de valor se já existe uma ativa; senão cria
     let pagamentos: AsaasPagamento[] = [];

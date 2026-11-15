@@ -131,6 +131,43 @@ export async function atualizarCliente(id: string, dados: Partial<{ name: string
   return chamar<AsaasCliente>(`/customers/${id}`, { method: "PUT", body: JSON.stringify(dados) });
 }
 
+type AsaasNotificacao = {
+  id: string;
+  smsEnabledForCustomer?: boolean;
+  phoneCallEnabledForCustomer?: boolean;
+  whatsappEnabledForCustomer?: boolean;
+  smsEnabledForProvider?: boolean;
+  deleted?: boolean;
+};
+
+/**
+ * Avisos de cobrança do Asaas só por e-mail (16/11/2026): desliga SMS, WhatsApp e ligação para a cliente
+ * (e o SMS para a Vaguinha), que são cobrados por envio e chegam com o nome da conta do Asaas.
+ * O Asaas não tem campo para isso na criação da cliente: é aviso por aviso (PUT /notifications/batch).
+ * Devolve quantos avisos foram alterados (0 = já estava só por e-mail).
+ */
+export async function avisosSoPorEmail(customerId: string): Promise<number> {
+  const r = await chamar<Lista<AsaasNotificacao>>(`/customers/${encodeURIComponent(customerId)}/notifications`);
+  const mudar = r.data.filter(
+    (n) => !n.deleted && (n.smsEnabledForCustomer || n.phoneCallEnabledForCustomer || n.whatsappEnabledForCustomer || n.smsEnabledForProvider),
+  );
+  if (!mudar.length) return 0;
+  await chamar("/notifications/batch", {
+    method: "PUT",
+    body: JSON.stringify({
+      customer: customerId,
+      notifications: mudar.map((n) => ({
+        id: n.id,
+        smsEnabledForCustomer: false,
+        phoneCallEnabledForCustomer: false,
+        whatsappEnabledForCustomer: false,
+        smsEnabledForProvider: false,
+      })),
+    }),
+  });
+  return mudar.length;
+}
+
 // ------------------------------------------------------------- assinaturas
 
 /**

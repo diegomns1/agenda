@@ -4,6 +4,7 @@ import { enviarPush, pushConfigurado } from "@/lib/push";
 import { emailConfigurado, enviarEmail } from "@/lib/email";
 import { emailVencimentoProximo } from "@/features/emails/modelos";
 import { rodarAtivacao } from "@/features/ativacao/automatico";
+import { avisosDoAsaasSoPorEmail } from "@/features/assinatura/avisos";
 import { usoDasContas } from "@/features/admin/uso";
 import { sincronizarEtapasCrm } from "@/features/rastreio/servidor";
 import { rodarLembretesAutomaticos } from "@/features/whatsapp-proprio/lembretes";
@@ -73,6 +74,11 @@ async function executar(request: NextRequest) {
             return { enviadas: 0 };
           })
       : null;
+
+  // Avisos de cobrança do Asaas só por e-mail (sem SMS): confere todas as clientes a cada 6 horas
+  if (new Date().getMinutes() < 5 && new Date().getUTCHours() % 6 === 0) {
+    await avisosDoAsaasSoPorEmail(admin).catch((e) => console.error("[cron] avisos do Asaas", e instanceof Error ? e.message : e));
+  }
 
   const agora = new Date();
   const em1h = new Date(agora.getTime() + 60 * 60_000);
