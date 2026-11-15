@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { obterPerfil } from "@/lib/auth";
+import { obterPerfil, obterUsuario } from "@/lib/auth";
 import { temRecurso } from "@/lib/planos";
 import { contarInscricoesPush, listarLembretes } from "@/features/lembretes/queries";
 import { ListaLembretes } from "@/features/lembretes/components/ListaLembretes";
@@ -9,6 +9,9 @@ import { AtivarNotificacoes } from "@/features/lembretes/components/AtivarNotifi
 import { BloqueioPlano } from "@/components/layout/BloqueioPlano";
 import { mensagensDoPerfil } from "@/features/mensagens/modelos";
 import { URL_APP } from "@/lib/constantes";
+import { podeConectarWhatsappProprio } from "@/features/whatsapp-proprio/acesso";
+import { situacaoWhatsapp } from "@/features/whatsapp-proprio/actions";
+import { ConectarWhatsapp } from "@/features/whatsapp-proprio/components/ConectarWhatsapp";
 
 export const metadata: Metadata = { title: "Lembretes" };
 
@@ -34,7 +37,13 @@ export default async function PaginaLembretes({ searchParams }: PageProps<"/lemb
     );
   }
 
-  const [{ pendentes, avisados }, aparelhos] = await Promise.all([listarLembretes(), contarInscricoesPush()]);
+  const usuario = await obterUsuario();
+  const zapProprio = podeConectarWhatsappProprio(usuario, perfil);
+  const [{ pendentes, avisados }, aparelhos, situacaoZap] = await Promise.all([
+    listarLembretes(),
+    contarInscricoesPush(),
+    zapProprio ? situacaoWhatsapp() : Promise.resolve(null),
+  ]);
 
   return (
     <div className="grid gap-5">
@@ -47,6 +56,8 @@ export default async function PaginaLembretes({ searchParams }: PageProps<"/lemb
           </Link>
         </p>
       </div>
+
+      {situacaoZap ? <ConectarWhatsapp inicial={situacaoZap} telefonePerfil={perfil.telefone} /> : null}
 
       <ListaLembretes
         pendentes={pendentes}

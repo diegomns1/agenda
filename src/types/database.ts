@@ -264,6 +264,21 @@ export type WhatsappMensagem = {
   status: "enviada" | "entregue" | "lida" | "falhou" | null;
 };
 
+/** WhatsApp da própria profissional conectado pela Evolution API (migração 0025). */
+export type WhatsappConexao = {
+  profissional_id: string;
+  instancia: string;
+  estado: "desconectado" | "conectando" | "conectado";
+  numero: string | null;
+  nome_perfil: string | null;
+  aceite_risco_em: string | null;
+  conectado_em: string | null;
+  desconectado_em: string | null;
+  motivo_queda: string | null;
+  aviso_queda_em: string | null;
+  atualizado_em: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -341,6 +356,12 @@ export type Database = {
         Row: { profissional_id: string; telefone: string; conectado_em: string };
         Insert: { profissional_id: string; telefone: string; conectado_em?: string };
         Update: Partial<{ telefone: string; conectado_em: string }>;
+        Relationships: [];
+      };
+      whatsapp_conexoes: {
+        Row: WhatsappConexao;
+        Insert: Partial<WhatsappConexao> & { profissional_id: string; instancia: string };
+        Update: Partial<Omit<WhatsappConexao, "profissional_id">>;
         Relationships: [];
       };
       whatsapp_codigos: {
