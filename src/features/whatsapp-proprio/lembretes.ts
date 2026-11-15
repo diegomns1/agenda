@@ -13,7 +13,8 @@ import { enviarTextoProprio, estadoInstancia, evolutionConfigurada } from "./evo
  * Chamado pela tarefa de 5 em 5 min (api/cron/lembretes). Para parecer gente e não disparo:
  *   - só entre 8h e 20h (Brasília); se a hora certa cair de madrugada, sai às 8h;
  *   - no máximo 1 mensagem por profissional a cada rodada (5 min) e 40 por dia;
- *   - "digitando…" de 2 a 5 s antes de cada mensagem.
+ *   - "digitando…" de 2 a 5 s antes de cada mensagem;
+ *   - atendimento marcado há menos de 1 h espera (a pessoa acabou de combinar).
  * Usa o texto "Lembrete" da tela Mensagens. Ao sair, marca o mesmo check de "avisada" da lista de Lembretes.
  * Se não der (sem telefone, número sem WhatsApp, erro), anota o motivo e o atendimento fica na lista para mandar na mão.
  */
@@ -25,8 +26,8 @@ const HORA_FIM = 20;
 const MAXIMO_POR_DIA = 40;
 /** Não manda lembrete faltando menos que isso (já é tarde para ajudar). */
 const MINIMO_ANTES_MIN = 45;
-/** Marcado em cima da hora (menos de 3 h de antecedência): a pessoa acabou de combinar, não precisa de lembrete. */
-const ANTECEDENCIA_MINIMA_MARCACAO_H = 3;
+/** Acabou de ser marcado: espera 1 h antes de lembrar (a pessoa acabou de combinar). Depois disso, manda normalmente. */
+const ESPERA_DEPOIS_DE_MARCAR_MIN = 60;
 
 export function horaDeLembrar(agora = new Date()) {
   const hora = Number(formatInTimeZone(agora, FUSO, "H"));
@@ -65,7 +66,12 @@ export async function rodarLembretesAutomaticos(admin: Admin, agora = new Date()
   await Promise.all(
     conexoes.map(async (c) => {
       const perfil = perfilDe.get(c.profissional_id);
-      if (!perfil || perfil.status !== "aprovada" || contaVencida(perfil.ativa_ate) || !temRecurso(perfil.plano, "lembrete_automatico")) return;
+      if (!perfil || perfil.status !== "aprovada" || contaVencida(perfil.ativa_ate)) return;
+      // Premium; o admin também (vê o cartão para testar)
+      if (!temRecurso(perfil.plano, "lembrete_automatico")) {
+        const { data: u } = await admin.auth.admin.getUserById(c.profissional_id);
+        if (u?.user?.app_metadata?.role !== "admin") return;
+      }
 
       // limite do dia
       const { count: hoje } = await admin
@@ -98,8 +104,9 @@ export async function rodarLembretesAutomaticos(admin: Admin, agora = new Date()
 
       // tenta o primeiro que dá para mandar; os que não dão ficam anotados (e seguem na lista para mandar na mão)
       for (const a of candidatos) {
-        const marcadoComAntecedencia = new Date(a.inicio).getTime() - new Date(a.created_at).getTime() >= ANTECEDENCIA_MINIMA_MARCACAO_H * 3_600_000;
-        const motivoPular = !marcadoComAntecedencia ? "marcado em cima da hora" : !a.cliente_id ? "sem cliente cadastrada" : null;
+        // marcado agora há pouco: deixa para a próxima rodada (não anota nada)
+        if (agora.getTime() - new Date(a.created_at).getTime() < ESPERA_DEPOIS_DE_MARCAR_MIN * 60_000) continue;
+        const motivoPular = !a.cliente_id ? "sem cliente cadastrada" : null;
 
         let telefone: string | null = null;
         if (!motivoPular && a.cliente_id) {
