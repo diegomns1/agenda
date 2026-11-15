@@ -276,6 +276,21 @@ export type WhatsappMensagem = {
   status: "enviada" | "entregue" | "lida" | "falhou" | null;
 };
 
+/** "Criar com IA" nos Stories: um pedido de imagem (migração 0029). */
+export type ImagemIA = {
+  id: string;
+  profissional_id: string;
+  conversa_id: string;
+  pedido: string;
+  anexos: number;
+  estado: "gerando" | "pronta" | "erro";
+  erro: string | null;
+  imagem_path: string | null;
+  tokens: number | null;
+  criado_em: string;
+  pronta_em: string | null;
+};
+
 /** WhatsApp da própria profissional conectado pela Evolution API (migração 0025). */
 export type WhatsappConexao = {
   profissional_id: string;
@@ -373,6 +388,12 @@ export type Database = {
         Row: { profissional_id: string; telefone: string; conectado_em: string };
         Insert: { profissional_id: string; telefone: string; conectado_em?: string };
         Update: Partial<{ telefone: string; conectado_em: string }>;
+        Relationships: [];
+      };
+      imagens_ia: {
+        Row: ImagemIA;
+        Insert: Partial<ImagemIA> & { profissional_id: string; conversa_id: string; pedido: string };
+        Update: Partial<Omit<ImagemIA, "id" | "profissional_id">>;
         Relationships: [];
       };
       whatsapp_conexoes: {

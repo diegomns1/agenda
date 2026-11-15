@@ -135,6 +135,13 @@ export default function PaginaPrivacidade() {
           comerciais da Anthropic, esses dados não são usados para treinar os modelos dela.
         </li>
         <li>
+          <strong>OpenAI</strong>, em dois casos: para transformar em texto os áudios mandados para a assistente no WhatsApp, e
+          para criar as imagens do “Criar com IA” dos Stories (plano Premium). Nesse segundo caso, o texto do seu pedido e as
+          fotos que você anexar são enviados à OpenAI só para gerar a imagem. Guardamos o texto do pedido e a imagem final; as
+          fotos anexadas não ficam guardadas. Pelos termos da API da OpenAI, esses dados não são usados para treinar os modelos
+          dela.
+        </li>
+        <li>
           <strong>Asaas</strong>, para as cobranças da assinatura por Pix e cartão.
         </li>
         <li>
