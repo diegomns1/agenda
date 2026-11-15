@@ -26,8 +26,11 @@ const HORA_FIM = 20;
 const MAXIMO_POR_DIA = 40;
 /** Não manda lembrete faltando menos que isso (já é tarde para ajudar). */
 const MINIMO_ANTES_MIN = 45;
-/** Acabou de ser marcado: espera 1 h antes de lembrar (a pessoa acabou de combinar). Depois disso, manda normalmente. */
-const ESPERA_DEPOIS_DE_MARCAR_MIN = 60;
+/**
+ * Acabou de ser marcado: espera antes de lembrar (a pessoa acabou de combinar). Depois disso, manda normalmente.
+ * ZERADO PARA O TESTE do Diego (15/11/2026). Voltar para 60 depois dos testes.
+ */
+const ESPERA_DEPOIS_DE_MARCAR_MIN = 0;
 
 export function horaDeLembrar(agora = new Date()) {
   const hora = Number(formatInTimeZone(agora, FUSO, "H"));
