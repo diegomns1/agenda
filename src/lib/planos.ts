@@ -48,6 +48,8 @@ export const RECURSOS = {
   relatorios: { nome: "Relatórios", planoMinimo: "premium" as Plano },
   // chat de IA que consulta e propõe mudanças na agenda (src/features/assistente)
   assistente: { nome: "Assistente de IA", planoMinimo: "premium" as Plano },
+  // lembrete que sai sozinho do WhatsApp da própria profissional (src/features/whatsapp-proprio), 15/11/2026
+  lembrete_automatico: { nome: "Lembrete automático pelo seu WhatsApp", planoMinimo: "premium" as Plano },
 } as const;
 
 export type Recurso = keyof typeof RECURSOS;
