@@ -4,7 +4,7 @@ import { enviarPush, pushConfigurado } from "@/lib/push";
 import { emailConfigurado, enviarEmail } from "@/lib/email";
 import { emailVencimentoProximo } from "@/features/emails/modelos";
 import { rodarAtivacao } from "@/features/ativacao/automatico";
-import { avisosDoAsaasSoPorEmail } from "@/features/assinatura/avisos";
+import { desligarAvisosDoAsaas } from "@/features/assinatura/avisos";
 import { usoDasContas } from "@/features/admin/uso";
 import { sincronizarEtapasCrm } from "@/features/rastreio/servidor";
 import { rodarLembretesAutomaticos } from "@/features/whatsapp-proprio/lembretes";
@@ -75,9 +75,9 @@ async function executar(request: NextRequest) {
           })
       : null;
 
-  // Avisos de cobrança do Asaas só por e-mail (sem SMS): confere todas as clientes a cada 6 horas
+  // Avisos de cobrança do Asaas desligados (quem avisa é a Vaguinha): confere todas as clientes a cada 6 horas
   if (new Date().getMinutes() < 5 && new Date().getUTCHours() % 6 === 0) {
-    await avisosDoAsaasSoPorEmail(admin).catch((e) => console.error("[cron] avisos do Asaas", e instanceof Error ? e.message : e));
+    await desligarAvisosDoAsaas(admin).catch((e) => console.error("[cron] avisos do Asaas", e instanceof Error ? e.message : e));
   }
 
   const agora = new Date();
@@ -182,7 +182,20 @@ async function avisarVencimentos(admin: ReturnType<typeof criarClienteAdmin>): P
     const dias = diasEntre(hoje, p.ativa_ate).length - 1;
     // teste grátis (5 dias): avisa só na véspera, senão o e-mail sairia junto com o de aprovação
     if (p.plano === "teste" && dias > 1) continue;
-    const r = await enviarEmail(emailVencimentoProximo(p.email, p.nome, p.plano, p.ativa_ate, dias));
+    // mensalidade em aberto: o e-mail leva o link para pagar com um toque (os avisos do Asaas estão desligados)
+    const { data: aberta } =
+      p.plano === "teste"
+        ? { data: null }
+        : await admin
+            .from("cobrancas")
+            .select("link")
+            .eq("profissional_id", p.id)
+            .in("status", ["PENDING", "OVERDUE"])
+            .not("link", "is", null)
+            .order("vencimento", { ascending: true })
+            .limit(1)
+            .maybeSingle();
+    const r = await enviarEmail(emailVencimentoProximo(p.email, p.nome, p.plano, p.ativa_ate, dias, aberta?.link ?? null));
     if (r.enviado) {
       await admin.from("profiles").update({ aviso_vencimento_para: p.ativa_ate }).eq("id", p.id);
       enviados += 1;

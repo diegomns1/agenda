@@ -174,7 +174,15 @@ export function emailContaSuspensa(para: string, nome: string, motivo: string | 
 }
 
 /** Assinatura perto de vencer (enviado pelo cron, uma vez por data de validade). */
-export function emailVencimentoProximo(para: string, nome: string, plano: Plano, ativaAte: string, diasRestantes: number): Email {
+export function emailVencimentoProximo(
+  para: string,
+  nome: string,
+  plano: Plano,
+  ativaAte: string,
+  diasRestantes: number,
+  /** link da mensalidade em aberto (Asaas); sem ele, o botão leva para a página Assinatura */
+  linkPagamento: string | null = null,
+): Email {
   const quando = diasRestantes <= 0 ? "hoje" : diasRestantes === 1 ? "amanhã" : `em ${diasRestantes} dias`;
   if (plano === "teste") {
     return montar({
@@ -198,9 +206,11 @@ export function emailVencimentoProximo(para: string, nome: string, plano: Plano,
     saudacao: `Oi, ${primeiroNome(nome)}!`,
     paragrafos: [
       `Seu plano ${PLANOS[plano].nome} vale até ${formatarDataISO(ativaAte)}. Depois dessa data a agenda fica em espera até a renovação (nada é apagado).`,
-      "Para renovar, abra a página Assinatura no painel e pague a mensalidade por Pix ou cartão de crédito. Se preferir, responda este e-mail.",
+      linkPagamento
+        ? "O botão abaixo abre a sua mensalidade para pagar por Pix ou cartão de crédito. Ela também fica na página Assinatura do painel."
+        : "Para renovar, abra a página Assinatura no painel e pague a mensalidade por Pix ou cartão de crédito. Se preferir, responda este e-mail.",
     ],
-    botao: { texto: "Renovar agora", url: `${URL_APP}/assinatura` },
+    botao: linkPagamento ? { texto: "Pagar a mensalidade", url: linkPagamento } : { texto: "Renovar agora", url: `${URL_APP}/assinatura` },
     observacao: "Se você já renovou, pode ignorar este aviso.",
   });
 }
