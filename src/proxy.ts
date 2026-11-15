@@ -14,6 +14,19 @@ function ehPublica(pathname: string) {
   return ROTAS_PUBLICAS.some((r) => pathname === r || pathname.startsWith(`${r}/`));
 }
 
+/** Onde o admin começa (15/11/2026): a área de admin, e não a agenda dele. */
+const INICIO_ADMIN = "/admin";
+
+/**
+ * O admin está abrindo o painel "do zero"? Vale para o app instalado (start_url com origem=pwa) e para
+ * endereço digitado ou favorito (o navegador manda Sec-Fetch-Site: none). Um toque em "Minha agenda" ou em
+ * "Hoje" é navegação de dentro do painel e não entra aqui: assim ele continua podendo usar a própria agenda.
+ */
+function abriuDoZero(request: NextRequest) {
+  if (request.nextUrl.searchParams.get("origem") === "pwa") return true;
+  return request.headers.get("sec-fetch-mode") === "navigate" && request.headers.get("sec-fetch-site") === "none";
+}
+
 /** Endereços antigos do painel: tudo vai para o domínio oficial (evita sessão/notificações duplicadas). */
 const HOSTS_ANTIGOS = new Set(["agenda-murex-five.vercel.app", "agenda.digstudio.com.br"]);
 const HOST_OFICIAL = "painel.vaguinha.app";
@@ -67,16 +80,28 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Logada em login/cadastro → vai para o app
+  const admin = claims?.app_metadata?.role === "admin";
+
+  // Logada em login/cadastro → vai para o app (o admin, para a área de admin)
   if (logada && (pathname === "/login" || pathname === "/cadastro")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = admin ? INICIO_ADMIN : "/";
     url.search = "";
     return NextResponse.redirect(url);
   }
 
+  // Admin abrindo o painel do zero → começa na área de admin (leva junto os cookies da sessão renovada)
+  if (admin && pathname === "/" && abriuDoZero(request)) {
+    const url = request.nextUrl.clone();
+    url.pathname = INICIO_ADMIN;
+    url.search = "";
+    const destino = NextResponse.redirect(url);
+    for (const c of response.cookies.getAll()) destino.cookies.set(c);
+    return destino;
+  }
+
   // Área admin exige role=admin no JWT (checado de novo no layout, por segurança)
-  if (pathname.startsWith("/admin") && claims?.app_metadata?.role !== "admin") {
+  if (pathname.startsWith("/admin") && !admin) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.search = "";

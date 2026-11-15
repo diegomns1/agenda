@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeftIcon, ChartPieIcon, LightbulbIcon, ShieldCheckIcon, UsersIcon } from "lucide-react";
+import { CalendarDaysIcon, ChartPieIcon, LightbulbIcon, ShieldCheckIcon, UsersIcon } from "lucide-react";
 import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { ehAdmin, obterUsuario } from "@/lib/auth";
@@ -36,9 +36,10 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
           </div>
           <div className="flex items-center gap-1">
             <Button asChild variant="ghost" size="sm">
+              {/* o admin começa aqui; este botão leva para a agenda dele (conta de profissional) */}
               <Link href="/">
-                <ArrowLeftIcon />
-                Voltar ao app
+                <CalendarDaysIcon />
+                Minha agenda
               </Link>
             </Button>
             <BotaoSair />

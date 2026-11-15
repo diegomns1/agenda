@@ -59,13 +59,15 @@ export async function entrar(_: EstadoForm, formData: FormData): Promise<EstadoF
   if (!r.success) return { erros: z.flattenError(r.error).fieldErrors, valores };
 
   const supabase = await criarClienteServidor();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: r.data.email,
     password: r.data.senha,
   });
   if (error) return { erro: traduzirErroAuth(error.message), valores };
 
-  redirect(destinoSeguro(formData.get("proximo")));
+  // o admin começa na área de admin (a não ser que o login tenha um destino guardado)
+  const destino = destinoSeguro(formData.get("proximo"));
+  redirect(destino === "/" && data.user?.app_metadata?.role === "admin" ? "/admin" : destino);
 }
 
 export async function cadastrar(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
