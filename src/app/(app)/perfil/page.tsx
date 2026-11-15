@@ -36,7 +36,7 @@ type Item = { href: string; Icone: LucideIcon | typeof IconeWhatsApp; titulo: st
 
 function Lista({ titulo, itens }: { titulo: string; itens: Item[] }) {
   return (
-    <section className="grid gap-2">
+    <section className="grid min-w-0 gap-2">
       <h2 className="px-1 text-sm font-semibold text-muted-foreground">{titulo}</h2>
       <ul className="divide-y overflow-hidden rounded-2xl border bg-card">
         {itens.map(({ href, Icone, titulo: nome, texto }) => (
@@ -89,7 +89,7 @@ export default async function PaginaPerfil() {
 
   return (
     <div className="grid gap-6">
-      <header className="flex items-center gap-3">
+      <header className="flex min-w-0 items-center gap-3">
         {perfil.logo_url ? (
           // eslint-disable-next-line @next/next/no-img-element -- logo enviada pela profissional (bucket público)
           <img src={perfil.logo_url} alt="" className="size-14 shrink-0 rounded-full bg-white object-contain ring-2 ring-rosa/40" />
@@ -105,7 +105,7 @@ export default async function PaginaPerfil() {
       </header>
 
       {/* Link de agendamento em destaque */}
-      <section className="grid gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4">
+      <section className="grid min-w-0 gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4">
         <div className="flex items-start gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             {podeLink ? <Link2Icon className="size-5" /> : <LockIcon className="size-5" />}

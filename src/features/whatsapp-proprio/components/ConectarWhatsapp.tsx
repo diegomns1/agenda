@@ -105,12 +105,13 @@ export function ConectarWhatsapp({ inicial, telefonePerfil }: { inicial: Situaca
 
   if (s.estado === "conectado" && !aberto) {
     return (
-      <div className="flex items-center gap-3 rounded-2xl border bg-card px-4 py-3">
+      // min-w-0: a página é uma grade; sem isso, um texto comprido alarga a tela inteira no celular
+      <div className="flex min-w-0 items-center gap-3 rounded-2xl border bg-card px-4 py-3">
         <IconeWhatsApp className="size-5 shrink-0 text-whatsapp" />
         <p className="min-w-0 flex-1 text-sm">
           <span className="block font-semibold">Lembretes automáticos ligados</span>
-          <span className="block truncate text-muted-foreground">
-            1 dia e 2 horas antes{s.numero ? ` · do seu WhatsApp ${formatarTelefone(s.numero)}` : ""}
+          <span className="block text-pretty text-muted-foreground">
+            1 dia e 2 horas antes{s.numero ? `, do seu WhatsApp ${formatarTelefone(s.numero)}` : ""}
           </span>
         </p>
         <Button variant="outline" size="sm" onClick={() => setAberto(true)}>
