@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CheckCircle2Icon, CopyIcon, KeyRoundIcon, Loader2Icon, QrCodeIcon, UnplugIcon } from "lucide-react";
@@ -23,7 +22,8 @@ import {
 import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
 import { formatarTelefone, mascararTelefone } from "@/lib/telefone";
 import { conectarWhatsapp, desconectarWhatsapp, salvarLembreteAutomatico, situacaoWhatsapp, type SituacaoWhatsapp } from "../actions";
-import { HORAS_LEMBRETE, rotuloHoras } from "../opcoes";
+import { MENSAGEM_LEMBRETE_2H, MENSAGEM_LEMBRETE_DIA } from "../opcoes";
+import { preencher, valoresDeExemplo } from "@/features/mensagens/modelos";
 
 type Jeito = "codigo" | "qr";
 
@@ -122,7 +122,7 @@ export function ConectarWhatsapp({ inicial, telefonePerfil }: { inicial: Situaca
               Conectado{s.numero ? `: ${formatarTelefone(s.numero)}` : ""}
               {s.nomePerfil ? ` (${s.nomePerfil})` : ""}
             </p>
-            <ConfigLembrete ativoInicial={s.lembreteAtivo ?? false} horasInicial={s.lembreteHoras ?? 24} />
+            <ConfigLembrete ativoInicial={s.lembreteAtivo ?? false} />
             <p className="text-sm text-muted-foreground">
               No seu celular, a Vaguinha aparece em <strong>Dispositivos conectados</strong>. Se você tirar de lá, a conexão cai e
               você recebe um aviso aqui.
@@ -275,57 +275,47 @@ export function ConectarWhatsapp({ inicial, telefonePerfil }: { inicial: Situaca
   );
 }
 
-/** Liga/desliga o envio e escolhe quando sai. Salva na hora. */
-function ConfigLembrete({ ativoInicial, horasInicial }: { ativoInicial: boolean; horasInicial: number }) {
+/** Liga/desliga o envio (1 dia antes e 2 horas antes, fixo) e mostra as mensagens que saem. */
+function ConfigLembrete({ ativoInicial }: { ativoInicial: boolean }) {
   const [ativo, setAtivo] = useState(ativoInicial);
-  const [horas, setHoras] = useState(horasInicial);
   const [pendente, iniciar] = useTransition();
+  const exemplo = { ...valoresDeExemplo(), dia: "amanhã (sexta)", endereco: "" };
 
-  function salvar(novoAtivo: boolean, novasHoras: number) {
-    const antes = { ativo, horas };
-    setAtivo(novoAtivo);
-    setHoras(novasHoras);
+  function salvar(novo: boolean) {
+    setAtivo(novo);
     iniciar(async () => {
-      const r = await salvarLembreteAutomatico({ ativo: novoAtivo, horas: novasHoras });
+      const r = await salvarLembreteAutomatico({ ativo: novo });
       if (!r.ok) {
-        setAtivo(antes.ativo);
-        setHoras(antes.horas);
+        setAtivo(!novo);
         toast.error(r.erro ?? "Não consegui salvar.");
-      } else toast.success(novoAtivo ? `Lembrete automático: ${rotuloHoras(novasHoras)}.` : "Lembrete automático desligado.");
+      } else toast.success(novo ? "Lembretes automáticos ligados." : "Lembretes automáticos desligados.");
     });
   }
 
   return (
     <div className="grid gap-3 rounded-xl border p-3">
       <label className="flex items-center justify-between gap-3">
-        <span className="text-sm font-semibold">Mandar lembrete sozinho</span>
-        <Switch checked={ativo} onCheckedChange={(v) => salvar(v, horas)} disabled={pendente} aria-label="Mandar lembrete sozinho" />
+        <span className="grid gap-0.5">
+          <span className="text-sm font-semibold">Mandar lembretes sozinha</span>
+          <span className="text-xs text-muted-foreground">1 dia antes e 2 horas antes de cada atendimento</span>
+        </span>
+        <Switch checked={ativo} onCheckedChange={salvar} disabled={pendente} aria-label="Mandar lembretes sozinha" />
       </label>
       {ativo ? (
         <>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Quando o lembrete sai">
-            {HORAS_LEMBRETE.map((h) => (
-              <button
-                key={h}
-                type="button"
-                role="radio"
-                aria-checked={horas === h}
-                disabled={pendente}
-                onClick={() => h !== horas && salvar(true, h)}
-                className={`min-h-toque rounded-full border px-3 text-sm transition-colors ${
-                  horas === h ? "border-primary bg-primary/10 font-semibold text-primary" : "hover:bg-muted/60"
-                }`}
-              >
-                {rotuloHoras(h)}
-              </button>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              { titulo: "1 dia antes", texto: MENSAGEM_LEMBRETE_DIA },
+              { titulo: "2 horas antes", texto: MENSAGEM_LEMBRETE_2H },
+            ].map((m) => (
+              <div key={m.titulo} className="grid gap-1">
+                <span className="text-xs font-medium text-muted-foreground">{m.titulo}</span>
+                <p className="rounded-lg bg-muted/60 px-3 py-2 text-sm whitespace-pre-wrap">{preencher(m.texto, exemplo)}</p>
+              </div>
             ))}
           </div>
           <p className="text-xs text-muted-foreground">
-            Sai entre 8h e 20h, com alguns minutos entre uma mensagem e outra. Usa o seu texto de lembrete (
-            <Link href="/mensagens" className="underline underline-offset-4">
-              editar
-            </Link>
-            ). Quem já foi avisado na mão não recebe de novo.
+            Saem entre 7h e 21h, com alguns minutos entre uma mensagem e outra. Quem você já avisou na mão não recebe o de 1 dia.
           </p>
         </>
       ) : (

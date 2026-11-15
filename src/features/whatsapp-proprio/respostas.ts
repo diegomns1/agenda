@@ -59,14 +59,14 @@ export async function tratarMensagemRecebida(admin: Admin, instancia: string, m:
 
   // só serve resposta de quem recebeu lembrete automático nas últimas 48 h (e cujo horário não passou há muito)
   const agora = Date.now();
+  const desde = new Date(agora - JANELA_RESPOSTA_H * 3_600_000).toISOString();
   const { data: avisados } = await admin
     .from("agendamentos")
     .select("id, cliente_id, cliente_nome, servico_nome, inicio, cliente_confirmou_em, resposta_cliente_em")
     .eq("profissional_id", pid)
     .eq("tipo", "atendimento")
     .eq("status", "agendado")
-    .is("lembrete_auto_erro", null)
-    .gte("lembrete_auto_em", new Date(agora - JANELA_RESPOSTA_H * 3_600_000).toISOString())
+    .or(`lembrete_auto_em.gte.${desde},lembrete_2h_em.gte.${desde}`)
     .gte("inicio", new Date(agora - 2 * 3_600_000).toISOString())
     .order("inicio", { ascending: true });
   if (!avisados?.length) return;

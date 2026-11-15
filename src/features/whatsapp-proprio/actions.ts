@@ -6,7 +6,7 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { normalizarTelefone } from "@/lib/telefone";
 import type { WhatsappConexao } from "@/types/database";
 import { podeConectarWhatsappProprio } from "./acesso";
-import { HORAS_LEMBRETE, URL_AVISOS_EVOLUTION } from "./opcoes";
+import { URL_AVISOS_EVOLUTION } from "./opcoes";
 import { apagarInstancia, configurarAvisos, criarInstancia, estadoInstancia, infoInstancia, nomeInstancia, qrAtual, VERSAO_AVISOS, type QrEvolution } from "./evolution";
 
 /*
@@ -24,7 +24,6 @@ export type SituacaoWhatsapp = {
   codigo: string | null;
   /** lembrete automático (só quando conectado) */
   lembreteAtivo?: boolean;
-  lembreteHoras?: number;
   erro?: string;
 };
 
@@ -79,7 +78,7 @@ export async function situacaoWhatsapp(): Promise<SituacaoWhatsapp> {
   if (!linha) return vazio;
 
   const estado = await estadoInstancia(linha.instancia);
-  const config = { lembreteAtivo: linha.lembrete_ativo, lembreteHoras: linha.lembrete_horas };
+  const config = { lembreteAtivo: linha.lembrete_ativo };
   const agora = new Date().toISOString();
 
   if (estado === "open") {
@@ -123,14 +122,13 @@ export async function desconectarWhatsapp(): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
-/** Liga/desliga o lembrete automático e escolhe quanto tempo antes ele sai. */
-export async function salvarLembreteAutomatico(entrada: { ativo: boolean; horas: number }): Promise<{ ok: boolean; erro?: string }> {
+/** Liga/desliga o lembrete automático (1 dia antes e 2 horas antes, fixo). */
+export async function salvarLembreteAutomatico(entrada: { ativo: boolean }): Promise<{ ok: boolean; erro?: string }> {
   const a = await acesso();
   if (!a) return { ok: false, erro: "Esse recurso não está liberado na sua conta." };
-  if (!(HORAS_LEMBRETE as readonly number[]).includes(entrada.horas)) return { ok: false, erro: "Escolha quando o lembrete sai." };
   const { error } = await a.admin
     .from("whatsapp_conexoes")
-    .update({ lembrete_ativo: entrada.ativo, lembrete_horas: entrada.horas, atualizado_em: new Date().toISOString() })
+    .update({ lembrete_ativo: entrada.ativo, atualizado_em: new Date().toISOString() })
     .eq("profissional_id", a.id);
   if (error) return { ok: false, erro: "Não consegui salvar. Tente de novo." };
   revalidatePath("/lembretes");

@@ -33,11 +33,3 @@ export function entenderResposta(texto: string): TipoResposta {
   if (semPontuacao.length <= 60 && CONFIRMA.test(semPontuacao) && !t.includes("?")) return "confirmou";
   return "outra";
 }
-
-/** O texto do lembrete pede a confirmação? Se não pedir, a Vaguinha acrescenta uma linha no fim. */
-export function pedeConfirmacao(texto: string) {
-  const t = normalizar(texto);
-  return /confirm|responda? (com )?sim|me responde|me avisa/.test(t);
-}
-
-export const LINHA_CONFIRMAR = "\n\nResponda *SIM* para confirmar ✅";

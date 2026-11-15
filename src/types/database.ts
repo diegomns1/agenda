@@ -203,6 +203,9 @@ export type Agendamento = {
   /** lembrete automático pelo WhatsApp da profissional (migração 0026) */
   lembrete_auto_em: string | null;
   lembrete_auto_erro: string | null;
+  /** lembrete automático de 2 horas antes (migração 0028); o de 1 dia é lembrete_auto_em */
+  lembrete_2h_em: string | null;
+  lembrete_2h_erro: string | null;
   /** resposta da cliente ao lembrete automático (migração 0027) */
   cliente_confirmou_em: string | null;
   resposta_cliente: string | null;

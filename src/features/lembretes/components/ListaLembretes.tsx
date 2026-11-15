@@ -17,6 +17,29 @@ type Props = {
   destaqueId?: string | null;
 };
 
+/** O que o lembrete automático (1 dia e 2 horas antes) já fez neste atendimento. */
+function LembretesAutomaticos({ a }: { a: LembreteItem }) {
+  const enviados = [
+    a.lembrete_auto_em && !a.lembrete_auto_erro ? `1 dia antes (${horaDe(a.lembrete_auto_em)})` : null,
+    a.lembrete_2h_em && !a.lembrete_2h_erro ? `2 h antes (${horaDe(a.lembrete_2h_em)})` : null,
+  ].filter(Boolean);
+  const erro = a.lembrete_2h_erro ?? a.lembrete_auto_erro;
+  return (
+    <>
+      {enviados.length ? (
+        <p className="flex items-center gap-1 text-mini text-sucesso-forte">
+          <BotIcon className="size-3" /> enviado sozinho: {enviados.join(" · ")}
+        </p>
+      ) : null}
+      {erro && !enviados.length ? (
+        <p className="flex items-center gap-1 text-mini text-aviso-forte">
+          <TriangleAlertIcon className="size-3" /> não saiu sozinho: {erro}
+        </p>
+      ) : null}
+    </>
+  );
+}
+
 function Item({ a, mensagens, destaque }: { a: LembreteItem; mensagens: Mensagens; destaque?: boolean }) {
   return (
     <li className={cn("flex flex-wrap items-center gap-3 px-4 py-3", destaque && "bg-primary/5")}>
@@ -50,15 +73,8 @@ function Item({ a, mensagens, destaque }: { a: LembreteItem; mensagens: Mensagen
           <p className="flex min-w-0 items-center gap-1 text-mini text-primary">
             <MessageCircleIcon className="size-3 shrink-0" /> <span className="truncate">respondeu: “{a.resposta_cliente}”</span>
           </p>
-        ) : a.lembrete_auto_em && !a.lembrete_auto_erro && a.cliente_avisada_em ? (
-          <p className="flex items-center gap-1 text-mini text-sucesso-forte">
-            <BotIcon className="size-3" /> enviado sozinho às {horaDe(a.lembrete_auto_em)}
-          </p>
-        ) : a.lembrete_auto_erro && !a.cliente_avisada_em ? (
-          <p className="flex items-center gap-1 text-mini text-aviso-forte">
-            <TriangleAlertIcon className="size-3" /> não saiu sozinho: {a.lembrete_auto_erro}
-          </p>
         ) : null}
+        <LembretesAutomaticos a={a} />
       </div>
       {/* no celular o botão vai para uma linha própria, largo: o nome aparece inteiro e o toque fica fácil */}
       <BotaoLembrarCliente agendamento={a} telefone={a.telefone} mensagens={mensagens} tamanho="sm" className="w-full sm:w-auto" />
