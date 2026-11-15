@@ -7,7 +7,7 @@ import { normalizarTelefone } from "@/lib/telefone";
 import type { WhatsappConexao } from "@/types/database";
 import { podeConectarWhatsappProprio } from "./acesso";
 import { HORAS_LEMBRETE, URL_AVISOS_EVOLUTION } from "./opcoes";
-import { apagarInstancia, criarInstancia, estadoInstancia, infoInstancia, nomeInstancia, qrAtual, VERSAO_AVISOS, type QrEvolution } from "./evolution";
+import { apagarInstancia, configurarAvisos, criarInstancia, estadoInstancia, infoInstancia, nomeInstancia, qrAtual, VERSAO_AVISOS, type QrEvolution } from "./evolution";
 
 /*
  * Conectar o WhatsApp da própria profissional (15/11/2026). A tela chama `conectarWhatsapp` e depois
@@ -83,6 +83,10 @@ export async function situacaoWhatsapp(): Promise<SituacaoWhatsapp> {
   const agora = new Date().toISOString();
 
   if (estado === "open") {
+    // conexão criada antes da fase 3: passa a avisar as respostas das clientes
+    if (linha.avisos_versao < VERSAO_AVISOS && (await configurarAvisos(linha.instancia, URL_AVISOS_EVOLUTION))) {
+      await a.admin.from("whatsapp_conexoes").update({ avisos_versao: VERSAO_AVISOS }).eq("profissional_id", a.id);
+    }
     if (linha.estado !== "conectado" || !linha.numero) {
       const info = await infoInstancia(linha.instancia);
       await a.admin
