@@ -61,7 +61,7 @@ LOG_COLOR=false
 LOG_BAILEYS=error
 DEL_INSTANCE=false
 LANGUAGE=pt-BR
-CORS_ORIGIN=http://127.0.0.1
+CORS_ORIGIN=*
 
 AUTHENTICATION_API_KEY=$CHAVE_API
 AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=false
@@ -150,7 +150,7 @@ docker compose up -d
 
 echo -n "   Esperando responder"
 for _ in $(seq 1 60); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" -H "apikey: $CHAVE_API" http://127.0.0.1:8080/instance/fetchInstances || true)
+  code=$(curl -s -m 5 -o /dev/null -w "%{http_code}" -H "apikey: $CHAVE_API" http://127.0.0.1:8080/instance/fetchInstances || true)
   [ "$code" = "200" ] && break
   echo -n "."
   sleep 3
@@ -158,7 +158,7 @@ done
 echo
 if [ "$code" != "200" ]; then
   echo "   A Evolution não respondeu (HTTP $code). Últimas linhas do registro:"
-  docker compose logs --tail 30 api
+  docker compose logs --tail 40 api | sed -E "s#postgresql://[^ '\"]+#postgresql://***#g"
   exit 1
 fi
 echo "   Evolution respondendo (HTTP 200)."
