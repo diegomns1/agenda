@@ -5,6 +5,7 @@ import { ehAdmin, obterUsuario } from "@/lib/auth";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { usoDasContas } from "@/features/admin/uso";
 import { enviarAtivacao, jaRecebeu, type TipoAtivacao } from "./enviar";
+import { saudeDoEnvio } from "@/features/whatsapp/meta";
 
 /* Botões do Admin para chamar quem não está usando (o automático roda sozinho; isto é para mandar agora). */
 
@@ -34,6 +35,14 @@ export async function chamarConta(id: string, tipo: TipoAtivacao): Promise<{ ok:
  */
 export async function chamarTodasQueSoEntraram(): Promise<{ ok: boolean; mensagem: string }> {
   const admin = await exigirAdmin();
+  // a Meta está barrando as mensagens prontas? avisa o motivo de verdade, em vez de "a Meta recusou"
+  const saude = await saudeDoEnvio();
+  if (saude?.bloqueado) {
+    return {
+      ok: false,
+      mensagem: `Não foi: a Meta está bloqueando as mensagens prontas (${saude.motivos[0] ?? "a conta do WhatsApp não pode iniciar conversas"}). Ninguém foi chamada.`,
+    };
+  }
   const [{ data: contas }, uso] = await Promise.all([
     admin.from("profiles").select("id, nome, email, telefone").eq("status", "aprovada").eq("plano", "teste").not("telefone", "is", null),
     usoDasContas(),
