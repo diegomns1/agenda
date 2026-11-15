@@ -54,7 +54,7 @@ export default async function PaginaAssistente() {
               Abrir no WhatsApp
             </a>
           ) : (
-            <Link href="/perfil#whatsapp" className="font-semibold text-whatsapp underline underline-offset-2">
+            <Link href="/perfil/assistente" className="font-semibold text-whatsapp underline underline-offset-2">
               Conectar
             </Link>
           )}

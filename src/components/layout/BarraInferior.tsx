@@ -2,19 +2,46 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDaysIcon, HomeIcon, ImagePlusIcon, LockIcon, SparklesIcon, UserRoundIcon, UsersIcon, type LucideIcon } from "lucide-react";
+import {
+  BellIcon,
+  CalendarDaysIcon,
+  ChartColumnIcon,
+  HomeIcon,
+  ImagePlusIcon,
+  LockIcon,
+  SparklesIcon,
+  UserRoundIcon,
+  UsersIcon,
+  type LucideIcon,
+} from "lucide-react";
+import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
 import { cn } from "@/lib/utils";
 
-type Item = { href: string; rotulo: string; Icone: LucideIcon };
+type Item = { href: string; rotulo: string; Icone: LucideIcon; /** outras rotas que acendem este item */ tambem?: string[] };
 
-/** Itens entram aqui conforme os módulos ficam prontos. */
-export const ITENS_NAVEGACAO: Item[] = [
+/*
+ * Navegação principal (15/11/2026):
+ * - celular: barra de baixo com 6 itens. "Serviços" saiu daqui e foi para dentro do Perfil; entrou o Relatório.
+ * - computador (md+): coluna na esquerda, com tudo (inclui Serviços e Lembretes).
+ */
+const NO_CELULAR: Item[] = [
+  { href: "/", rotulo: "Hoje", Icone: HomeIcon },
+  { href: "/agenda", rotulo: "Agenda", Icone: CalendarDaysIcon },
+  { href: "/clientes", rotulo: "Clientes", Icone: UsersIcon },
+  { href: "/stories", rotulo: "Stories", Icone: ImagePlusIcon },
+  { href: "/relatorios", rotulo: "Relatório", Icone: ChartColumnIcon },
+  { href: "/perfil", rotulo: "Perfil", Icone: UserRoundIcon, tambem: ["/servicos", "/mensagens", "/assinatura", "/tutoriais"] },
+];
+
+const NO_COMPUTADOR: Item[] = [
   { href: "/", rotulo: "Hoje", Icone: HomeIcon },
   { href: "/agenda", rotulo: "Agenda", Icone: CalendarDaysIcon },
   { href: "/clientes", rotulo: "Clientes", Icone: UsersIcon },
   { href: "/servicos", rotulo: "Serviços", Icone: SparklesIcon },
+  { href: "/lembretes", rotulo: "Lembretes", Icone: BellIcon },
   { href: "/stories", rotulo: "Stories", Icone: ImagePlusIcon },
-  { href: "/perfil", rotulo: "Perfil", Icone: UserRoundIcon },
+  { href: "/relatorios", rotulo: "Relatório", Icone: ChartColumnIcon },
+  { href: "/perfil", rotulo: "Perfil", Icone: UserRoundIcon, tambem: ["/mensagens", "/assinatura", "/tutoriais"] },
 ];
 
 type Props = {
@@ -22,17 +49,24 @@ type Props = {
   bloqueados?: Record<string, boolean>;
 };
 
+function ativoEm(pathname: string, item: Item) {
+  if (item.href === "/") return pathname === "/";
+  return [item.href, ...(item.tambem ?? [])].some((r) => pathname === r || pathname.startsWith(`${r}/`));
+}
+
+/** Barra de baixo, só no celular. */
 export function BarraInferior({ bloqueados = {} }: Props) {
   const pathname = usePathname();
 
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
     >
       <ul className="mx-auto flex max-w-3xl items-stretch justify-around">
-        {ITENS_NAVEGACAO.map(({ href, rotulo, Icone }) => {
-          const ativo = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        {NO_CELULAR.map((item) => {
+          const { href, rotulo, Icone } = item;
+          const ativo = ativoEm(pathname, item);
           const bloqueado = Boolean(bloqueados[href]);
           return (
             <li key={href} className="flex-1">
@@ -57,6 +91,45 @@ export function BarraInferior({ bloqueados = {} }: Props) {
                   ) : null}
                 </span>
                 {rotulo}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+/** Coluna da esquerda, só no computador. */
+export function BarraLateral({ bloqueados = {} }: Props) {
+  const pathname = usePathname();
+
+  return (
+    <nav
+      aria-label="Navegação principal"
+      className="fixed inset-y-0 left-0 z-30 hidden w-56 flex-col gap-1 border-r border-border/70 bg-card/60 px-3 pb-4 md:flex"
+    >
+      <Link href="/" className="flex h-14 items-center px-2" aria-label="Vaguinha: início">
+        <LogoVaguinha className="h-6" />
+      </Link>
+      <ul className="grid gap-0.5">
+        {NO_COMPUTADOR.map((item) => {
+          const { href, rotulo, Icone } = item;
+          const ativo = ativoEm(pathname, item);
+          const bloqueado = Boolean(bloqueados[href]);
+          return (
+            <li key={href}>
+              <Link
+                href={href}
+                aria-current={ativo ? "page" : undefined}
+                className={cn(
+                  "flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors",
+                  ativo ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                <Icone className="size-[18px] shrink-0" />
+                <span className="flex-1 truncate">{rotulo}</span>
+                {bloqueado ? <LockIcon className="size-3.5 shrink-0 opacity-70" aria-label="Não incluído no seu plano" /> : null}
               </Link>
             </li>
           );

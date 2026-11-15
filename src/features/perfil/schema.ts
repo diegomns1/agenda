@@ -30,7 +30,7 @@ const dia = z
     path: ["fim"],
   });
 
-export const esquemaPerfil = z.object({
+const camposPerfil = z.object({
   nome: z.string().trim().min(2, "Informe seu nome").max(80),
   nome_negocio: z.string().trim().max(80).optional().transform((v) => v || null),
   telefone: z
@@ -66,9 +66,26 @@ export const esquemaPerfil = z.object({
   expediente: z.object({
     "0": dia, "1": dia, "2": dia, "3": dia, "4": dia, "5": dia, "6": dia,
   }),
-}).refine((d) => d.ramo !== "outro" || d.ramo_outro, { message: "Escreva qual é o seu ramo", path: ["ramo"] });
+});
 
-export type DadosPerfil = z.infer<typeof esquemaPerfil>;
+/*
+ * O Perfil é dividido em telas (15/11/2026): cada uma salva só os seus campos.
+ *   dados     — nome, negócio, WhatsApp, Instagram, endereço, ramo e tratamento
+ *   horarios  — expediente e intervalo da grade
+ *   aparencia — tema do painel e cores da marca
+ *   link      — link de agendamento (endereço, ativo, confirmação, antecedência)
+ */
+export const SECOES_PERFIL = ["dados", "horarios", "aparencia", "link"] as const;
+export type SecaoPerfil = (typeof SECOES_PERFIL)[number];
+
+export const ESQUEMAS_SECAO = {
+  dados: camposPerfil
+    .pick({ nome: true, nome_negocio: true, telefone: true, instagram: true, endereco: true, ramo: true, ramo_outro: true, tratamento: true })
+    .refine((d) => d.ramo !== "outro" || d.ramo_outro, { message: "Escreva qual é o seu ramo", path: ["ramo"] }),
+  horarios: camposPerfil.pick({ expediente: true, intervalo_grade_min: true }),
+  aparencia: camposPerfil.pick({ tema: true, cor_primaria: true, cor_secundaria: true }),
+  link: camposPerfil.pick({ slug: true, agendamento_online: true, confirmacao_online: true, antecedencia_min_horas: true }),
+};
 
 /** Monta o objeto `expediente` a partir dos campos exp_<dia>_ativo / _inicio / _fim do FormData. */
 export function expedienteDoForm(formData: FormData): Expediente {

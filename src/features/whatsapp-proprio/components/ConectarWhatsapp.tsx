@@ -53,6 +53,8 @@ export function ConectarWhatsapp({ inicial, telefonePerfil }: { inicial: Situaca
   const [confirmarSaida, setConfirmarSaida] = useState(false);
   const [pendente, iniciar] = useTransition();
   const estadoAnterior = useRef(inicial.estado);
+  // conectado e com os lembretes ligados: o cartão fica recolhido numa linha (não empurra a lista para baixo)
+  const [aberto, setAberto] = useState(!(inicial.estado === "conectado" && inicial.lembreteAtivo));
 
   // enquanto conecta, pergunta ao servidor de 3 em 3 s (o QR e o código mudam sozinhos)
   useEffect(() => {
@@ -101,6 +103,23 @@ export function ConectarWhatsapp({ inicial, telefonePerfil }: { inicial: Situaca
     }
   }
 
+  if (s.estado === "conectado" && !aberto) {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border bg-card px-4 py-3">
+        <IconeWhatsApp className="size-5 shrink-0 text-whatsapp" />
+        <p className="min-w-0 flex-1 text-sm">
+          <span className="block font-semibold">Lembretes automáticos ligados</span>
+          <span className="block truncate text-muted-foreground">
+            1 dia e 2 horas antes{s.numero ? ` · do seu WhatsApp ${formatarTelefone(s.numero)}` : ""}
+          </span>
+        </p>
+        <Button variant="outline" size="sm" onClick={() => setAberto(true)}>
+          Configurar
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -122,15 +141,22 @@ export function ConectarWhatsapp({ inicial, telefonePerfil }: { inicial: Situaca
               Conectado{s.numero ? `: ${formatarTelefone(s.numero)}` : ""}
               {s.nomePerfil ? ` (${s.nomePerfil})` : ""}
             </p>
-            <ConfigLembrete ativoInicial={s.lembreteAtivo ?? false} />
+            <ConfigLembrete ativoInicial={s.lembreteAtivo ?? false} aoMudar={(ativo) => setS((atual) => ({ ...atual, lembreteAtivo: ativo }))} />
             <p className="text-sm text-muted-foreground">
               No seu celular, a Vaguinha aparece em <strong>Dispositivos conectados</strong>. Se você tirar de lá, a conexão cai e
               você recebe um aviso aqui.
             </p>
-            <Button variant="outline" className="w-fit" onClick={() => setConfirmarSaida(true)} disabled={pendente}>
-              <UnplugIcon />
-              Desconectar
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {s.lembreteAtivo ? (
+                <Button className="w-fit" onClick={() => setAberto(false)}>
+                  Pronto
+                </Button>
+              ) : null}
+              <Button variant="outline" className="w-fit" onClick={() => setConfirmarSaida(true)} disabled={pendente}>
+                <UnplugIcon />
+                Desconectar
+              </Button>
+            </div>
           </>
         ) : s.estado === "conectando" ? (
           <>
@@ -276,7 +302,7 @@ export function ConectarWhatsapp({ inicial, telefonePerfil }: { inicial: Situaca
 }
 
 /** Liga/desliga o envio (1 dia antes e 2 horas antes, fixo) e mostra as mensagens que saem. */
-function ConfigLembrete({ ativoInicial }: { ativoInicial: boolean }) {
+function ConfigLembrete({ ativoInicial, aoMudar }: { ativoInicial: boolean; aoMudar: (ativo: boolean) => void }) {
   const [ativo, setAtivo] = useState(ativoInicial);
   const [pendente, iniciar] = useTransition();
   const exemplo = { ...valoresDeExemplo(), dia: "amanhã (sexta)", endereco: "" };
@@ -288,7 +314,10 @@ function ConfigLembrete({ ativoInicial }: { ativoInicial: boolean }) {
       if (!r.ok) {
         setAtivo(!novo);
         toast.error(r.erro ?? "Não consegui salvar.");
-      } else toast.success(novo ? "Lembretes automáticos ligados." : "Lembretes automáticos desligados.");
+      } else {
+        aoMudar(novo);
+        toast.success(novo ? "Lembretes automáticos ligados." : "Lembretes automáticos desligados.");
+      }
     });
   }
 

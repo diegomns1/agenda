@@ -183,7 +183,7 @@ export function EditorMensagens({ modelos, padroes, contexto }: Props) {
         {usaEndereco && !contexto.endereco ? (
           <p className="rounded-xl bg-aviso px-3 py-2 text-sm text-aviso-texto">
             Você ainda não cadastrou o endereço: a linha do endereço não vai aparecer.{" "}
-            <Link href="/perfil" className="font-semibold underline underline-offset-4">
+            <Link href="/perfil/dados" className="font-semibold underline underline-offset-4">
               Cadastrar no Perfil
             </Link>
           </p>
@@ -191,7 +191,7 @@ export function EditorMensagens({ modelos, padroes, contexto }: Props) {
         {/\{link\}/i.test(texto) && !contexto.link ? (
           <p className="rounded-xl bg-aviso px-3 py-2 text-sm text-aviso-texto">
             Seu link de agendamento está desligado: a linha do link não vai aparecer.{" "}
-            <Link href="/perfil#agendamento-online" className="font-semibold underline underline-offset-4">
+            <Link href="/perfil/link" className="font-semibold underline underline-offset-4">
               Ligar no Perfil
             </Link>
           </p>

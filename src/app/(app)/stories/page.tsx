@@ -54,7 +54,7 @@ export default async function PaginaStories({ searchParams }: PageProps<"/storie
         <p className="text-sm text-muted-foreground">
           Imagens prontas para o Instagram com sua logo e suas cores.{" "}
           {!perfil.logo_url ? (
-            <Link href="/perfil" className="underline underline-offset-4">
+            <Link href="/perfil/dados" className="underline underline-offset-4">
               Envie sua logo
             </Link>
           ) : null}

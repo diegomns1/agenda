@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BellIcon, BotMessageSquareIcon, ChartColumnIcon } from "lucide-react";
+import { BellIcon } from "lucide-react";
 import { NOME_APP, SUPORTE_WHATSAPP } from "@/lib/constantes";
 import { linkWhatsApp } from "@/lib/telefone";
 import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
@@ -15,8 +15,7 @@ type Props = {
 };
 
 /**
- * Topo do painel. No celular: logo + nome do negócio (com espaço), sino de lembretes e o menu.
- * No computador, Assistente e Relatórios aparecem também com nome ao lado do sino.
+ * Topo do painel: logo + nome do negócio, sino de lembretes e o menu.
  */
 export function Cabecalho({ titulo, logoUrl, admin, lembretesPendentes = 0, mostrarSino = true }: Props) {
   return (
@@ -34,18 +33,6 @@ export function Cabecalho({ titulo, logoUrl, admin, lembretesPendentes = 0, most
           <span className="truncate text-destaque font-bold tracking-tight text-foreground">{titulo || NOME_APP}</span>
         </Link>
         <div className="flex shrink-0 items-center">
-          <Button asChild variant="ghost" className="hidden h-9 sm:inline-flex">
-            <Link href="/assistente">
-              <BotMessageSquareIcon />
-              Assistente
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" className="hidden h-9 sm:inline-flex">
-            <Link href="/relatorios">
-              <ChartColumnIcon />
-              Relatórios
-            </Link>
-          </Button>
           {mostrarSino ? (
             <Button asChild variant="ghost" size="icon" className="size-toque sm:size-toque">
               <Link href="/lembretes" className="relative" aria-label={`Lembretes${lembretesPendentes ? `: ${lembretesPendentes} para avisar` : ""}`}>

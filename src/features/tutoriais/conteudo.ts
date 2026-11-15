@@ -110,7 +110,7 @@ export const TUTORIAIS: Tutorial[] = [
       "Os pedidos aparecem na tela Hoje para você confirmar (ou entram direto, se você escolher assim no Perfil).",
     ],
     video: null,
-    acao: { href: "/perfil", rotulo: "Abrir meu link" },
+    acao: { href: "/perfil/link", rotulo: "Abrir meu link" },
   },
   {
     id: "assistente",
@@ -123,7 +123,7 @@ export const TUTORIAIS: Tutorial[] = [
       "Pode mandar áudio também. Antes de mudar qualquer coisa, ela mostra e você toca em Confirmar.",
     ],
     video: null,
-    acao: { href: "/perfil#whatsapp", rotulo: "Conectar a assistente" },
+    acao: { href: "/perfil/assistente", rotulo: "Conectar a assistente" },
   },
   {
     id: "stories",

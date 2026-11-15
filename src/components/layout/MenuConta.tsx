@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import {
-  BotMessageSquareIcon,
-  ChartColumnIcon,
   GraduationCapIcon,
   LifeBuoyIcon,
   LightbulbIcon,
@@ -47,21 +45,9 @@ export function MenuConta({ admin, linkSuporte }: Props) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" sideOffset={6} className="w-60">
           <DropdownMenuItem asChild className={ITEM}>
-            <Link href="/assistente">
-              <BotMessageSquareIcon />
-              Assistente no painel
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild className={ITEM}>
             <Link href="/mensagens">
               <MessageSquareTextIcon />
               Mensagens do WhatsApp
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild className={ITEM}>
-            <Link href="/relatorios">
-              <ChartColumnIcon />
-              Relatórios do mês
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className={ITEM}>

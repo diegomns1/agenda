@@ -6,7 +6,8 @@ import { criarClienteServidor } from "@/lib/supabase/server";
 import { obterUsuario } from "@/lib/auth";
 import { normalizarTelefone } from "@/lib/telefone";
 import { valoresDoForm, type EstadoForm } from "@/components/formulario/tipos";
-import { esquemaPerfil, expedienteDoForm } from "./schema";
+import type { ProfileUpdate } from "@/types/database";
+import { ESQUEMAS_SECAO, expedienteDoForm, SECOES_PERFIL, type SecaoPerfil } from "./schema";
 
 const CAMPOS_TEXTO = [
   "nome", "nome_negocio", "telefone", "instagram",
@@ -17,12 +18,19 @@ const CAMPOS_TEXTO = [
 
 function revalidarPerfil() {
   revalidatePath("/", "layout");
-  revalidatePath("/perfil");
+  revalidatePath("/perfil", "layout");
 }
 
+/**
+ * Salva UMA tela do Perfil (campo oculto "secao": dados, horarios, aparencia ou link). Só os campos dessa tela
+ * são validados e gravados, então um problema em outra parte do perfil não impede de salvar esta.
+ */
 export async function salvarPerfil(_: EstadoForm, formData: FormData): Promise<EstadoForm> {
   const usuario = await obterUsuario();
   if (!usuario) return { erro: "Sessão expirada. Entre de novo." };
+
+  const secao = String(formData.get("secao") ?? "") as SecaoPerfil;
+  if (!SECOES_PERFIL.includes(secao)) return { erro: "Não foi possível salvar. Recarregue a página." };
 
   const valores = valoresDoForm(formData, CAMPOS_TEXTO);
   const bruto = {
@@ -30,44 +38,49 @@ export async function salvarPerfil(_: EstadoForm, formData: FormData): Promise<E
     expediente: expedienteDoForm(formData),
   };
 
-  const r = esquemaPerfil.safeParse(bruto);
-  if (!r.success) {
-    const flat = z.flattenError(r.error);
+  const falha = (erro: z.ZodError): EstadoForm => {
+    const flat = z.flattenError(erro);
     // Erros dentro de expediente viram uma mensagem geral legível
-    const errosExpediente = r.error.issues
-      .filter((i) => i.path[0] === "expediente")
-      .map((i) => i.message);
+    const errosExpediente = erro.issues.filter((i) => i.path[0] === "expediente").map((i) => i.message);
     return {
       erros: flat.fieldErrors as Record<string, string[] | undefined>,
       erro: errosExpediente[0] ? `Expediente: ${errosExpediente[0]}` : "Confira os campos destacados.",
       valores,
     };
-  }
+  };
 
-  const d = r.data;
-  const supabase = await criarClienteServidor();
-  const { error } = await supabase
-    .from("profiles")
-    .update({
+  let mudanca: ProfileUpdate;
+  if (secao === "dados") {
+    const r = ESQUEMAS_SECAO.dados.safeParse(bruto);
+    if (!r.success) return falha(r.error);
+    const d = r.data;
+    mudanca = {
       nome: d.nome,
       nome_negocio: d.nome_negocio,
       telefone: normalizarTelefone(d.telefone),
       instagram: d.instagram,
-      cor_primaria: d.cor_primaria,
-      cor_secundaria: d.cor_secundaria,
-      intervalo_grade_min: d.intervalo_grade_min,
       endereco: d.endereco,
-      expediente: d.expediente,
-      slug: d.slug,
-      agendamento_online: d.agendamento_online,
-      confirmacao_online: d.confirmacao_online,
-      antecedencia_min_horas: d.antecedencia_min_horas,
       ramo: d.ramo,
       ramo_outro: d.ramo === "outro" ? d.ramo_outro : null,
       tratamento: d.tratamento,
-      tema: d.tema,
-    })
-    .eq("id", usuario.id);
+    };
+  } else if (secao === "horarios") {
+    const r = ESQUEMAS_SECAO.horarios.safeParse(bruto);
+    if (!r.success) return falha(r.error);
+    mudanca = { expediente: r.data.expediente, intervalo_grade_min: r.data.intervalo_grade_min };
+  } else if (secao === "aparencia") {
+    const r = ESQUEMAS_SECAO.aparencia.safeParse(bruto);
+    if (!r.success) return falha(r.error);
+    mudanca = { tema: r.data.tema, cor_primaria: r.data.cor_primaria, cor_secundaria: r.data.cor_secundaria };
+  } else {
+    const r = ESQUEMAS_SECAO.link.safeParse(bruto);
+    if (!r.success) return falha(r.error);
+    const d = r.data;
+    mudanca = { slug: d.slug, agendamento_online: d.agendamento_online, confirmacao_online: d.confirmacao_online, antecedencia_min_horas: d.antecedencia_min_horas };
+  }
+
+  const supabase = await criarClienteServidor();
+  const { error } = await supabase.from("profiles").update(mudanca).eq("id", usuario.id);
 
   if (error) {
     if (error.code === "23505") return { erro: "Esse endereço do link já está em uso. Escolha outro.", erros: { slug: ["Já em uso"] }, valores };
@@ -75,7 +88,7 @@ export async function salvarPerfil(_: EstadoForm, formData: FormData): Promise<E
   }
 
   revalidarPerfil();
-  return { ok: true, mensagem: "Perfil salvo." };
+  return { ok: true, mensagem: "Salvo." };
 }
 
 /** Grava a URL pública da logo depois do upload feito pelo navegador. */
