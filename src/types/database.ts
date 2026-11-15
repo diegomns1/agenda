@@ -198,6 +198,9 @@ export type Agendamento = {
   lembrete_1d_enviado_em: string | null;
   lembrete_1h_enviado_em: string | null;
   cliente_avisada_em: string | null;
+  /** lembrete automático pelo WhatsApp da profissional (migração 0026) */
+  lembrete_auto_em: string | null;
+  lembrete_auto_erro: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -276,6 +279,9 @@ export type WhatsappConexao = {
   desconectado_em: string | null;
   motivo_queda: string | null;
   aviso_queda_em: string | null;
+  /** lembrete automático ligado e quantas horas antes (24, 12, 3 ou 2), migração 0026 */
+  lembrete_ativo: boolean;
+  lembrete_horas: number;
   atualizado_em: string;
 };
 

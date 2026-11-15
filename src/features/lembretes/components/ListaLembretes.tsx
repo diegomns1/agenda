@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { BellIcon, ChevronDownIcon, PhoneOffIcon } from "lucide-react";
+import { BellIcon, BotIcon, ChevronDownIcon, PhoneOffIcon, TriangleAlertIcon } from "lucide-react";
 import { BotaoLembrarCliente } from "./BotaoLembrarCliente";
 import { EstadoVazio } from "@/components/layout/EstadoVazio";
 import { dataDe, formatarData, horaDe, rotuloRelativo } from "@/lib/datas";
@@ -42,6 +42,15 @@ function Item({ a, mensagens, destaque }: { a: LembreteItem; mensagens: Mensagen
             </span>
           ) : null}
         </p>
+        {a.lembrete_auto_em && !a.lembrete_auto_erro && a.cliente_avisada_em ? (
+          <p className="flex items-center gap-1 text-mini text-sucesso-forte">
+            <BotIcon className="size-3" /> enviado sozinho às {horaDe(a.lembrete_auto_em)}
+          </p>
+        ) : a.lembrete_auto_erro && !a.cliente_avisada_em ? (
+          <p className="flex items-center gap-1 text-mini text-aviso-forte">
+            <TriangleAlertIcon className="size-3" /> não saiu sozinho: {a.lembrete_auto_erro}
+          </p>
+        ) : null}
       </div>
       {/* no celular o botão vai para uma linha própria, largo: o nome aparece inteiro e o toque fica fácil */}
       <BotaoLembrarCliente agendamento={a} telefone={a.telefone} mensagens={mensagens} tamanho="sm" className="w-full sm:w-auto" />

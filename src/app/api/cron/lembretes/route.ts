@@ -6,6 +6,7 @@ import { emailVencimentoProximo } from "@/features/emails/modelos";
 import { rodarAtivacao } from "@/features/ativacao/automatico";
 import { usoDasContas } from "@/features/admin/uso";
 import { sincronizarEtapasCrm } from "@/features/rastreio/servidor";
+import { rodarLembretesAutomaticos } from "@/features/whatsapp-proprio/lembretes";
 import { diasEntre, formatarData, hojeISO, horaDe, somarDias } from "@/lib/datas";
 import { primeiroNome } from "@/lib/texto";
 import { temRecurso } from "@/lib/planos";
@@ -56,6 +57,12 @@ async function executar(request: NextRequest) {
     return { enviados: 0 };
   });
 
+  // Lembrete automático pelo WhatsApp da própria profissional (Premium): no máximo 1 por profissional por rodada
+  const lembretesAuto = await rodarLembretesAutomaticos(admin).catch((e) => {
+    console.error("[cron] lembrete automático", e);
+    return { enviados: 0 };
+  });
+
   // Etapas do funil para a Meta (Configurando, Usando, Assinou): uma vez por hora
   const etapasMeta =
     new Date().getMinutes() < 5
@@ -101,7 +108,7 @@ async function executar(request: NextRequest) {
   }
 
   if (envios.length === 0) {
-    return NextResponse.json({ ok: true, enviados: 0, verificados: linhas.length, vencimentosAvisados, ativacao: ativacao.enviados, etapasMeta });
+    return NextResponse.json({ ok: true, enviados: 0, verificados: linhas.length, vencimentosAvisados, ativacao: ativacao.enviados, etapasMeta, lembretesAuto });
   }
 
   // Só profissionais cujo plano inclui lembretes
@@ -143,7 +150,7 @@ async function executar(request: NextRequest) {
   if (marcar1h.length) await admin.from("agendamentos").update({ lembrete_1h_enviado_em: marcadoEm }).in("id", marcar1h);
   if (mortos.size) await admin.from("push_subscriptions").delete().in("endpoint", [...mortos]);
 
-  return NextResponse.json({ ok: true, enviados, avisos: envios.length, verificados: linhas.length, inscricoesRemovidas: mortos.size, vencimentosAvisados, ativacao: ativacao.enviados, etapasMeta });
+  return NextResponse.json({ ok: true, enviados, avisos: envios.length, verificados: linhas.length, inscricoesRemovidas: mortos.size, vencimentosAvisados, ativacao: ativacao.enviados, etapasMeta, lembretesAuto });
 }
 
 /**

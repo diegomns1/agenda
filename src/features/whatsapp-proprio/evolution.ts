@@ -102,8 +102,17 @@ export async function apagarInstancia(nome: string) {
   await chamar("DELETE", `/instance/delete/${enc(nome)}`);
 }
 
-/** Manda texto pelo WhatsApp dela. `numero` só com dígitos e 55. Devolve se a Evolution aceitou. */
-export async function enviarTextoProprio(nome: string, numero: string, texto: string): Promise<boolean> {
-  const r = await chamar("POST", `/message/sendText/${enc(nome)}`, { number: numero, text: texto });
-  return r.ok;
+/**
+ * Manda texto pelo WhatsApp dela. `numero` só com dígitos e 55. `digitandoMs`: tempo de "digitando…" antes de sair.
+ * A Evolution confere se o número tem WhatsApp (sem WhatsApp = erro 400).
+ */
+export async function enviarTextoProprio(nome: string, numero: string, texto: string, digitandoMs = 0): Promise<{ ok: boolean; erro?: string }> {
+  const r = await chamar<{ response?: { message?: unknown } }>("POST", `/message/sendText/${enc(nome)}`, {
+    number: numero,
+    text: texto,
+    ...(digitandoMs > 0 ? { delay: digitandoMs } : {}),
+  });
+  if (r.ok) return { ok: true };
+  const msg = JSON.stringify(r.dados?.response?.message ?? "");
+  return { ok: false, erro: r.status === 400 && /exists.{0,4}false/i.test(msg) ? "número sem WhatsApp" : r.status ? `erro ${r.status}` : "sem resposta" };
 }

@@ -30,7 +30,7 @@ export const PLANOS = {
     nome: "Premium",
     curto: "Premium",
     preco: 59.9,
-    descricao: "Tudo do Profissional + assistente de IA + stories para o Instagram + relatórios do mês.",
+    descricao: "Tudo do Profissional + lembrete automático pelo seu WhatsApp + assistente de IA + stories para o Instagram + relatórios do mês.",
     nivel: 3,
   },
 } as const;

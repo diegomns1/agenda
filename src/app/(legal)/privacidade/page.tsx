@@ -118,6 +118,12 @@ export default function PaginaPrivacidade() {
           mandamos nada da sua agenda nem das suas clientes, só o nome da etapa.
         </li>
         <li>
+          <strong>Seu próprio WhatsApp (plano Premium, só se você conectar)</strong>: a conexão fica num servidor nosso (Evolution
+          API, no mesmo servidor do Vaguinha) e é usada só para mandar, do seu número, os lembretes das suas clientes com horário
+          marcado. Guardamos apenas o número conectado e o estado da conexão; não lemos nem guardamos suas conversas, contatos ou
+          fotos. Você desconecta quando quiser, na tela Lembretes ou no próprio WhatsApp (Dispositivos conectados).
+        </li>
+        <li>
           <strong>Google (Google Ads)</strong>, só se você aceitou os cookies de medição: a tag do Google mede as visitas ao site
           e avisa quando um cadastro é feito, para medir os anúncios no Google. Não mandamos seu e-mail nem seu telefone.
         </li>

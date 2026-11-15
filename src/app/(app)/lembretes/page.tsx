@@ -12,6 +12,8 @@ import { URL_APP } from "@/lib/constantes";
 import { podeConectarWhatsappProprio } from "@/features/whatsapp-proprio/acesso";
 import { situacaoWhatsapp } from "@/features/whatsapp-proprio/actions";
 import { ConectarWhatsapp } from "@/features/whatsapp-proprio/components/ConectarWhatsapp";
+import { evolutionConfigurada } from "@/features/whatsapp-proprio/evolution";
+import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
 
 export const metadata: Metadata = { title: "Lembretes" };
 
@@ -57,7 +59,22 @@ export default async function PaginaLembretes({ searchParams }: PageProps<"/lemb
         </p>
       </div>
 
-      {situacaoZap ? <ConectarWhatsapp inicial={situacaoZap} telefonePerfil={perfil.telefone} /> : null}
+      {situacaoZap ? (
+        <ConectarWhatsapp inicial={situacaoZap} telefonePerfil={perfil.telefone} />
+      ) : evolutionConfigurada() && !temRecurso(perfil.plano, "lembrete_automatico") ? (
+        <Link
+          href="/assinatura"
+          className="flex items-start gap-3 rounded-xl border border-dashed p-4 transition-colors hover:bg-muted/50"
+        >
+          <IconeWhatsApp className="mt-0.5 size-5 shrink-0 text-whatsapp" />
+          <span className="grid gap-0.5">
+            <span className="text-sm font-semibold">Lembrete sozinho, do seu WhatsApp</span>
+            <span className="text-sm text-muted-foreground">
+              No Premium, a Vaguinha manda o lembrete para quem está marcado sem você precisar tocar em nada. Ver planos →
+            </span>
+          </span>
+        </Link>
+      ) : null}
 
       <ListaLembretes
         pendentes={pendentes}

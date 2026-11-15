@@ -7,6 +7,7 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { normalizarTelefone } from "@/lib/telefone";
 import type { WhatsappConexao } from "@/types/database";
 import { podeConectarWhatsappProprio } from "./acesso";
+import { HORAS_LEMBRETE } from "./opcoes";
 import { apagarInstancia, criarInstancia, estadoInstancia, infoInstancia, nomeInstancia, qrAtual, type QrEvolution } from "./evolution";
 
 /*
@@ -22,6 +23,9 @@ export type SituacaoWhatsapp = {
   qr: string | null;
   /** código de 8 letras para digitar no celular */
   codigo: string | null;
+  /** lembrete automático (só quando conectado) */
+  lembreteAtivo?: boolean;
+  lembreteHoras?: number;
   erro?: string;
 };
 
@@ -75,6 +79,7 @@ export async function situacaoWhatsapp(): Promise<SituacaoWhatsapp> {
   if (!linha) return vazio;
 
   const estado = await estadoInstancia(linha.instancia);
+  const config = { lembreteAtivo: linha.lembrete_ativo, lembreteHoras: linha.lembrete_horas };
   const agora = new Date().toISOString();
 
   if (estado === "open") {
@@ -85,9 +90,9 @@ export async function situacaoWhatsapp(): Promise<SituacaoWhatsapp> {
         .update({ estado: "conectado", numero: info.numero, nome_perfil: info.nomePerfil, conectado_em: agora, motivo_queda: null, atualizado_em: agora })
         .eq("profissional_id", a.id);
       revalidatePath("/lembretes");
-      return { ...vazio, estado: "conectado", numero: info.numero, nomePerfil: info.nomePerfil };
+      return { ...vazio, ...config, estado: "conectado", numero: info.numero, nomePerfil: info.nomePerfil };
     }
-    return { ...vazio, estado: "conectado", numero: linha.numero, nomePerfil: linha.nome_perfil };
+    return { ...vazio, ...config, estado: "conectado", numero: linha.numero, nomePerfil: linha.nome_perfil };
   }
 
   if (estado === "connecting") return { ...vazio, estado: "conectando", ...deQr(await qrAtual(linha.instancia)) };
@@ -110,6 +115,20 @@ export async function desconectarWhatsapp(): Promise<{ ok: boolean }> {
     .from("whatsapp_conexoes")
     .update({ estado: "desconectado", desconectado_em: agora, motivo_queda: "desconectou pelo painel", atualizado_em: agora })
     .eq("profissional_id", a.id);
+  revalidatePath("/lembretes");
+  return { ok: true };
+}
+
+/** Liga/desliga o lembrete automático e escolhe quanto tempo antes ele sai. */
+export async function salvarLembreteAutomatico(entrada: { ativo: boolean; horas: number }): Promise<{ ok: boolean; erro?: string }> {
+  const a = await acesso();
+  if (!a) return { ok: false, erro: "Esse recurso não está liberado na sua conta." };
+  if (!(HORAS_LEMBRETE as readonly number[]).includes(entrada.horas)) return { ok: false, erro: "Escolha quando o lembrete sai." };
+  const { error } = await a.admin
+    .from("whatsapp_conexoes")
+    .update({ lembrete_ativo: entrada.ativo, lembrete_horas: entrada.horas, atualizado_em: new Date().toISOString() })
+    .eq("profissional_id", a.id);
+  if (error) return { ok: false, erro: "Não consegui salvar. Tente de novo." };
   revalidatePath("/lembretes");
   return { ok: true };
 }
