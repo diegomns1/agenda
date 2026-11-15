@@ -135,8 +135,9 @@ function CamposAtendimento({
   const [clienteId, setClienteId] = useState(v?.cliente_id ?? ag?.cliente_id ?? inicial?.clienteId ?? "");
   const [telefoneNova, setTelefoneNova] = useState(v?.nova_cliente_telefone ?? "");
 
+  // editando um atendimento sem serviço (ex.: veio do Google): começa em "Escolha o serviço", para não gravar um errado
   const servicoInicial =
-    v?.servico_id ?? ag?.servico_id ?? inicial?.servicoId ?? servicos[0]?.id ?? "";
+    v?.servico_id ?? (ag ? (ag.servico_id ?? "") : (inicial?.servicoId ?? servicos[0]?.id ?? ""));
   const [servicoId, setServicoId] = useState(servicoInicial);
   const servico = servicos.find((s) => s.id === servicoId);
 
@@ -239,7 +240,13 @@ function CamposAtendimento({
           value={servicoId}
           onChange={(e) => aoTrocarServico(e.target.value)}
           className={selectClass}
+          aria-invalid={estado.erros?.servico_id ? true : undefined}
         >
+          {!servicoId ? (
+            <option value="" disabled>
+              Escolha o serviço…
+            </option>
+          ) : null}
           {servicos.map((s) => (
             <option key={s.id} value={s.id}>
               {s.nome} · {formatarDuracao(s.duracao_min)}
@@ -247,6 +254,9 @@ function CamposAtendimento({
             </option>
           ))}
         </select>
+        {ag && !ag.servico_id && ag.servico_nome ? (
+          <p className="text-xs text-muted-foreground">Veio anotado como: “{ag.servico_nome}”</p>
+        ) : null}
         {estado.erros?.servico_id?.[0] ? <p className="text-sm text-destructive">{estado.erros.servico_id[0]}</p> : null}
       </div>
 

@@ -5,7 +5,6 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
   BanIcon,
-  CalendarClockIcon,
   CheckIcon,
   PencilIcon,
   RotateCcwIcon,
@@ -115,7 +114,19 @@ export function DetalheAgendamento({ agendamento: a, clientes, mensagens, aoFech
                 <dl className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <dt className="text-xs text-muted-foreground">Serviço</dt>
-                    <dd>{a.servico_nome ?? "—"}</dd>
+                    <dd>
+                      {a.servico_id ? (
+                        a.servico_nome
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => aoEditar(a)}
+                          className="-my-2 inline-flex min-h-toque items-center font-medium text-primary underline underline-offset-4"
+                        >
+                          + Adicionar serviço
+                        </button>
+                      )}
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-xs text-muted-foreground">Valor</dt>
@@ -159,8 +170,8 @@ export function DetalheAgendamento({ agendamento: a, clientes, mensagens, aoFech
                     ) : null}
                     {a.status !== "cancelado" ? (
                       <Button variant="outline" className={botao} onClick={() => aoEditar(a)}>
-                        <CalendarClockIcon />
-                        Remarcar
+                        <PencilIcon />
+                        Editar
                       </Button>
                     ) : null}
                   </>
