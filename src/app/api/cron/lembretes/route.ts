@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { enviarPush, pushConfigurado } from "@/lib/push";
 import { emailConfigurado, enviarEmail } from "@/lib/email";
-import { emailVencimentoProximo } from "@/features/emails/modelos";
+import { emailAssinaturaVencida, emailVencimentoProximo } from "@/features/emails/modelos";
 import { rodarAtivacao } from "@/features/ativacao/automatico";
 import { desligarAvisosDoAsaas } from "@/features/assinatura/avisos";
 import { usoDasContas } from "@/features/admin/uso";
@@ -50,6 +50,11 @@ async function executar(request: NextRequest) {
   // Aviso de vencimento por e-mail (barato: uma consulta pequena a cada execução)
   const vencimentosAvisados = await avisarVencimentos(admin).catch((e) => {
     console.error("[cron] vencimentos", e);
+    return 0;
+  });
+  // Assinatura que venceu sem pagamento: um e-mail no dia seguinte (os avisos do Asaas estão desligados)
+  const vencidosAvisados = await avisarVencidos(admin).catch((e) => {
+    console.error("[cron] vencidos", e);
     return 0;
   });
   // Ativação de quem só entrou / fim do teste (age uma vez por hora, das 9h às 20h)
@@ -114,7 +119,7 @@ async function executar(request: NextRequest) {
   }
 
   if (envios.length === 0) {
-    return NextResponse.json({ ok: true, enviados: 0, verificados: linhas.length, vencimentosAvisados, ativacao: ativacao.enviados, etapasMeta, lembretesAuto });
+    return NextResponse.json({ ok: true, enviados: 0, verificados: linhas.length, vencimentosAvisados, vencidosAvisados, ativacao: ativacao.enviados, etapasMeta, lembretesAuto });
   }
 
   // Só profissionais cujo plano inclui lembretes
@@ -156,7 +161,7 @@ async function executar(request: NextRequest) {
   if (marcar1h.length) await admin.from("agendamentos").update({ lembrete_1h_enviado_em: marcadoEm }).in("id", marcar1h);
   if (mortos.size) await admin.from("push_subscriptions").delete().in("endpoint", [...mortos]);
 
-  return NextResponse.json({ ok: true, enviados, avisos: envios.length, verificados: linhas.length, inscricoesRemovidas: mortos.size, vencimentosAvisados, ativacao: ativacao.enviados, etapasMeta, lembretesAuto });
+  return NextResponse.json({ ok: true, enviados, avisos: envios.length, verificados: linhas.length, inscricoesRemovidas: mortos.size, vencimentosAvisados, vencidosAvisados, ativacao: ativacao.enviados, etapasMeta, lembretesAuto });
 }
 
 /**
@@ -183,21 +188,52 @@ async function avisarVencimentos(admin: ReturnType<typeof criarClienteAdmin>): P
     // teste grátis (5 dias): avisa só na véspera, senão o e-mail sairia junto com o de aprovação
     if (p.plano === "teste" && dias > 1) continue;
     // mensalidade em aberto: o e-mail leva o link para pagar com um toque (os avisos do Asaas estão desligados)
-    const { data: aberta } =
-      p.plano === "teste"
-        ? { data: null }
-        : await admin
-            .from("cobrancas")
-            .select("link")
-            .eq("profissional_id", p.id)
-            .in("status", ["PENDING", "OVERDUE"])
-            .not("link", "is", null)
-            .order("vencimento", { ascending: true })
-            .limit(1)
-            .maybeSingle();
-    const r = await enviarEmail(emailVencimentoProximo(p.email, p.nome, p.plano, p.ativa_ate, dias, aberta?.link ?? null));
+    const link = p.plano === "teste" ? null : await linkDaMensalidade(admin, p.id);
+    const r = await enviarEmail(emailVencimentoProximo(p.email, p.nome, p.plano, p.ativa_ate, dias, link));
     if (r.enviado) {
       await admin.from("profiles").update({ aviso_vencimento_para: p.ativa_ate }).eq("id", p.id);
+      enviados += 1;
+    }
+  }
+  return enviados;
+}
+
+/** Link da mensalidade em aberto (mais antiga primeiro), para o botão dos e-mails de cobrança. */
+async function linkDaMensalidade(admin: ReturnType<typeof criarClienteAdmin>, profissionalId: string) {
+  const { data } = await admin
+    .from("cobrancas")
+    .select("link")
+    .eq("profissional_id", profissionalId)
+    .in("status", ["PENDING", "OVERDUE"])
+    .not("link", "is", null)
+    .order("vencimento", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return data?.link ?? null;
+}
+
+/**
+ * Plano pago que venceu entre 1 e 5 dias atrás e não foi renovado: um e-mail "sua assinatura venceu"
+ * (uma vez por vencimento, marcado em aviso_vencido_para). O teste grátis tem o próprio aviso (ativação).
+ */
+async function avisarVencidos(admin: ReturnType<typeof criarClienteAdmin>): Promise<number> {
+  if (!emailConfigurado()) return 0;
+  const hoje = hojeISO();
+  const { data, error } = await admin
+    .from("profiles")
+    .select("id, nome, email, plano, ativa_ate, aviso_vencido_para")
+    .eq("status", "aprovada")
+    .neq("plano", "teste")
+    .lt("ativa_ate", hoje)
+    .gte("ativa_ate", somarDias(hoje, -5));
+  if (error || !data) return 0;
+
+  let enviados = 0;
+  for (const p of data) {
+    if (!p.email || !p.ativa_ate || p.plano === "teste" || p.aviso_vencido_para === p.ativa_ate) continue;
+    const r = await enviarEmail(emailAssinaturaVencida(p.email, p.nome, p.plano, p.ativa_ate, await linkDaMensalidade(admin, p.id)));
+    if (r.enviado) {
+      await admin.from("profiles").update({ aviso_vencido_para: p.ativa_ate }).eq("id", p.id);
       enviados += 1;
     }
   }

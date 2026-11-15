@@ -75,6 +75,8 @@ export type Profile = {
   termos_aceitos_em: string | null;
   termos_versao: string | null;
   aviso_vencimento_para: string | null; // "AAAA-MM-DD"
+  /** vencimento para o qual o e-mail "sua assinatura venceu" já saiu (migração 0030) */
+  aviso_vencido_para?: string | null;
   asaas_customer_id: string | null;
   asaas_subscription_id: string | null;
   plano_assinado: "essencial" | "profissional" | "premium" | null;

@@ -215,6 +215,25 @@ export function emailVencimentoProximo(
   });
 }
 
+/** Assinatura venceu sem pagamento (enviado pelo cron no dia seguinte, uma vez por vencimento). */
+export function emailAssinaturaVencida(para: string, nome: string, plano: Plano, ativaAte: string, linkPagamento: string | null = null): Email {
+  return montar({
+    para,
+    assunto: `Sua assinatura do ${NOME_APP} venceu`,
+    previa: "Sua agenda está em espera. Nada foi apagado: é só pagar a mensalidade para voltar a usar.",
+    titulo: "Sua assinatura venceu",
+    saudacao: `Oi, ${primeiroNome(nome)}!`,
+    paragrafos: [
+      `Seu plano ${PLANOS[plano].nome} venceu em ${formatarDataISO(ativaAte)} e a agenda ficou em espera. Seus clientes, serviços e horários continuam guardados.`,
+      linkPagamento
+        ? "Para voltar a usar, pague a mensalidade pelo botão abaixo, por Pix ou cartão de crédito. Assim que o pagamento é confirmado, a agenda é liberada sozinha."
+        : "Para voltar a usar, abra a página Assinatura no painel e pague a mensalidade por Pix ou cartão de crédito. Assim que o pagamento é confirmado, a agenda é liberada sozinha.",
+    ],
+    botao: linkPagamento ? { texto: "Pagar a mensalidade", url: linkPagamento } : { texto: "Renovar agora", url: `${URL_APP}/assinatura` },
+    observacao: "Se você já pagou, pode ignorar este aviso. Se não quer continuar, não precisa fazer nada.",
+  });
+}
+
 // --------------------------------------------------------------------------- ativação (13/11/2026)
 
 /** 1 dia depois do cadastro, para quem ainda não cadastrou nada (sem WhatsApp no cadastro). */
