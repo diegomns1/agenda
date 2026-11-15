@@ -53,14 +53,15 @@ const PLANOS_SITE = [
     id: "profissional" as const,
     destaque: false,
     para: "Para clientes pedirem horário pelo link e receberem lembrete.",
-    itens: ["Tudo do Essencial", "Link de agendamento", "Lembrete 1 dia e 1 hora antes", "WhatsApp com a mensagem pronta", "Lista de quem falta avisar"],
+    itens: ["Tudo do Essencial", "Link de agendamento", "Aviso no seu celular 1 dia e 1 hora antes", "WhatsApp com a mensagem pronta", "Lista de quem falta avisar"],
   },
   {
     id: "premium" as const,
     destaque: true,
-    para: "Para divulgar horários vagos e ter uma assistente no WhatsApp.",
+    para: "Para os lembretes saírem sozinhos e ter uma assistente no WhatsApp.",
     itens: [
       "Tudo do Profissional",
+      "Lembrete automático pelo seu WhatsApp, 1 dia e 2 horas antes",
       "Assistente de IA no seu WhatsApp",
       "Stories do dia, da semana e do mês",
       "Story do horário que vagou",
@@ -93,7 +94,7 @@ const DUVIDAS = [
   },
   {
     p: "O Vaguinha manda mensagem para os meus clientes sozinho?",
-    r: "Não. Mensagem automática pode bloquear o seu número. O Vaguinha prepara o texto e abre o WhatsApp do cliente; você toca em enviar.",
+    r: "No plano Premium, sim: você conecta o seu WhatsApp e o lembrete sai sozinho, do seu número, 1 dia antes e 2 horas antes de cada horário. Essa conexão não é oficial do WhatsApp, por isso o Vaguinha manda poucas mensagens, com intervalo e só para quem tem horário marcado. Nos outros planos, o Vaguinha prepara o texto e abre o WhatsApp do cliente; você toca em enviar.",
   },
   {
     p: "Dá para trazer a agenda que eu uso no Google?",
@@ -120,11 +121,11 @@ export default function PaginaSite() {
         <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pt-12 pb-16 sm:px-6 md:grid-cols-[1.1fr_0.9fr] md:py-16">
           <div className="grid gap-6">
             <a
-              href="#assistente"
+              href="#lembrete-automatico"
               className="surgir inline-flex w-fit items-center gap-2 rounded-full border border-whatsapp/30 bg-background/70 py-1 pr-3 pl-1 text-sm font-semibold text-foreground backdrop-blur hover:bg-background"
             >
               <span className="rounded-full bg-whatsapp px-2 py-0.5 text-mini font-bold text-white">Novidade</span>
-              Sua assistente agora no WhatsApp
+              Lembrete automático pelo seu WhatsApp
               <ArrowRightIcon className="size-3.5" />
             </a>
             <h1 className="surgir text-4xl leading-[1.08] font-extrabold tracking-tight text-balance sm:text-5xl md:text-[3.5rem]">
@@ -182,6 +183,42 @@ export default function PaginaSite() {
             <Recurso titulo="Abre como app no celular" texto="Adicione à tela de início, sem loja de aplicativos. Funciona no Android e no iPhone.">
               <FragmentoApp />
             </Recurso>
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------- Lembrete automático (Premium) */}
+      <section id="lembrete-automatico" className={cn("flex scroll-mt-16 items-center", TELA)}>
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-2">
+          <div>
+            <p className="inline-flex items-center gap-1.5 text-sm font-bold text-whatsapp">
+              <IconeWhatsApp className="size-4" />
+              Novidade · plano Premium
+            </p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
+              O lembrete sai sozinho, do seu WhatsApp
+            </h2>
+            <p className="mt-4 max-w-lg text-pretty text-muted-foreground">
+              Conecte o seu WhatsApp uma vez e o Vaguinha avisa cada cliente 1 dia antes e 2 horas antes do horário. Sai do seu número, com a
+              mensagem pronta, sem você parar o atendimento para mandar.
+            </p>
+            <ul className="mt-6 grid gap-2.5 text-sm">
+              {[
+                "1 dia antes e 2 horas antes de cada atendimento",
+                "Do seu número: o cliente reconhece e responde você",
+                "Você continua usando o WhatsApp normal no celular",
+                "Se o cliente responder, você recebe um aviso",
+                "Conecta em 1 minuto, com um código no próprio celular",
+              ].map((t) => (
+                <li key={t} className="flex items-start gap-2">
+                  <CheckIcon className="mt-0.5 size-4 shrink-0 text-whatsapp" />
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="mx-auto w-full max-w-sm">
+            <MockLembreteCliente />
           </div>
         </div>
       </section>
@@ -642,6 +679,47 @@ function MockAssistente() {
             <span className="rounded-xl bg-card py-1.5 shadow-sm">✅ Confirmar</span>
             <span className="rounded-xl bg-card py-1.5 shadow-sm">Não</span>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Como o cliente recebe os dois lembretes automáticos (do WhatsApp da profissional). */
+function MockLembreteCliente() {
+  return (
+    <div aria-hidden className="overflow-hidden rounded-3xl border border-vinho/10 bg-card shadow-alta">
+      <div className="flex items-center gap-2.5 bg-whatsapp px-3.5 py-2.5 text-white">
+        <span className="flex size-8 items-center justify-center rounded-full bg-white/25 text-sm font-extrabold">A</span>
+        <div className="leading-tight">
+          <p className="text-sm font-bold">Studio Ana Nails</p>
+          <p className="text-mini opacity-85">online</p>
+        </div>
+      </div>
+      <div className="grid gap-2 bg-muted/60 p-3 text-sm">
+        <p className="mx-auto rounded-full bg-card px-2.5 py-0.5 text-mini text-muted-foreground shadow-sm">ontem</p>
+        <div className="max-w-[88%] rounded-xl rounded-tl-sm bg-card px-3 py-2 shadow-sm">
+          Oi, Duda! 😊
+          <br />
+          Passando para lembrar do seu horário amanhã (sexta) às 15:30.
+          <br />✨ Alongamento em gel
+          <br />
+          <br />
+          Até lá!
+          <span className="mt-0.5 block text-right text-mini text-muted-foreground">15:30</span>
+        </div>
+        <p className="ml-auto max-w-[80%] rounded-xl rounded-tr-sm bg-whatsapp/15 px-3 py-2">
+          Obrigada! Estarei aí 🥰
+          <span className="mt-0.5 block text-right text-mini text-muted-foreground">15:41</span>
+        </p>
+        <p className="mx-auto rounded-full bg-card px-2.5 py-0.5 text-mini text-muted-foreground shadow-sm">hoje</p>
+        <div className="max-w-[88%] rounded-xl rounded-tl-sm bg-card px-3 py-2 shadow-sm">
+          Oi, Duda! Seu horário é hoje às 15:30.
+          <br />✨ Alongamento em gel
+          <br />
+          <br />
+          Até daqui a pouco! 😊
+          <span className="mt-0.5 block text-right text-mini text-muted-foreground">13:30</span>
         </div>
       </div>
     </div>
