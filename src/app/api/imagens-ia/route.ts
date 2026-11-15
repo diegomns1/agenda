@@ -1,19 +1,20 @@
 import { randomUUID } from "node:crypto";
-import { after, NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { obterPerfil, obterUsuario } from "@/lib/auth";
 import { temRecurso } from "@/lib/planos";
 import { nomeDoRamo } from "@/lib/ramos";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
-import { gerarImagem, geracaoImagemConfigurada, type Referencia } from "@/features/imagens-ia/openai";
-import { BUCKET_IMAGENS_IA, LIMITE_MES, MAX_ANEXOS, MAX_PEDIDO, montarPrompt, usadasNoMes } from "@/features/imagens-ia/regras";
+import { conferirLimite, iniciarGeracao } from "@/features/imagens-ia/iniciar";
+import { geracaoImagemConfigurada, type Referencia } from "@/features/imagens-ia/openai";
+import { BUCKET_IMAGENS_IA, LIMITE_MES, MAX_ANEXOS, MAX_PEDIDO, montarPrompt } from "@/features/imagens-ia/regras";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /*
- * "Criar com IA" nos Stories (Premium), 15/11/2026.
+ * "Criar com IA" nos Stories (Premium), 15/11/2026: o chat livre.
  * Corpo multipart: pedido, conversa (uuid, opcional) e até 4 fotos em "anexo" (a tela já reduz para JPEG).
- * Responde na hora com o id; a imagem é gerada depois (after) e a tela pergunta o estado em situacaoImagem().
+ * Responde na hora com o id; a imagem é gerada depois e a tela pergunta o estado em situacaoImagem().
  * Se a conversa já tem uma imagem pronta, ela vai junto como primeira referência: o pedido vira um ajuste nela.
  */
 
@@ -52,17 +53,8 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = criarClienteAdmin();
-  const usadas = await usadasNoMes(admin, usuario.id);
-  if (usadas >= LIMITE_MES) return erro(`Você já usou as ${LIMITE_MES} imagens deste mês. No mês que vem, renova.`);
-
-  // uma de cada vez
-  const { count: emAndamento } = await admin
-    .from("imagens_ia")
-    .select("id", { count: "exact", head: true })
-    .eq("profissional_id", usuario.id)
-    .eq("estado", "gerando")
-    .gte("criado_em", new Date(Date.now() - 4 * 60_000).toISOString());
-  if (emAndamento) return erro("Espere a imagem anterior ficar pronta.");
+  const limite = await conferirLimite(admin, usuario.id);
+  if (!limite.ok) return erro(limite.erro);
 
   // imagem anterior da conversa: o pedido vira um ajuste nela
   const { data: anterior } = await admin
@@ -75,44 +67,27 @@ export async function POST(request: NextRequest) {
     .limit(1)
     .maybeSingle();
 
-  const { data: linha, error } = await admin
-    .from("imagens_ia")
-    .insert({ profissional_id: usuario.id, conversa_id: conversa, pedido, anexos: anexos.length })
-    .select("id")
-    .single();
-  if (error || !linha) return erro("Não consegui começar. Tente de novo.", 500);
-
-  const prompt = montarPrompt(pedido, {
-    ramo: perfil.ramo ? nomeDoRamo(perfil.ramo, perfil.ramo_outro) : null,
-    negocio: perfil.nome_negocio,
-    ajuste: Boolean(anterior?.imagem_path),
+  const id = await iniciarGeracao(admin, {
+    usuarioId: usuario.id,
+    conversa,
+    pedido,
     anexos: anexos.length,
+    prompt: montarPrompt(pedido, {
+      ramo: perfil.ramo ? nomeDoRamo(perfil.ramo, perfil.ramo_outro) : null,
+      negocio: perfil.nome_negocio,
+      ajuste: Boolean(anterior?.imagem_path),
+      anexos: anexos.length,
+    }),
+    referencias: async () => {
+      const referencias: Referencia[] = [];
+      if (anterior?.imagem_path) {
+        const { data } = await admin.storage.from(BUCKET_IMAGENS_IA).download(anterior.imagem_path);
+        if (data) referencias.push({ dados: Buffer.from(await data.arrayBuffer()), mime: "image/jpeg", nome: "anterior.jpg" });
+      }
+      return [...referencias, ...anexos];
+    },
   });
+  if (!id) return erro("Não consegui começar. Tente de novo.", 500);
 
-  after(async () => {
-    const referencias: Referencia[] = [];
-    if (anterior?.imagem_path) {
-      const { data } = await admin.storage.from(BUCKET_IMAGENS_IA).download(anterior.imagem_path);
-      if (data) referencias.push({ dados: Buffer.from(await data.arrayBuffer()), mime: "image/jpeg", nome: "anterior.jpg" });
-    }
-    referencias.push(...anexos);
-
-    const r = await gerarImagem(prompt, referencias);
-    if (!r.ok) {
-      await admin.from("imagens_ia").update({ estado: "erro", erro: r.erro }).eq("id", linha.id);
-      return;
-    }
-    const path = `${usuario.id}/${linha.id}.jpg`;
-    const { error: erroUpload } = await admin.storage.from(BUCKET_IMAGENS_IA).upload(path, r.dados, { contentType: "image/jpeg", upsert: true });
-    await admin
-      .from("imagens_ia")
-      .update(
-        erroUpload
-          ? { estado: "erro", erro: "Não consegui guardar a imagem. Tente de novo." }
-          : { estado: "pronta", imagem_path: path, tokens: r.tokens, pronta_em: new Date().toISOString() },
-      )
-      .eq("id", linha.id);
-  });
-
-  return NextResponse.json({ ok: true, id: linha.id, conversa, usadas: usadas + 1, limite: LIMITE_MES });
+  return NextResponse.json({ ok: true, id, conversa, usadas: limite.usadas + 1, limite: LIMITE_MES });
 }

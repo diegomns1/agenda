@@ -70,3 +70,10 @@ export async function historicoImagens(): Promise<{ itens: ItemImagemIA[]; usada
     limite: LIMITE_MES,
   };
 }
+
+/** Quantas imagens ela já usou este mês e o limite (para o botão "Gerar com IA" do gerador de stories). */
+export async function creditosImagens(): Promise<{ usadas: number; limite: number }> {
+  const usuario = await obterUsuario();
+  if (!usuario) return { usadas: 0, limite: LIMITE_MES };
+  return { usadas: await usadasNoMes(criarClienteAdmin(), usuario.id), limite: LIMITE_MES };
+}

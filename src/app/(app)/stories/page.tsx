@@ -7,7 +7,7 @@ import { temRecurso } from "@/lib/planos";
 import { GeradorStories } from "@/features/stories/components/GeradorStories";
 import { listarServicos } from "@/features/servicos/queries";
 import { BloqueioPlano } from "@/components/layout/BloqueioPlano";
-import { historicoImagens } from "@/features/imagens-ia/actions";
+import { creditosImagens, historicoImagens } from "@/features/imagens-ia/actions";
 import { ChatImagens } from "@/features/imagens-ia/components/ChatImagens";
 import { geracaoImagemConfigurada } from "@/features/imagens-ia/openai";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ export default async function PaginaStories({ searchParams }: PageProps<"/storie
         titulo="Stories"
         descricao="Imagens prontas para o Instagram com sua logo e suas cores."
         beneficios={[
-          "Criar com IA: descreva a imagem, anexe fotos e receba o story pronto (30 por mês)",
+          "Gerar com IA: o story dos seus horários e serviços com acabamento profissional (30 por mês)",
           "Agenda do dia, da semana e do mês com seus horários livres",
           "Tabela de serviços e valores com a sua marca",
           "Temas de Natal, Ano Novo, Dia da Mulher, Outubro Rosa e Novembro Azul",
@@ -38,13 +38,14 @@ export default async function PaginaStories({ searchParams }: PageProps<"/storie
   }
 
   const dataInicial = ehDataISO(sp.data) && sp.data >= hojeISO() ? sp.data : undefined;
-  // duas abas: "Criar com IA" (chat que gera imagem) e "Modelos prontos" (agenda, serviços, temas).
-  // Links antigos com ?tipo=... (ex.: "Divulgar" do horário que vagou) abrem direto nos modelos prontos.
+  // duas abas: "Montar story" (escolhe dia, horários, serviços e tema; sai o modelo pronto ou, com 1 crédito, a versão
+  // feita pela IA) e "Criar do zero com IA" (chat livre que gera imagem). A primeira é a principal.
   const temIA = geracaoImagemConfigurada();
-  const aba: "ia" | "prontos" = !temIA || sp.aba === "prontos" || typeof sp.tipo === "string" ? "prontos" : "ia";
-  const [servicos, historico] = await Promise.all([
-    aba === "prontos" ? listarServicos({ somenteAtivos: true }) : Promise.resolve([]),
+  const aba: "ia" | "montar" = temIA && sp.aba === "ia" ? "ia" : "montar";
+  const [servicos, historico, creditos] = await Promise.all([
+    aba === "montar" ? listarServicos({ somenteAtivos: true }) : Promise.resolve([]),
     aba === "ia" ? historicoImagens() : Promise.resolve(null),
+    aba === "montar" && temIA ? creditosImagens() : Promise.resolve(null),
   ]);
 
   return (
@@ -64,8 +65,8 @@ export default async function PaginaStories({ searchParams }: PageProps<"/storie
         <nav aria-label="Jeito de criar" className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1 sm:w-fit">
           {(
             [
-              { id: "ia", rotulo: "Criar com IA", href: "/stories" },
-              { id: "prontos", rotulo: "Modelos prontos", href: "/stories?aba=prontos" },
+              { id: "montar", rotulo: "Montar story", href: "/stories" },
+              { id: "ia", rotulo: "Criar do zero com IA", href: "/stories?aba=ia" },
             ] as const
           ).map((t) => (
             <Link
@@ -97,6 +98,7 @@ export default async function PaginaStories({ searchParams }: PageProps<"/storie
           tipoInicial={sp.tipo === "dia" || sp.tipo === "semana" || sp.tipo === "mes" || sp.tipo === "servicos" ? sp.tipo : undefined}
           dataInicial={dataInicial}
           horaInicial={dataInicial && typeof sp.hora === "string" && /^\d{2}:\d{2}$/.test(sp.hora) ? sp.hora : undefined}
+          creditosIA={creditos}
         />
       )}
     </div>

@@ -13,6 +13,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { sugerirStory } from "@/features/stories/actions";
+import { GerarComIA } from "@/features/imagens-ia/components/GerarComIA";
 import { gradeDoDia, gradeGenerica } from "@/features/stories/selecao";
 import { caminhoFundo, ID_MEU_FUNDO, obterTema, TEMAS, TIPOS_STORY, type Tema, type TipoStory } from "@/features/stories/temas";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,8 @@ type Props = {
   dataInicial?: DataISO;
   /** Horário que vagou ("Divulgar" na tela Hoje): o story do dia abre só com ele marcado. */
   horaInicial?: string;
+  /** "Gerar com IA": imagens usadas no mês e o limite. Sem isso (IA desligada), o botão não aparece. */
+  creditosIA?: { usadas: number; limite: number } | null;
 };
 
 const DIAS_CURTOS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
@@ -239,7 +242,7 @@ function Alternador({ ativo, onClick, children, className, disabled }: { ativo: 
   );
 }
 
-export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, intervaloMin, servicos, tipoInicial, dataInicial, horaInicial }: Props) {
+export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, intervaloMin, servicos, tipoInicial, dataInicial, horaInicial, creditosIA }: Props) {
   const [tipo, setTipo] = useState<TipoStory>(tipoInicial ?? "dia");
   const [temaId, setTemaId] = useState("neutro");
   const [dia, setDia] = useState<DataISO>(dataInicial ?? hoje);
@@ -711,6 +714,10 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
         <p className="text-xs text-muted-foreground">
           No celular, &quot;Compartilhar&quot; abre direto o Instagram. A imagem sai em 1080×1920, sem nomes de clientes.
         </p>
+
+        {creditosIA ? (
+          <GerarComIA tipo={tipo} selecao={corpo} desabilitado={carregandoPrevia || sugerindo} usadasInicial={creditosIA.usadas} limite={creditosIA.limite} />
+        ) : null}
       </div>
 
       {/* Prévia */}

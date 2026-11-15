@@ -1,93 +1,32 @@
-import { ImageResponse } from "next/og";
 import { NextResponse, type NextRequest } from "next/server";
 import { obterPerfil } from "@/lib/auth";
-import { ehDataISO, hojeISO } from "@/lib/datas";
 import { URL_APP } from "@/lib/constantes"; // não usar a origem do pedido: na VPS é localhost:3020 (interno)
 import { temRecurso } from "@/lib/planos";
-import {
-  dadosDia,
-  dadosDiaManual,
-  dadosMes,
-  dadosMesManual,
-  dadosSemana,
-  dadosSemanaManual,
-  dadosServicos,
-  marcaDoPerfil,
-} from "@/features/stories/dados";
+import { imagemDoStory, montarStory, TIPOS_DE_STORY } from "@/features/stories/montar";
 import { esquemaSelecaoStory, type SelecaoStory } from "@/features/stories/selecao";
-import { ALTURA_STORY, caminhoFundo, LARGURA_STORY, obterTema, type TipoStory } from "@/features/stories/temas";
-import { StoryDia } from "@/features/stories/templates/StoryDia";
-import { StorySemana } from "@/features/stories/templates/StorySemana";
-import { StoryMes } from "@/features/stories/templates/StoryMes";
-import { StoryServicos } from "@/features/stories/templates/StoryServicos";
+import type { TipoStory } from "@/features/stories/temas";
 import type { Profile } from "@/types/database";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const TIPOS: TipoStory[] = ["dia", "semana", "mes", "servicos"];
-
 type Contexto = { params: Promise<{ tipo: string }> };
 
 async function autorizar(tipo: string) {
-  if (!TIPOS.includes(tipo as TipoStory)) return { erro: NextResponse.json({ erro: "Tipo inválido" }, { status: 404 }) };
+  if (!TIPOS_DE_STORY.includes(tipo as TipoStory)) return { erro: NextResponse.json({ erro: "Tipo inválido" }, { status: 404 }) };
   const perfil = await obterPerfil();
   if (!perfil) return { erro: NextResponse.json({ erro: "Não autorizado" }, { status: 401 }) };
   if (!temRecurso(perfil.plano, "stories")) return { erro: NextResponse.json({ erro: "Recurso não incluído no plano" }, { status: 403 }) };
   return { perfil };
 }
 
-const cacheFundos = new Map<string, string>();
-
-/** Papel de parede do tema como data URL (guardado em memória enquanto o servidor estiver de pé). */
-async function papelDeParede(origem: string, id: string): Promise<string | null> {
-  const guardado = cacheFundos.get(id);
-  if (guardado) return guardado;
-  try {
-    const r = await fetch(`${origem}${caminhoFundo(id)}`, { cache: "force-cache" });
-    if (!r.ok) return null;
-    const dataUrl = `data:image/jpeg;base64,${Buffer.from(await r.arrayBuffer()).toString("base64")}`;
-    cacheFundos.set(id, dataUrl);
-    return dataUrl;
-  } catch {
-    return null; // sem o papel de parede, o story sai com o fundo em cores do tema
-  }
-}
-
 /** Monta a imagem: com seleção manual usa o que a profissional marcou; sem, lê a agenda. */
 async function gerar(perfil: Profile, tipo: TipoStory, sel: SelecaoStory, baixar: boolean, origem: string) {
-  const data = sel.data && ehDataISO(sel.data) ? sel.data : hojeISO();
-  const base = obterTema(sel.tema);
-  // papel de parede: baixado do próprio site (public/stories/temas) e embutido como data URL
-  // (o satori recusa baixar de localhost; assim funciona igual no computador e na Vercel)
-  // "Meu fundo": a imagem vem pronta no pedido (sem ela, o story sai nas cores da profissional)
-  const fundo = base.personalizado ? (sel.fundo ?? null) : base.imagem ? await papelDeParede(origem, base.id) : null;
-  const tema = fundo ? { ...base, imagemUrl: fundo } : base;
-  const marca = marcaDoPerfil(perfil);
-
-  let elemento: React.ReactElement;
-  switch (tipo) {
-    case "dia":
-      elemento = <StoryDia tema={tema} marca={marca} dados={sel.horarios ? dadosDiaManual(data, sel.horarios) : await dadosDia(perfil, data)} />;
-      break;
-    case "semana":
-      elemento = <StorySemana tema={tema} marca={marca} dados={sel.dias ? dadosSemanaManual(data, sel.dias) : await dadosSemana(perfil, data)} />;
-      break;
-    case "mes":
-      elemento = <StoryMes tema={tema} marca={marca} dados={sel.dias ? dadosMesManual(data, sel.dias) : await dadosMes(perfil, data)} />;
-      break;
-    default:
-      elemento = <StoryServicos tema={tema} marca={marca} dados={await dadosServicos(sel.servicos, sel.foto)} />;
-  }
-
-  const nomeArquivo = `vaguinha-${tipo}-${tipo === "servicos" ? "tabela" : data}-${tema.id}.png`;
-  return new ImageResponse(elemento, {
-    width: LARGURA_STORY,
-    height: ALTURA_STORY,
-    headers: {
-      "Cache-Control": "private, no-store",
-      "Content-Disposition": `${baixar ? "attachment" : "inline"}; filename="${nomeArquivo}"`,
-    },
+  const story = await montarStory(perfil, tipo, sel, origem);
+  const nomeArquivo = `vaguinha-${tipo}-${tipo === "servicos" ? "tabela" : story.data}-${story.tema.id}.png`;
+  return imagemDoStory(story, {
+    "Cache-Control": "private, no-store",
+    "Content-Disposition": `${baixar ? "attachment" : "inline"}; filename="${nomeArquivo}"`,
   });
 }
 
