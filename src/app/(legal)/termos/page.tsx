@@ -67,8 +67,14 @@ export default function PaginaTermos() {
       <h2>6. Lembretes, notificações e WhatsApp</h2>
       <p>
         Os lembretes para a profissional chegam por notificação no celular, e dependem de o aparelho e o navegador permitirem.
-        As mensagens para os clientes são abertas no seu WhatsApp já prontas, mas quem envia é você. O Vaguinha não tem
-        ligação com o WhatsApp nem envia mensagens automaticamente em seu nome.
+        As mensagens para os clientes são abertas no seu WhatsApp já prontas, e quem envia é você.
+      </p>
+      <p>
+        No plano Premium existe o lembrete automático, que é opcional: você conecta o seu próprio WhatsApp ao painel e o
+        Vaguinha envia, do seu número e em seu nome, um lembrete 1 dia antes e outro 2 horas antes de cada horário marcado.
+        Essa conexão não é oficial do WhatsApp nem tem ligação com a Meta. Por isso existe o risco de o WhatsApp restringir
+        ou bloquear o seu número, e o Vaguinha não se responsabiliza por isso. Ao conectar, você declara que conhece esse
+        risco e que os seus clientes aceitam receber o lembrete. Você pode desligar ou desconectar quando quiser.
       </p>
 
       <h2>7. Disponibilidade e responsabilidade</h2>

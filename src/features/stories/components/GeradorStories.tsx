@@ -636,7 +636,7 @@ export function GeradorStories({ hoje, corPrimaria, corSecundaria, expediente, i
               </div>
             </div>
             {servicos.length === 0 ? (
-              <p className="rounded-lg border border-dashed px-3 py-2 text-sm text-muted-foreground">Cadastre seus serviços na aba Serviços para montar este story.</p>
+              <p className="rounded-lg border border-dashed px-3 py-2 text-sm text-muted-foreground">Cadastre seus serviços em Perfil → Serviços para montar este story.</p>
             ) : (
               <ul className="divide-y overflow-hidden rounded-xl border bg-card">
                 {servicos.map((s) => {

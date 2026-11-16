@@ -4,6 +4,7 @@ import type { Plano } from "@/lib/planos";
  * Tutoriais do painel (13/11/2026). Passo a passo curto de cada função, com espaço para vídeo.
  * Para pôr um vídeo: cole o link do YouTube (ou do Instagram/Drive com permissão pública) em `video`.
  * Os passos usam os nomes que aparecem na tela (botões, abas, títulos). Mudou a tela, mude aqui também.
+ * Revisado em 15/11/2026: Perfil em botões, Relatório na barra, editar atendimento, lembrete automático e stories com IA.
  */
 
 export type Tutorial = {
@@ -24,9 +25,9 @@ export const TUTORIAIS: Tutorial[] = [
     titulo: "Primeiros passos",
     resumo: "Deixe a agenda pronta em 5 minutos.",
     passos: [
-      "Abra Perfil e preencha Seus dados: nome do negócio e seu WhatsApp.",
-      "Ainda no Perfil, em Horário de atendimento, marque os dias e horários em que você atende.",
-      "Na aba Serviços, toque em Novo serviço e cadastre cada serviço com o tempo que leva e o valor.",
+      "Abra Perfil → Meus dados e preencha o nome do negócio e o seu WhatsApp.",
+      "Em Perfil → Horários, marque os dias e as horas em que você atende.",
+      "Em Perfil → Serviços, toque em Novo serviço e cadastre cada serviço com o tempo que leva e o valor.",
       "Pronto: na aba Agenda, toque em Marcar para colocar o primeiro horário.",
     ],
     video: null,
@@ -49,12 +50,14 @@ export const TUTORIAIS: Tutorial[] = [
   },
   {
     id: "marcar",
-    titulo: "Marcar, remarcar e cancelar",
+    titulo: "Marcar, editar e cancelar",
     resumo: "O dia a dia da agenda.",
     passos: [
       "Na aba Agenda, toque em Marcar (ou num horário vazio e depois no +).",
       "Escolha o cliente (ou cadastre na hora), o serviço e o horário. O sistema não deixa marcar dois no mesmo horário.",
-      "Para remarcar ou cancelar, toque no atendimento na agenda e escolha a opção.",
+      "Para mudar o dia, o horário ou o serviço de quem já está marcado, toque no atendimento e depois em Editar.",
+      "A cliente vai fazer mais uma coisa no mesmo horário? Toque no atendimento e em + Adicionar serviço.",
+      "Para desmarcar, toque no atendimento e em Cancelar atendimento.",
       "Depois do atendimento, marque Concluído ou Faltou: isso aparece no histórico e no relatório do mês.",
       "Academia, médico, almoço ou folga? Use o botão Compromisso: o horário fica ocupado e ninguém marca em cima.",
     ],
@@ -99,6 +102,22 @@ export const TUTORIAIS: Tutorial[] = [
     acao: { href: "/lembretes", rotulo: "Ver lembretes" },
   },
   {
+    id: "lembrete-automatico",
+    titulo: "Lembrete automático pelo seu WhatsApp",
+    resumo: "O lembrete sai sozinho, do seu número, sem você tocar em nada.",
+    plano: "premium",
+    passos: [
+      "Toque no sininho (em cima) para abrir Lembretes e ache o cartão Lembrete pelo seu WhatsApp.",
+      "No celular, escolha Com código. No computador, escolha Com QR Code. Toque em Conectar.",
+      "No seu WhatsApp, abra Dispositivos conectados → Conectar dispositivo e digite o código (ou aponte a câmera para o QR Code).",
+      "Ligue Mandar lembretes sozinha. Cada cliente recebe uma mensagem 1 dia antes e outra 2 horas antes do horário.",
+      "As mensagens saem entre 7h e 21h, com um intervalo entre uma e outra. Você continua usando o WhatsApp normalmente.",
+      "Essa conexão não é oficial do WhatsApp. Por isso a Vaguinha manda poucas mensagens e só para quem tem horário marcado. Dá para desligar quando quiser.",
+    ],
+    video: null,
+    acao: { href: "/lembretes", rotulo: "Conectar meu WhatsApp" },
+  },
+  {
     id: "link",
     titulo: "Link para o cliente marcar sozinho",
     resumo: "Coloque na bio do Instagram e no WhatsApp.",
@@ -131,8 +150,10 @@ export const TUTORIAIS: Tutorial[] = [
     resumo: "Divulgue as vagas no Instagram em segundos.",
     plano: "premium",
     passos: [
-      "Na aba Stories, escolha o tipo: horários do dia, da semana, um horário que vagou ou um serviço com foto e valor.",
-      "Escolha o tema e toque para baixar a imagem.",
+      "Na aba Stories, em Montar story, escolha o tipo: horários do dia, da semana, um horário que vagou ou um serviço com foto e valor.",
+      "Escolha o tema e toque em Baixar imagem para usar o modelo pronto.",
+      "Quer um acabamento mais profissional? Toque em Gerar com IA: ela usa tudo o que você escolheu. Cada imagem gasta 1 crédito, e são 30 por mês.",
+      "Em Criar do zero com IA, você descreve a imagem que quer, como numa conversa.",
       "Poste no Instagram. Os nomes dos clientes nunca aparecem.",
     ],
     video: null,
@@ -144,7 +165,7 @@ export const TUTORIAIS: Tutorial[] = [
     resumo: "Quanto entrou, faltas e horários que vagaram.",
     plano: "premium",
     passos: [
-      "Toque em Relatórios, no alto da tela.",
+      "Toque em Relatório, na barra de baixo (no computador, na coluna da esquerda).",
       "Veja o total do mês, os serviços que mais saem, as faltas e as desmarcações.",
       "Os horários que vagaram aparecem também na tela Hoje, com atalho para divulgar.",
     ],
@@ -156,9 +177,10 @@ export const TUTORIAIS: Tutorial[] = [
     titulo: "Planos e assinatura",
     resumo: "Continuar depois do teste grátis.",
     passos: [
-      "Abra Perfil e role até Assinatura.",
+      "Abra Perfil → Assinatura.",
       "Escolha o plano e pague por Pix ou cartão. Sem fidelidade: dá para cancelar quando quiser.",
       "Se o teste acabar antes, nada se perde: clientes, serviços e horários ficam guardados.",
+      "Os avisos de vencimento chegam por e-mail, com o botão para pagar.",
     ],
     video: null,
     acao: { href: "/assinatura", rotulo: "Ver planos" },

@@ -194,7 +194,7 @@ export function emailVencimentoProximo(
       paragrafos: [
         `O teste vale até ${formatarDataISO(ativaAte)}. Depois disso a agenda fica em espera até você escolher um plano. Clientes, serviços e horários continuam guardados.`,
         `Os planos começam em ${formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês, por Pix ou cartão de crédito, sem fidelidade.`,
-        `Essencial (${formatarPreco(PLANOS.essencial.preco)}): agenda, clientes e serviços. Profissional (${formatarPreco(PLANOS.profissional.preco)}): mais o link de agendamento e os lembretes. Premium (${formatarPreco(PLANOS.premium.preco)}): mais o assistente de IA, os stories e o relatório do mês.`,
+        `Essencial (${formatarPreco(PLANOS.essencial.preco)}): agenda, clientes e serviços. Profissional (${formatarPreco(PLANOS.profissional.preco)}): mais o link de agendamento e os lembretes. Premium (${formatarPreco(PLANOS.premium.preco)}): mais o lembrete automático pelo seu WhatsApp, o assistente de IA, os stories e o relatório do mês.`,
       ],
       botao: { texto: "Escolher meu plano", url: `${URL_APP}/assinatura` },
     });

@@ -66,6 +66,7 @@ const PLANOS_SITE = [
       "Stories do dia, da semana e do mês",
       "Story do horário que vagou",
       "Story de serviço com foto e valor",
+      "Stories gerados com IA (30 por mês)",
       "Relatório do mês: quanto entrou, faltas e remarcações",
     ],
   },
@@ -106,7 +107,7 @@ const DUVIDAS = [
   },
   {
     p: "Meus dados e os dos meus clientes estão seguros?",
-    r: "Cada profissional só enxerga a própria agenda, com regras aplicadas direto no banco de dados. Não vendemos dados nem entramos em contato com os seus clientes.",
+    r: "Cada profissional só enxerga a própria agenda, com regras aplicadas direto no banco de dados. Não vendemos dados nem entramos em contato com os seus clientes: o lembrete automático do Premium sai do seu próprio WhatsApp, e só se você ligar.",
   },
 ];
 
@@ -177,7 +178,7 @@ export default function PaginaSite() {
             <Recurso titulo="Traz sua agenda do Google" texto="Envie o arquivo exportado do Google Agenda e os compromissos entram de uma vez.">
               <FragmentoImportar />
             </Recurso>
-            <Recurso titulo="Monta stories dos horários livres" texto="Dia, semana ou só o horário que vagou, com a sua logo e 16 temas para escolher.">
+            <Recurso titulo="Monta stories dos horários livres" texto="Dia, semana ou só o horário que vagou, com a sua logo e 16 temas para escolher. No Premium, a IA gera uma versão com acabamento profissional.">
               <FragmentoStory />
             </Recurso>
             <Recurso titulo="Abre como app no celular" texto="Adicione à tela de início, sem loja de aplicativos. Funciona no Android e no iPhone.">

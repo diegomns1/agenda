@@ -53,7 +53,7 @@ export const CENARIOS = [
   // ---------------------------------------------------------------- C. recursos
   { id: "C01", modo: "lead", nome: "Nanda", abertura: "Como funciona o sistema de stories?", persona: "Lash que posta muito no Instagram; depois pergunta se o teste grátis tem stories.", espera: "Stories são do Premium; o teste tem os recursos do Essencial." },
   { id: "C02", modo: "lead", nome: "Bruna", abertura: "O cliente consegue marcar sozinho pelo link?", persona: "Quer link na bio do Instagram." },
-  { id: "C03", modo: "lead", nome: "Lívia", abertura: "Vocês mandam mensagem automática pro meu cliente lembrando do horário?", persona: "Acha que o sistema manda WhatsApp sozinho pros clientes.", espera: "Explicar que a notificação vai para a profissional e abre o WhatsApp com a mensagem pronta; o Vaguinha não manda sozinho." },
+  { id: "C03", modo: "lead", nome: "Lívia", abertura: "Vocês mandam mensagem automática pro meu cliente lembrando do horário?", persona: "Acha que o sistema manda WhatsApp sozinho pros clientes.", espera: "Explicar que no Premium o lembrete sai sozinho do WhatsApp da própria profissional (1 dia e 2 horas antes) e que no Profissional ela recebe a notificação e toca em enviar. Não dizer que é oficial do WhatsApp nem que entra no teste grátis." },
   { id: "C04", modo: "lead", nome: "Rafa", abertura: "Como é essa assistente de IA?", persona: "Curioso sobre a IA no WhatsApp e se ela marca sozinha." },
   { id: "C05", modo: "lead", nome: "Sandra", abertura: "Dá pra importar minha agenda do Google?", persona: "Tem 2 anos de agenda no Google." },
   { id: "C06", modo: "lead", nome: "Tânia", abertura: "Tem relatório de quanto eu ganhei no mês?", persona: "Quer controle financeiro." },

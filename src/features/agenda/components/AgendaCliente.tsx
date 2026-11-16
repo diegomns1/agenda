@@ -349,7 +349,7 @@ export function AgendaCliente({ visao, data, agendamentos, clientes, servicos, e
               {form?.agendamento
                 ? form.agendamento.tipo === "bloqueio"
                   ? "Editar compromisso"
-                  : "Remarcar / editar atendimento"
+                  : "Editar atendimento"
                 : form?.tipo === "bloqueio"
                   ? "Novo compromisso"
                   : "Marcar atendimento"}

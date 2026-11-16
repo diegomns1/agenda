@@ -17,7 +17,15 @@ import { cn } from "@/lib/utils";
 const DESCRICAO: Record<PlanoAssinavel, string[]> = {
   essencial: ["Agenda por dia, semana e mês", "Clientes com histórico", "Serviços e valores", "App no celular"],
   profissional: ["Tudo do Essencial", "Link para marcarem sozinhos", "Lembretes 1 dia e 1 hora antes", "WhatsApp com mensagem pronta"],
-  premium: ["Tudo do Profissional", "Assistente de IA", "Stories do dia, semana e mês", "Relatórios do mês", "Aviso de horário que vagou"],
+  premium: [
+    "Tudo do Profissional",
+    "Lembrete automático pelo seu WhatsApp",
+    "Assistente de IA",
+    "Stories do dia, semana e mês",
+    "Stories gerados com IA (30 por mês)",
+    "Relatórios do mês",
+    "Aviso de horário que vagou",
+  ],
 };
 
 /** Mesmos valores de FORMAS_PAGAMENTO em lib/asaas.ts (que é só do servidor). Sem boleto, por decisão do Diego. */

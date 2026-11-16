@@ -1,7 +1,7 @@
 /** Dados usados nos Termos de Uso, na Política de Privacidade e nos e-mails. */
 
 /** Versão vigente dos termos. Mude a data quando o texto mudar de forma relevante. */
-export const VERSAO_TERMOS = "2026-11-11"; // 11/11: teste grátis liberado sozinho (sem aprovação manual)
+export const VERSAO_TERMOS = "2026-11-15"; // 15/11: lembrete automático pelo WhatsApp da profissional (11/11: teste liberado sozinho)
 /** Data da última mudança na Política de Privacidade (não pede novo aceite; 11/11: WhatsApp oficial, IA, Meta). */
 export const ATUALIZACAO_PRIVACIDADE = "2026-11-15"; // 15/11: lembrete pelo WhatsApp da profissional
 
