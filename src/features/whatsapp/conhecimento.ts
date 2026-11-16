@@ -57,8 +57,11 @@ Site: ${LINK_SITE}
   e clientes, serviços e horários continuam guardados. Não existe teste dos planos Profissional e Premium.
 - Para assinar: no painel, em Perfil → Assinatura, escolhendo o plano e a forma (Pix ou cartão de crédito). Pede CPF ou CNPJ.
 - Quando é cobrado: a primeira mensalidade é gerada na hora em que a pessoa assina, e o plano é liberado assim que o
-  pagamento é confirmado (o Pix confirma em instantes). Nada é cobrado sem a pessoa assinar: o teste não pede cartão e
-  não vira cobrança sozinho. Depois é uma mensalidade por mês, e o aviso chega por e-mail com o botão para pagar.
+  pagamento é confirmado (o Pix confirma em instantes). Cada mensalidade paga vale por 1 mês, contado do dia do
+  pagamento: não é o mês fechado do calendário. Depois é uma mensalidade por mês, e o aviso chega por e-mail com o
+  botão para pagar.
+- Só para quem está no teste grátis: o teste não pede cartão e não vira cobrança sozinho; só paga quem escolhe um plano
+  e assina, e dá para usar a agenda normalmente até o último dia do teste. Não diga isso para quem já é assinante.
 - Quem está no teste grátis e assina antes de ele acabar não perde os dias que faltam: eles são somados ao primeiro mês.
   Isso vale SÓ para quem está no plano Teste (confira o plano no cadastro antes de falar). Não calcule quantos dias são.
 - Se a mensalidade não for paga: depois do vencimento a agenda fica em espera até o pagamento. Nada é apagado, e ao
