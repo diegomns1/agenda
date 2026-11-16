@@ -45,14 +45,25 @@ export async function POST(request: NextRequest) {
 
   const { data: perfil } = await admin
     .from("profiles")
-    .select("id, plano, ativa_ate, plano_assinado")
+    .select("id, plano, ativa_ate, plano_assinado, asaas_subscription_id")
     .eq("asaas_customer_id", pagamento.customer)
     .maybeSingle();
   if (!perfil) return NextResponse.json({ ok: true, ignorado: "cliente desconhecido" });
 
-  // plano: da referência "uuid:plano" da assinatura, ou o plano assinado guardado no perfil
+  // plano: se a cobrança é da assinatura atual, vale o plano assinado guardado no perfil. O Asaas gera a mensalidade
+  // do mês seguinte com antecedência; se a pessoa troca de plano depois, o valor dessa cobrança é atualizado, mas a
+  // referência "uuid:plano" dela pode continuar com o plano antigo (ela pagaria o novo e ficaria no antigo).
+  // Cobrança de outra assinatura (ou sem assinatura): vale a referência.
   const planoDaRef = pagamento.externalReference?.split(":")[1];
-  const plano = ehPlanoAssinavel(planoDaRef) ? planoDaRef : ehPlanoAssinavel(perfil.plano_assinado) ? perfil.plano_assinado : null;
+  const daAssinaturaAtual = Boolean(pagamento.subscription && pagamento.subscription === perfil.asaas_subscription_id);
+  const plano =
+    daAssinaturaAtual && ehPlanoAssinavel(perfil.plano_assinado)
+      ? perfil.plano_assinado
+      : ehPlanoAssinavel(planoDaRef)
+        ? planoDaRef
+        : ehPlanoAssinavel(perfil.plano_assinado)
+          ? perfil.plano_assinado
+          : null;
 
   const { data: existente } = await admin.from("cobrancas").select("id, liberou_acesso").eq("asaas_id", pagamento.id).maybeSingle();
 
