@@ -5,7 +5,9 @@ import { contarPorStatus, listarContas } from "@/features/admin/queries";
 import { ListaContas } from "@/features/admin/components/ListaContas";
 import { NIVEL_USO, usoDasContas, type NivelUso } from "@/features/admin/uso";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
-import { BotaoChamarTodas } from "@/features/ativacao/components/BotoesAtivacao";
+import { BotaoChamarTodas, type ContaParaChamar } from "@/features/ativacao/components/BotoesAtivacao";
+import { formatarDataISO, hojeISO } from "@/lib/datas";
+import { formatarTelefone } from "@/lib/telefone";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Contas" };
@@ -14,9 +16,24 @@ function ehStatus(v: unknown): v is StatusConta {
   return typeof v === "string" && v in STATUS_CONTA;
 }
 
+function ehNivel(v: unknown): v is NivelUso {
+  return typeof v === "string" && v in NIVEL_USO;
+}
+
+/** Endereço da lista com os filtros escolhidos (situação da conta e nível de uso). */
+function endereco(status?: StatusConta, nivel?: NivelUso) {
+  const q = new URLSearchParams();
+  if (status) q.set("status", status);
+  if (nivel) q.set("uso", nivel);
+  const texto = q.toString();
+  return texto ? `/admin?${texto}` : "/admin";
+}
+
 export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">) {
-  const { status } = await searchParams;
+  const { status, uso: usoPedido } = await searchParams;
   const filtro = ehStatus(status) ? status : undefined;
+  // toque em "Usando", "Parou"...: mostra só as contas liberadas daquele nível
+  const filtroUso = ehNivel(usoPedido) ? usoPedido : undefined;
 
   const [contas, contagem, uso, { data: envios }] = await Promise.all([
     listarContas(filtro),
@@ -29,15 +46,22 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
   for (const e of envios ?? []) if (!chamadas.has(e.profissional_id)) chamadas.set(e.profissional_id, e);
   // botão "Chamar no WhatsApp": quem só entrou, tem número e ainda não recebeu a ajuda POR WhatsApp
   const ajudaNoZap = new Set((envios ?? []).filter((e) => e.tipo === "ajuda_inicio" && e.canal === "whatsapp").map((e) => e.profissional_id));
-  const paraChamar = contas.filter(
-    (c) => c.status === "aprovada" && c.plano === "teste" && c.telefone && uso.get(c.id)?.nivel === "so_entrou" && !ajudaNoZap.has(c.id),
-  ).length;
+  const hoje = hojeISO();
+  const paraChamar: ContaParaChamar[] = contas
+    .filter((c) => c.status === "aprovada" && c.plano === "teste" && c.telefone && uso.get(c.id)?.nivel === "so_entrou" && !ajudaNoZap.has(c.id))
+    .map((c) => ({
+      id: c.id,
+      nome: c.nome,
+      telefone: formatarTelefone(c.telefone!),
+      detalhe: !c.ativa_ate ? "teste" : c.ativa_ate < hoje ? `teste acabou em ${formatarDataISO(c.ativa_ate)}` : `teste até ${formatarDataISO(c.ativa_ate)}`,
+    }));
   const porNivel = { usando: 0, configurando: 0, parou: 0, so_entrou: 0 } as Record<NivelUso, number>;
   for (const c of contas) {
     const u = uso.get(c.id);
     if (u && c.status === "aprovada") porNivel[u.nivel]++;
   }
   const total = Object.values(contagem).reduce((a, b) => a + b, 0);
+  const contasDaLista = filtroUso ? contas.filter((c) => c.status === "aprovada" && uso.get(c.id)?.nivel === filtroUso) : contas;
 
   const filtros: { chave?: StatusConta; rotulo: string; qtd: number }[] = [
     { rotulo: "Todas", qtd: total },
@@ -65,7 +89,7 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
           return (
             <Link
               key={f.rotulo}
-              href={f.chave ? `/admin?status=${f.chave}` : "/admin"}
+              href={endereco(f.chave, filtroUso)}
               className={cn(
                 "shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors",
                 ativo
@@ -82,12 +106,37 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
       <section className="grid gap-2 rounded-xl border bg-card p-3" aria-label="Quem está usando">
         <p className="text-sm font-medium">Contas liberadas: quem está usando</p>
         <div className="flex flex-wrap gap-2 text-xs">
-          {(Object.keys(NIVEL_USO) as NivelUso[]).map((n) => (
-            <span key={n} className={cn("rounded-full px-2.5 py-1 font-semibold", NIVEL_USO[n].tom)} title={NIVEL_USO[n].explica}>
-              {NIVEL_USO[n].rotulo} {porNivel[n]}
-            </span>
-          ))}
+          {(Object.keys(NIVEL_USO) as NivelUso[]).map((n) => {
+            const ativo = filtroUso === n;
+            return (
+              <Link
+                key={n}
+                // tocar de novo no que já está escolhido tira o filtro
+                href={endereco(filtro, ativo ? undefined : n)}
+                aria-current={ativo ? "true" : undefined}
+                title={`${NIVEL_USO[n].explica}. Toque para ver só estas contas.`}
+                className={cn(
+                  "inline-flex min-h-8 items-center rounded-full px-3 font-semibold transition-shadow hover:ring-2 hover:ring-foreground/15",
+                  NIVEL_USO[n].tom,
+                  ativo && "ring-2 ring-foreground/60",
+                  filtroUso && !ativo && "opacity-55",
+                )}
+              >
+                {NIVEL_USO[n].rotulo} {porNivel[n]}
+              </Link>
+            );
+          })}
+          {filtroUso ? (
+            <Link href={endereco(filtro)} className="inline-flex min-h-8 items-center rounded-full border bg-background px-3 font-semibold text-muted-foreground hover:bg-muted">
+              Ver todas
+            </Link>
+          ) : null}
         </div>
+        <p className="text-xs text-muted-foreground">
+          {filtroUso
+            ? `Mostrando só as contas liberadas em "${NIVEL_USO[filtroUso].rotulo}" (${contasDaLista.length}).`
+            : "Toque num dos níveis para ver só aquelas contas."}
+        </p>
         <p className="text-xs text-muted-foreground">
           Usando = marcou 3 horários ou mais nos últimos 3 dias (ou recebeu pelo link). Configurando = cadastrou serviços ou clientes,
           mas ainda marca pouco. Parou = nada nos últimos 3 dias. Só entrou = não cadastrou nada. Só números: ninguém vê os dados das clientes.
@@ -96,10 +145,10 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
           Automático: quem só entrou recebe uma oferta de ajuda 1 dia depois do cadastro, e no último dia do teste vai um pedido de
           feedback (WhatsApp, ou e-mail para quem não deu o número). Das 9h às 20h, uma vez por conta.
         </p>
-        <BotaoChamarTodas quantas={paraChamar} />
+        <BotaoChamarTodas contas={paraChamar} />
       </section>
 
-      <ListaContas contas={contas} uso={uso} chamadas={chamadas} />
+      <ListaContas contas={contasDaLista} uso={uso} chamadas={chamadas} />
     </div>
   );
 }

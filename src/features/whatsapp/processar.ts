@@ -257,7 +257,7 @@ export async function motivoRobo(admin: Admin, telefone: string, texto: string):
 
 /**
  * A IA pediu ajuda: card vai para "Precisa de você" e o Diego recebe um e-mail com a conversa.
- * `silenciar`: parece robô do outro lado. O card vai para "Com você" e a IA para de responder de vez
+ * `silenciar`: parece robô do outro lado. O card vai para "Robôs e spam" e a IA para de responder de vez
  * (não manda nem "vou chamar a equipe", que só alimentaria o outro robô). O Diego devolve ao robô na Central.
  */
 async function chamarDiego(admin: Admin, contato: WhatsappContato, motivo: string, silenciar = false) {
@@ -270,10 +270,18 @@ async function chamarDiego(admin: Admin, contato: WhatsappContato, motivo: strin
     return;
   }
   if (silenciar ? contato.atendimento === "humano" : contato.atendimento !== "robo") return; // já foi chamado (ou já está com ele)
-  await admin
+  const { error: erroMover } = await admin
     .from("whatsapp_contatos")
-    .update({ atendimento: silenciar ? "humano" : "precisa", motivo_ajuda: silenciar ? `🤖 IA pausada, parece robô: ${motivo}` : motivo })
+    .update(
+      silenciar
+        ? { atendimento: "humano", etapa: "spam", motivo_ajuda: `🤖 IA pausada, parece robô: ${motivo}` }
+        : { atendimento: "precisa", motivo_ajuda: motivo },
+    )
     .eq("telefone", contato.telefone);
+  if (silenciar && erroMover) {
+    // sem a migração 0033 a etapa "spam" não existe: o importante é a IA parar de responder o outro robô
+    await admin.from("whatsapp_contatos").update({ atendimento: "humano", motivo_ajuda: `🤖 IA pausada, parece robô: ${motivo}` }).eq("telefone", contato.telefone);
+  } else if (silenciar) contato.etapa = "spam";
   contato.atendimento = silenciar ? "humano" : "precisa";
   await registrar(
     admin,

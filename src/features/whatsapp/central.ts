@@ -10,6 +10,7 @@ import { bloquearNaMeta, enviarModelo, enviarTexto, saudeDoEnvio } from "./meta"
 import { registrarEnvio } from "@/features/ativacao/enviar";
 import { MODELOS, type IdModelo } from "./modelos";
 import { primeiroNome } from "@/lib/texto";
+import { DIAS_SEM_RESPOSTA } from "./prazos";
 
 /*
  * Central do WhatsApp (só admin): kanban de contatos, conversa, assumir / devolver ao robô e responder.
@@ -19,7 +20,8 @@ import { primeiroNome } from "@/lib/texto";
 export type ContatoCentral = WhatsappContato & {
   /** profissional ligada (cadastro com o mesmo número ou assistente conectada) */
   profissional: { nome: string; plano: string; conectada: boolean } | null;
-  ultima: { de: string; texto: string } | null;
+  /** `status`: "falhou" quando a Meta avisou que a última mensagem enviada não foi entregue */
+  ultima: { de: string; texto: string; status?: string | null } | null;
 };
 
 export type MensagemCentral = Pick<
@@ -34,22 +36,21 @@ export type MensagemCentral = Pick<
   semArquivo: boolean;
 };
 
-const DIAS_ESFRIAR = 3;
-const ETAPAS = ["robo", "link", "cadastrou", "assinou", "sem_resposta"] as const;
+const ETAPAS = ["robo", "link", "cadastrou", "assinou", "sem_resposta", "spam"] as const;
 
 async function exigirAdmin() {
   if (!ehAdmin(await obterUsuario())) throw new Error("Só o admin pode usar a Central do WhatsApp.");
   return criarClienteAdmin();
 }
 
-/** Contatos mais recentes, com a última mensagem e a profissional ligada. Leads parados há 3 dias viram "sem resposta". */
+/** Contatos mais recentes, com a última mensagem e a profissional ligada. Leads parados há 1 dia viram "sem resposta". */
 export async function listarContatos(): Promise<ContatoCentral[]> {
   const admin = await exigirAdmin();
   const { data: contatos } = await admin.from("whatsapp_contatos").select("*").order("ultima_msg_em", { ascending: false }).limit(400);
   const lista = (contatos ?? []) as WhatsappContato[];
 
-  // esfriou: lead que não escreve há 3 dias e ainda está com o robô
-  const limite = Date.now() - DIAS_ESFRIAR * 86_400_000;
+  // esfriou: lead que não escreve há 1 dia e ainda está com o robô
+  const limite = Date.now() - DIAS_SEM_RESPOSTA * 86_400_000;
   const esfriaram = lista.filter(
     (c) => (c.etapa === "robo" || c.etapa === "link") && c.atendimento === "robo" && new Date(c.ultima_do_contato_em ?? c.criado_em).getTime() < limite,
   );
@@ -65,14 +66,14 @@ export async function listarContatos(): Promise<ContatoCentral[]> {
     ids.length ? admin.from("whatsapp_vinculos").select("profissional_id").in("profissional_id", ids) : Promise.resolve({ data: [] }),
     // última mensagem de cada um (busca as recentes e fica com a primeira de cada telefone)
     telefones.length
-      ? admin.from("whatsapp_mensagens").select("telefone, de, texto, criado_em").in("telefone", telefones).order("criado_em", { ascending: false }).limit(1500)
+      ? admin.from("whatsapp_mensagens").select("telefone, de, texto, criado_em, status").in("telefone", telefones).order("criado_em", { ascending: false }).limit(1500)
       : Promise.resolve({ data: [] }),
   ]);
   const perfilPorId = new Map((perfis.data ?? []).map((p) => [p.id, p]));
   const conectadas = new Set((vinculos.data ?? []).map((v) => v.profissional_id));
-  const ultimaPorTel = new Map<string, { de: string; texto: string }>();
-  for (const m of (ultimas.data ?? []) as { telefone: string; de: string; texto: string }[]) {
-    if (!ultimaPorTel.has(m.telefone)) ultimaPorTel.set(m.telefone, { de: m.de, texto: m.texto });
+  const ultimaPorTel = new Map<string, { de: string; texto: string; status?: string | null }>();
+  for (const m of (ultimas.data ?? []) as { telefone: string; de: string; texto: string; status: string | null }[]) {
+    if (!ultimaPorTel.has(m.telefone)) ultimaPorTel.set(m.telefone, { de: m.de, texto: m.texto, status: m.status });
   }
 
   return lista.map((c) => {
@@ -122,6 +123,8 @@ export async function mudarAtendimento(telefone: string, atendimento: "humano" |
   const admin = await exigirAdmin();
   const mudar = atendimento === "robo" ? { atendimento, motivo_ajuda: null } : { atendimento };
   const { error } = await admin.from("whatsapp_contatos").update(mudar).eq("telefone", telefone);
+  // estava em "Robôs e spam": assumir ou devolver ao robô tira de lá (senão o cartão continuaria na coluna de spam)
+  if (!error) await admin.from("whatsapp_contatos").update({ etapa: "robo" }).eq("telefone", telefone).eq("etapa", "spam");
   if (!error) {
     await admin.from("whatsapp_mensagens").insert({
       telefone,
@@ -133,14 +136,22 @@ export async function mudarAtendimento(telefone: string, atendimento: "humano" |
   return { ok: !error };
 }
 
-/** Arrastar o card de coluna. "precisa"/"humano" mexem no atendimento; o resto, na etapa do funil. */
+/**
+ * Arrastar o card de coluna. "precisa"/"humano" mexem no atendimento; o resto, na etapa do funil.
+ * "spam" (Robôs e spam): a IA para de responder (atendimento "humano") e o cartão fica guardado nessa coluna.
+ */
 export async function moverContato(telefone: string, coluna: string): Promise<{ ok: boolean }> {
   const admin = await exigirAdmin();
   let mudar: Partial<Omit<WhatsappContato, "telefone">>;
-  if (coluna === "precisa" || coluna === "humano") mudar = { atendimento: coluna };
+  if (coluna === "spam") mudar = { etapa: "spam", atendimento: "humano", nao_lidas: 0 };
+  else if (coluna === "precisa" || coluna === "humano") mudar = { atendimento: coluna };
   else if ((ETAPAS as readonly string[]).includes(coluna)) mudar = { etapa: coluna as WhatsappContato["etapa"], atendimento: "robo", motivo_ajuda: null };
   else return { ok: false };
   const { error } = await admin.from("whatsapp_contatos").update(mudar).eq("telefone", telefone);
+  // saiu de "Robôs e spam" para uma coluna sua: volta a ser um contato normal
+  if (!error && (coluna === "precisa" || coluna === "humano")) {
+    await admin.from("whatsapp_contatos").update({ etapa: "robo" }).eq("telefone", telefone).eq("etapa", "spam");
+  }
   return { ok: !error };
 }
 

@@ -244,7 +244,7 @@ export type WhatsappContato = {
   nome: string | null;
   ramo: string | null;
   profissional_id: string | null;
-  etapa: "robo" | "link" | "cadastrou" | "assinou" | "sem_resposta";
+  etapa: "robo" | "link" | "cadastrou" | "assinou" | "sem_resposta" | "spam"; // "spam": migração 0033
   atendimento: "robo" | "precisa" | "humano";
   motivo_ajuda: string | null;
   origem: Json | null;

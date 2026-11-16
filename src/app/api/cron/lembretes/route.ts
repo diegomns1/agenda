@@ -8,6 +8,7 @@ import { desligarAvisosDoAsaas } from "@/features/assinatura/avisos";
 import { usoDasContas } from "@/features/admin/uso";
 import { sincronizarEtapasCrm } from "@/features/rastreio/servidor";
 import { rodarLembretesAutomaticos } from "@/features/whatsapp-proprio/lembretes";
+import { limparConversasParadas } from "@/features/whatsapp/limpeza";
 import { diasEntre, formatarData, hojeISO, horaDe, somarDias } from "@/lib/datas";
 import { primeiroNome } from "@/lib/texto";
 import { temRecurso } from "@/lib/planos";
@@ -83,6 +84,13 @@ async function executar(request: NextRequest) {
   // Avisos de cobrança do Asaas desligados (quem avisa é a Vaguinha): confere todas as clientes a cada 6 horas
   if (new Date().getMinutes() < 5 && new Date().getUTCHours() % 6 === 0) {
     await desligarAvisosDoAsaas(admin).catch((e) => console.error("[cron] avisos do Asaas", e instanceof Error ? e.message : e));
+  }
+
+  // Central do WhatsApp: conversa parada há 5 dias é apagada (uma vez por dia, às 4h de Brasília)
+  if (new Date().getMinutes() < 5 && new Date().getUTCHours() === 7) {
+    await limparConversasParadas(admin)
+      .then((r) => r.apagadas && console.log("[cron] conversas paradas apagadas:", r.apagadas))
+      .catch((e) => console.error("[cron] limpeza da Central", e instanceof Error ? e.message : e));
   }
 
   const agora = new Date();

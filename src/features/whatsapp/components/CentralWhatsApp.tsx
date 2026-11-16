@@ -1,17 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { MegaphoneIcon, SearchIcon, SparklesIcon } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MegaphoneIcon, SearchIcon, SendIcon, SparklesIcon, TriangleAlertIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listarContatos, moverContato, type ContatoCentral } from "../central";
 import { descreverNumero } from "../numero";
+import { DIAS_PARA_APAGAR } from "../prazos";
 import { ConversaWhatsApp } from "./ConversaWhatsApp";
+import { DialogoMensagemPronta } from "./OpcoesConversa";
 import { COLUNAS, colunaDe, nomeDe, quando } from "./colunas";
 
 /*
  * Central do WhatsApp (admin): um kanban só, com filtro Todos / Leads / Clientes.
- * As colunas do Diego (Precisa de você, Com você) ficam na esquerda; depois o funil do lead.
+ * As colunas do Diego (Precisa de você, Com você) ficam na esquerda; depois o funil do lead; no fim, Robôs e spam.
  * Atualiza sozinha a cada 10 s. No computador, dá para arrastar o card de coluna; no celular, uma coluna por vez.
+ * No computador a página não rola (16/11/2026): o quadro ocupa o que sobra da tela e só os cartões rolam, dentro
+ * de cada coluna. Assim o título, os filtros e o nome das colunas ficam sempre à vista.
  */
 
 type Filtro = "todos" | "leads" | "clientes";
@@ -23,6 +27,19 @@ export function CentralWhatsApp({ inicial, abrir }: { inicial: ContatoCentral[];
   const [aberto, setAberto] = useState<string | null>(abrir ?? null);
   const [colunaCelular, setColunaCelular] = useState("precisa");
   const [arrastando, setArrastando] = useState<string | null>(null);
+  /** telefone de quem vai receber a mensagem pronta pelo botão "Reenviar mensagem" do cartão */
+  const [reenviarPara, setReenviarPara] = useState<string | null>(null);
+  const raiz = useRef<HTMLDivElement>(null);
+
+  // altura do quadro = tela menos o que está acima dele (cabeçalho do admin, botões, aviso da Meta...)
+  useEffect(() => {
+    const el = raiz.current;
+    if (!el) return;
+    const medir = () => el.style.setProperty("--topo", `${Math.round(el.getBoundingClientRect().top + window.scrollY)}px`);
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, []);
 
   const recarregar = useCallback(async () => {
     try {
@@ -61,30 +78,32 @@ export function CentralWhatsApp({ inicial, abrir }: { inicial: ContatoCentral[];
     if (!tel) return;
     const c = contatos.find((x) => x.telefone === tel);
     if (!c || colunaDe(c) === coluna) return;
-    // otimista: move já na tela
+    // otimista: move já na tela (mesmas regras de moverContato, no servidor)
     setContatos((l) =>
-      l.map((x) =>
-        x.telefone !== tel
-          ? x
-          : coluna === "precisa" || coluna === "humano"
-            ? { ...x, atendimento: coluna }
-            : { ...x, atendimento: "robo", motivo_ajuda: null, etapa: coluna as ContatoCentral["etapa"] },
-      ),
+      l.map((x): ContatoCentral => {
+        if (x.telefone !== tel) return x;
+        if (coluna === "spam") return { ...x, etapa: "spam", atendimento: "humano", nao_lidas: 0 };
+        if (coluna === "precisa" || coluna === "humano") return { ...x, atendimento: coluna, etapa: x.etapa === "spam" ? "robo" : x.etapa };
+        return { ...x, atendimento: "robo", motivo_ajuda: null, etapa: coluna as ContatoCentral["etapa"] };
+      }),
     );
     await moverContato(tel, coluna);
     recarregar();
   }
 
   const contatoAberto = contatos.find((c) => c.telefone === aberto) ?? null;
+  const contatoReenvio = contatos.find((c) => c.telefone === reenviarPara) ?? null;
   const precisam = porColuna.get("precisa")?.length ?? 0;
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    // 1.5rem = o espaço de baixo do <main> do admin: com isso a página fecha exatamente na altura da tela
+    <div ref={raiz} className="flex flex-col gap-3 md:h-[calc(100svh-var(--topo,15rem)-1.5rem)] md:min-h-80">
+      <div className="flex shrink-0 flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Central do WhatsApp</h1>
           <p className="text-sm text-muted-foreground">
-            {precisam ? `${precisam} ${precisam === 1 ? "conversa precisa" : "conversas precisam"} de você.` : "O robô está dando conta de tudo."} Atualiza sozinha.
+            {precisam ? `${precisam} ${precisam === 1 ? "conversa precisa" : "conversas precisam"} de você.` : "O robô está dando conta de tudo."} Atualiza
+            sozinha. Conversa parada há {DIAS_PARA_APAGAR} dias é apagada.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -116,7 +135,7 @@ export function CentralWhatsApp({ inicial, abrir }: { inicial: ContatoCentral[];
       </div>
 
       {/* celular: uma coluna por vez */}
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:hidden" aria-label="Colunas">
+      <div className="-mx-4 flex shrink-0 gap-2 overflow-x-auto px-4 pb-1 md:hidden" aria-label="Colunas">
         {COLUNAS.map((col) => (
           <button
             key={col.id}
@@ -134,7 +153,8 @@ export function CentralWhatsApp({ inicial, abrir }: { inicial: ContatoCentral[];
         ))}
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-3">
+      {/* o quadro ocupa o resto da tela; a rolagem para os lados é dele, e a de cima para baixo é de cada coluna */}
+      <div className="flex gap-3 overflow-x-auto pb-2 md:min-h-0 md:flex-1">
         {COLUNAS.map((col) => {
           const lista = porColuna.get(col.id) ?? [];
           return (
@@ -146,20 +166,31 @@ export function CentralWhatsApp({ inicial, abrir }: { inicial: ContatoCentral[];
               }}
               onDrop={() => soltar(col.id)}
               className={cn(
-                "flex w-full shrink-0 flex-col rounded-2xl border bg-muted/40 md:w-72",
+                "flex w-full shrink-0 flex-col overflow-hidden rounded-2xl border bg-muted/40 md:w-72",
                 colunaCelular !== col.id && "max-md:hidden",
                 arrastando && "md:border-dashed",
               )}
             >
-              <h2 className="flex items-center gap-2 px-3 pt-3 pb-2 text-sm font-semibold">
-                <span className={cn("size-2 rounded-full", col.tom)} aria-hidden />
-                {col.titulo}
-                <span className="ml-auto rounded-full bg-background px-2 text-xs text-muted-foreground tabular-nums">{lista.length}</span>
-              </h2>
-              <div className="grid content-start gap-2 px-2 pb-2 md:max-h-[calc(100svh-15rem)] md:overflow-y-auto">
+              <div className="shrink-0 px-3 pt-2.5 pb-2">
+                <h2 className="flex items-center gap-2 text-sm font-semibold">
+                  <span className={cn("size-2 shrink-0 rounded-full", col.tom)} aria-hidden />
+                  <span className="truncate">{col.titulo}</span>
+                  <span className="ml-auto rounded-full bg-background px-2 text-xs text-muted-foreground tabular-nums">{lista.length}</span>
+                </h2>
+                <p className="truncate pl-4 text-mini text-muted-foreground">{col.explica}</p>
+              </div>
+              <div className="grid content-start gap-2 px-2 pt-1.5 pb-2 md:min-h-0 md:flex-1 md:overflow-y-auto">
                 {lista.length === 0 ? <p className="px-2 py-6 text-center text-xs text-muted-foreground">Ninguém aqui</p> : null}
                 {lista.slice(0, 150).map((c) => (
-                  <Cartao key={c.telefone} c={c} aoAbrir={() => setAberto(c.telefone)} aoArrastar={() => setArrastando(c.telefone)} aoSoltar={() => setArrastando(null)} />
+                  <Cartao
+                    key={c.telefone}
+                    c={c}
+                    coluna={col.id}
+                    aoAbrir={() => setAberto(c.telefone)}
+                    aoReenviar={() => setReenviarPara(c.telefone)}
+                    aoArrastar={() => setArrastando(c.telefone)}
+                    aoSoltar={() => setArrastando(null)}
+                  />
                 ))}
               </div>
             </section>
@@ -168,63 +199,106 @@ export function CentralWhatsApp({ inicial, abrir }: { inicial: ContatoCentral[];
       </div>
 
       {contatoAberto ? <ConversaWhatsApp contato={contatoAberto} aoFechar={() => setAberto(null)} aoMudar={recarregar} /> : null}
+      {contatoReenvio ? (
+        <DialogoMensagemPronta contato={contatoReenvio} aberto aoMudarAberto={(v) => !v && setReenviarPara(null)} aoEnviar={recarregar} />
+      ) : null}
     </div>
   );
 }
 
-function Cartao({ c, aoAbrir, aoArrastar, aoSoltar }: { c: ContatoCentral; aoAbrir: () => void; aoArrastar: () => void; aoSoltar: () => void }) {
+function Cartao({
+  c,
+  coluna,
+  aoAbrir,
+  aoReenviar,
+  aoArrastar,
+  aoSoltar,
+}: {
+  c: ContatoCentral;
+  coluna: string;
+  aoAbrir: () => void;
+  aoReenviar: () => void;
+  aoArrastar: () => void;
+  aoSoltar: () => void;
+}) {
   const ult = c.ultima;
+  // a Meta avisou que a última mensagem que saiu não chegou
+  const naoEntregue = Boolean(ult && ult.de !== "contato" && ult.status === "falhou");
+  // "Reenviar mensagem": para quem parou de responder e para quem não recebeu (abre as mensagens prontas)
+  const podeReenviar = !c.bloqueado && (coluna === "sem_resposta" || naoEntregue);
   return (
-    <button
-      type="button"
+    <div
       draggable
       onDragStart={aoArrastar}
       onDragEnd={aoSoltar}
-      onClick={aoAbrir}
-      className="relative grid gap-1.5 rounded-xl border bg-card p-3 text-left shadow-sm transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
+      className="relative rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
     >
-      <div className="flex items-start gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{nomeDe(c)}</p>
-          <p className="text-xs text-muted-foreground tabular-nums">{descreverNumero(c.telefone)}</p>
+      <button
+        type="button"
+        onClick={aoAbrir}
+        className="grid w-full gap-1.5 rounded-xl p-3 text-left focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
+      >
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{nomeDe(c)}</p>
+            <p className="text-xs text-muted-foreground tabular-nums">{descreverNumero(c.telefone)}</p>
+          </div>
+          <span className="shrink-0 text-xs text-muted-foreground">{quando(c.ultima_msg_em)}</span>
         </div>
-        <span className="shrink-0 text-xs text-muted-foreground">{quando(c.ultima_msg_em)}</span>
-        {c.nao_lidas > 0 ? (
-          <span className="absolute -top-1.5 -right-1.5 flex min-w-5 items-center justify-center rounded-full bg-whatsapp px-1.5 text-mini leading-5 font-bold text-white tabular-nums">
-            {c.nao_lidas > 99 ? "99+" : c.nao_lidas}
-          </span>
+        <div className="flex flex-wrap gap-1 empty:hidden">
+          {c.profissional ? (
+            <Etiqueta>
+              {c.profissional.plano}
+              {c.profissional.conectada ? " · assistente" : ""}
+            </Etiqueta>
+          ) : null}
+          {c.ramo ? <Etiqueta>{c.ramo}</Etiqueta> : null}
+          {c.origem ? (
+            <Etiqueta>
+              <MegaphoneIcon className="size-3" aria-hidden />
+              Anúncio
+            </Etiqueta>
+          ) : null}
+          {c.ia_usada ? (
+            <Etiqueta>
+              <SparklesIcon className="size-3" aria-hidden />
+              IA
+            </Etiqueta>
+          ) : null}
+        </div>
+        {c.motivo_ajuda && (c.atendimento === "precisa" || (c.atendimento === "humano" && c.motivo_ajuda.startsWith("🤖"))) ? (
+          <p className="line-clamp-2 text-xs font-medium text-destructive">{c.motivo_ajuda}</p>
+        ) : ult ? (
+          <p className="line-clamp-2 text-xs text-muted-foreground">
+            {ult.de === "robo" ? "Robô: " : ult.de === "equipe" ? "Você: " : ult.de === "sistema" ? "• " : ""}
+            {ult.texto}
+          </p>
         ) : null}
-      </div>
-      <div className="flex flex-wrap gap-1">
-        {c.profissional ? (
-          <Etiqueta>
-            {c.profissional.plano}
-            {c.profissional.conectada ? " · assistente" : ""}
-          </Etiqueta>
+        {naoEntregue ? (
+          <p className="flex items-center gap-1 text-xs font-semibold text-destructive">
+            <TriangleAlertIcon className="size-3 shrink-0" aria-hidden />
+            Não foi entregue
+          </p>
         ) : null}
-        {c.ramo ? <Etiqueta>{c.ramo}</Etiqueta> : null}
-        {c.origem ? (
-          <Etiqueta>
-            <MegaphoneIcon className="size-3" aria-hidden />
-            Anúncio
-          </Etiqueta>
-        ) : null}
-        {c.ia_usada ? (
-          <Etiqueta>
-            <SparklesIcon className="size-3" aria-hidden />
-            IA
-          </Etiqueta>
-        ) : null}
-      </div>
-      {c.motivo_ajuda && (c.atendimento === "precisa" || (c.atendimento === "humano" && c.motivo_ajuda.startsWith("🤖"))) ? (
-        <p className="line-clamp-2 text-xs font-medium text-destructive">{c.motivo_ajuda}</p>
-      ) : ult ? (
-        <p className="line-clamp-2 text-xs text-muted-foreground">
-          {ult.de === "robo" ? "Robô: " : ult.de === "equipe" ? "Você: " : ult.de === "sistema" ? "• " : ""}
-          {ult.texto}
-        </p>
+      </button>
+      {c.nao_lidas > 0 ? (
+        <span className="pointer-events-none absolute -top-1.5 -right-1.5 flex min-w-5 items-center justify-center rounded-full bg-whatsapp px-1.5 text-mini leading-5 font-bold text-white tabular-nums">
+          {c.nao_lidas > 99 ? "99+" : c.nao_lidas}
+        </span>
       ) : null}
-    </button>
+      {podeReenviar ? (
+        <div className="border-t px-2 py-1.5">
+          <button
+            type="button"
+            onClick={aoReenviar}
+            className="inline-flex min-h-8 w-full items-center justify-center gap-1.5 rounded-lg text-xs font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
+          >
+            <SendIcon className="size-3.5" aria-hidden />
+            Reenviar mensagem
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 

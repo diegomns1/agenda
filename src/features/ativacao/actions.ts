@@ -30,11 +30,14 @@ export async function chamarConta(id: string, tipo: TipoAtivacao): Promise<{ ok:
 }
 
 /**
- * Chama no WhatsApp (só WhatsApp, nunca cai no e-mail) todas as contas em teste que só entraram, têm número e ainda
+ * Chama no WhatsApp (só WhatsApp, nunca cai no e-mail) as contas em teste que só entraram, têm número e ainda
  * não receberam a ajuda POR WhatsApp (quem só recebeu o e-mail entra de novo).
+ * `ids`: só as que o admin marcou na lista (16/11/2026). Sem `ids`, todas. A regra é conferida de novo aqui.
  */
-export async function chamarTodasQueSoEntraram(): Promise<{ ok: boolean; mensagem: string }> {
+export async function chamarTodasQueSoEntraram(ids?: string[]): Promise<{ ok: boolean; mensagem: string }> {
   const admin = await exigirAdmin();
+  const escolhidas = ids ? new Set(ids) : null;
+  if (escolhidas && escolhidas.size === 0) return { ok: false, mensagem: "Marque pelo menos uma conta." };
   // a Meta está barrando as mensagens prontas? avisa o motivo de verdade, em vez de "a Meta recusou"
   const saude = await saudeDoEnvio();
   if (saude?.bloqueado) {
@@ -50,6 +53,7 @@ export async function chamarTodasQueSoEntraram(): Promise<{ ok: boolean; mensage
   let enviadas = 0;
   let recusadas = 0;
   for (const c of contas ?? []) {
+    if (escolhidas && !escolhidas.has(c.id)) continue;
     if (uso.get(c.id)?.nivel !== "so_entrou" || (await jaRecebeu(admin, c.id, "ajuda_inicio", "whatsapp"))) continue;
     const r = await enviarAtivacao(admin, c, "ajuda_inicio", true, true);
     if (r.ok) enviadas++;

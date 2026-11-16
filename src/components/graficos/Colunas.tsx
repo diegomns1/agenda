@@ -80,11 +80,12 @@ export function BarrasRanking({ itens, formato = "numero", vazio = "Sem dados ai
   const fmt = (v: number) => (formato === "moeda" ? formatarMoeda(v) : String(v));
   if (itens.length === 0) return <p className="text-sm text-muted-foreground">{vazio}</p>;
   return (
-    <ul className="grid gap-3">
+    // grid-cols-1 (= minmax(0, 1fr)) + min-w-0: sem isso um nome comprido esticava a lista e a barra vazava do quadro
+    <ul className="grid grid-cols-1 gap-3">
       {itens.map((i) => (
-        <li key={i.nome} className="grid gap-1" title={`${i.nome}: ${fmt(i.valor)}`}>
-          <div className="flex items-baseline justify-between gap-3 text-sm">
-            <span className="truncate">
+        <li key={i.nome} className="grid min-w-0 grid-cols-1 gap-1" title={`${i.nome}: ${fmt(i.valor)}`}>
+          <div className="flex min-w-0 items-baseline justify-between gap-3 text-sm">
+            <span className="min-w-0 truncate">
               {i.nome}
               {i.detalhe ? <span className="text-xs text-muted-foreground"> · {i.detalhe}</span> : null}
             </span>

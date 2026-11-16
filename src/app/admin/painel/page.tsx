@@ -106,11 +106,11 @@ export default async function PaginaPainelDono() {
       </section>
 
       <div className="grid gap-5 md:grid-cols-2">
-        <section className="rounded-2xl border bg-card p-4">
+        <section className="min-w-0 rounded-2xl border bg-card p-4">
           <h2 className="mb-3 font-semibold">Ramos que mais usam</h2>
           <BarrasRanking itens={p.porRamo} vazio="Ninguém informou o ramo ainda." />
         </section>
-        <section className="grid content-start gap-5">
+        <section className="grid min-w-0 grid-cols-1 content-start gap-5">
           <div className="rounded-2xl border bg-card p-4">
             <h2 className="mb-3 font-semibold">Por área</h2>
             <BarrasRanking itens={p.porGrupo} />
