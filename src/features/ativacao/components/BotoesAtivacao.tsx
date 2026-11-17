@@ -5,7 +5,8 @@ import { HandHelpingIcon, Loader2Icon, MessageSquareHeartIcon, SendIcon } from "
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { chamarConta, chamarTodasQueSoEntraram } from "../actions";
+import { cn } from "@/lib/utils";
+import { chamarConta, chamarContas } from "../actions";
 import type { TipoAtivacao } from "../enviar";
 
 /** Na página da conta: mandar agora a mensagem de ajuda ou o pedido de feedback. */
@@ -32,76 +33,135 @@ export function BotoesAtivacaoConta({ id }: { id: string }) {
   );
 }
 
-export type ContaParaChamar = { id: string; nome: string; telefone: string; detalhe: string };
+export type CategoriaChamada = "so_entrou" | "configurando" | "parou";
+export type ContaParaChamar = {
+  id: string;
+  nome: string;
+  telefone: string;
+  detalhe: string;
+  categoria: CategoriaChamada;
+  /** "dd/MM" da última oferta de ajuda que saiu pelo WhatsApp, se já saiu */
+  jaChamada: string | null;
+};
+
+const CATEGORIAS: { id: CategoriaChamada; rotulo: string; explica: string }[] = [
+  { id: "so_entrou", rotulo: "Só entrou", explica: "criou a conta e não cadastrou nada" },
+  { id: "configurando", rotulo: "Configurando", explica: "cadastrou serviço ou cliente há pouco, mas ainda marca pouco" },
+  { id: "parou", rotulo: "Parou", explica: "mexeu no começo e depois não fez mais nada" },
+];
+
+/** Vêm marcadas as que ainda não receberam a mensagem; quem já recebeu só vai de novo se você marcar. */
+const marcadasDeInicio = (contas: ContaParaChamar[], categoria: CategoriaChamada) =>
+  new Set(contas.filter((c) => c.categoria === categoria && !c.jaChamada).map((c) => c.id));
 
 /**
- * Na lista de contas: chamar no WhatsApp quem só entrou e ainda não recebeu a oferta de ajuda.
- * O botão abre a lista (16/11/2026): dá para ver quem são e desmarcar quem não deve receber.
+ * Na lista de contas: chamar no WhatsApp com a oferta de ajuda.
+ * Abre uma lista (16/11/2026) para ver quem são e desmarcar quem não deve receber. Desde 17/11/2026 dá para
+ * escolher a categoria (Só entrou, Configurando ou Parou) e mandar de novo para quem já recebeu.
  */
 export function BotaoChamarTodas({ contas }: { contas: ContaParaChamar[] }) {
   const [pendente, iniciar] = useTransition();
   const [aberto, setAberto] = useState(false);
-  const [fora, setFora] = useState<Set<string>>(new Set()); // desmarcadas (o padrão é todas marcadas)
+  const primeira = CATEGORIAS.find((c) => contas.some((x) => x.categoria === c.id && !x.jaChamada))?.id ?? "so_entrou";
+  const [categoria, setCategoria] = useState<CategoriaChamada>(primeira);
+  const [marcadas, setMarcadas] = useState<Set<string>>(() => marcadasDeInicio(contas, primeira));
   if (!contas.length) return null;
 
-  const marcadas = contas.filter((c) => !fora.has(c.id));
+  const daCategoria = contas.filter((c) => c.categoria === categoria);
+  const escolhidas = daCategoria.filter((c) => marcadas.has(c.id));
+  const quantas = (id: CategoriaChamada) => contas.filter((c) => c.categoria === id).length;
+
+  function trocarCategoria(nova: CategoriaChamada) {
+    setCategoria(nova);
+    setMarcadas(marcadasDeInicio(contas, nova));
+  }
   const alternar = (id: string) =>
-    setFora((antes) => {
+    setMarcadas((antes) => {
       const novo = new Set(antes);
       if (novo.has(id)) novo.delete(id);
       else novo.add(id);
       return novo;
     });
+  const todasMarcadas = daCategoria.length > 0 && escolhidas.length === daCategoria.length;
 
   function chamar() {
     iniciar(async () => {
-      const r = await chamarTodasQueSoEntraram(marcadas.map((c) => c.id));
+      const r = await chamarContas(escolhidas.map((c) => c.id));
       if (r.ok) toast.success(r.mensagem);
       else toast.error(r.mensagem);
       if (r.ok) {
         setAberto(false);
-        setFora(new Set());
+        setMarcadas(new Set());
       }
     });
   }
 
   return (
     <>
-      <Button size="sm" onClick={() => setAberto(true)} className="w-fit">
+      <Button
+        size="sm"
+        onClick={() => {
+          trocarCategoria(primeira);
+          setAberto(true);
+        }}
+        className="w-fit"
+      >
         <SendIcon />
-        Chamar no WhatsApp {contas.length === 1 ? "a que só entrou" : `as ${contas.length} que só entraram`}
+        Chamar no WhatsApp
       </Button>
       <Dialog open={aberto} onOpenChange={(v) => !pendente && setAberto(v)}>
         <DialogContent className="flex max-h-[88svh] flex-col gap-3 sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Quem chamar no WhatsApp</DialogTitle>
             <DialogDescription>
-              Estas contas criaram o cadastro, não cadastraram nada e ainda não receberam a oferta de ajuda. Desmarque quem não deve
-              receber. A Meta cobra por cada mensagem enviada.
+              Vai a oferta de ajuda da Serena (&quot;Conseguiu cadastrar seus serviços e marcar o primeiro horário?&quot;). Escolha a
+              categoria e desmarque quem não deve receber. A Meta cobra por cada mensagem enviada.
             </DialogDescription>
           </DialogHeader>
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Categoria">
+            {CATEGORIAS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                role="tab"
+                aria-selected={categoria === c.id}
+                title={c.explica}
+                onClick={() => trocarCategoria(c.id)}
+                className={cn(
+                  "inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors",
+                  categoria === c.id ? "border-primary bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted",
+                )}
+              >
+                {c.rotulo} <span className="tabular-nums opacity-75">{quantas(c.id)}</span>
+              </button>
+            ))}
+          </div>
           <div className="flex items-center justify-between gap-2 text-sm">
             <span className="text-muted-foreground">
-              {marcadas.length} de {contas.length} marcada{contas.length === 1 ? "" : "s"}
+              {escolhidas.length} de {daCategoria.length} marcada{daCategoria.length === 1 ? "" : "s"}
             </span>
-            <button
-              type="button"
-              className="font-semibold text-primary underline-offset-4 hover:underline"
-              onClick={() => setFora(marcadas.length === contas.length ? new Set(contas.map((c) => c.id)) : new Set())}
-            >
-              {marcadas.length === contas.length ? "Desmarcar todas" : "Marcar todas"}
-            </button>
+            {daCategoria.length ? (
+              <button
+                type="button"
+                className="font-semibold text-primary underline-offset-4 hover:underline"
+                onClick={() => setMarcadas(todasMarcadas ? new Set() : new Set(daCategoria.map((c) => c.id)))}
+              >
+                {todasMarcadas ? "Desmarcar todas" : "Marcar todas"}
+              </button>
+            ) : null}
           </div>
           <ul className="-mx-1 grid min-h-0 flex-1 content-start gap-1 overflow-y-auto px-1">
-            {contas.map((c) => (
+            {daCategoria.length === 0 ? <li className="py-6 text-center text-sm text-muted-foreground">Ninguém nesta categoria com WhatsApp.</li> : null}
+            {daCategoria.map((c) => (
               <li key={c.id}>
                 <label className="flex min-h-toque cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 has-checked:border-primary/40 has-checked:bg-primary/5">
-                  <input type="checkbox" className="size-4 shrink-0 accent-primary" checked={!fora.has(c.id)} onChange={() => alternar(c.id)} />
+                  <input type="checkbox" className="size-4 shrink-0 accent-primary" checked={marcadas.has(c.id)} onChange={() => alternar(c.id)} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">{c.nome}</span>
                     <span className="block truncate text-xs text-muted-foreground tabular-nums">
                       {c.telefone} · {c.detalhe}
                     </span>
+                    {c.jaChamada ? <span className="block text-xs font-medium text-aviso-texto">Já recebeu esta mensagem em {c.jaChamada}</span> : null}
                   </span>
                 </label>
               </li>
@@ -111,9 +171,9 @@ export function BotaoChamarTodas({ contas }: { contas: ContaParaChamar[] }) {
             <Button variant="outline" onClick={() => setAberto(false)} disabled={pendente}>
               Cancelar
             </Button>
-            <Button onClick={chamar} disabled={pendente || marcadas.length === 0}>
+            <Button onClick={chamar} disabled={pendente || escolhidas.length === 0}>
               {pendente ? <Loader2Icon className="animate-spin" /> : <SendIcon />}
-              {marcadas.length === 1 ? "Chamar 1 conta" : `Chamar ${marcadas.length} contas`}
+              {escolhidas.length === 1 ? "Chamar 1 conta" : `Chamar ${escolhidas.length} contas`}
             </Button>
           </DialogFooter>
         </DialogContent>

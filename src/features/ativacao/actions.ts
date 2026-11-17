@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { ehAdmin, obterUsuario } from "@/lib/auth";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
-import { usoDasContas } from "@/features/admin/uso";
-import { enviarAtivacao, jaRecebeu, type TipoAtivacao } from "./enviar";
+import { enviarAtivacao, type TipoAtivacao } from "./enviar";
 import { saudeDoEnvio } from "@/features/whatsapp/meta";
 
 /* Botões do Admin para chamar quem não está usando (o automático roda sozinho; isto é para mandar agora). */
@@ -29,15 +28,18 @@ export async function chamarConta(id: string, tipo: TipoAtivacao): Promise<{ ok:
     : { ok: false, mensagem: `Não foi: ${r.erro ?? "erro desconhecido"}.` };
 }
 
+/** No máximo por vez: cada mensagem é cobrada pela Meta, e um toque errado não deve chamar a base inteira. */
+const MAXIMO_POR_VEZ = 60;
+
 /**
- * Chama no WhatsApp (só WhatsApp, nunca cai no e-mail) as contas em teste que só entraram, têm número e ainda
- * não receberam a ajuda POR WhatsApp (quem só recebeu o e-mail entra de novo).
- * `ids`: só as que o admin marcou na lista (16/11/2026). Sem `ids`, todas. A regra é conferida de novo aqui.
+ * Manda a oferta de ajuda pelo WhatsApp (só WhatsApp, nunca cai no e-mail) para as contas que o admin marcou na
+ * lista (17/11/2026: de qualquer categoria, não só "Só entrou"; e manda de novo para quem já recebeu, se ele marcar).
+ * Conferido de novo aqui: a conta precisa estar liberada e ter número.
  */
-export async function chamarTodasQueSoEntraram(ids?: string[]): Promise<{ ok: boolean; mensagem: string }> {
+export async function chamarContas(ids: string[]): Promise<{ ok: boolean; mensagem: string }> {
   const admin = await exigirAdmin();
-  const escolhidas = ids ? new Set(ids) : null;
-  if (escolhidas && escolhidas.size === 0) return { ok: false, mensagem: "Marque pelo menos uma conta." };
+  const escolhidas = [...new Set(ids)].slice(0, MAXIMO_POR_VEZ);
+  if (escolhidas.length === 0) return { ok: false, mensagem: "Marque pelo menos uma conta." };
   // a Meta está barrando as mensagens prontas? avisa o motivo de verdade, em vez de "a Meta recusou"
   const saude = await saudeDoEnvio();
   if (saude?.bloqueado) {
@@ -46,25 +48,20 @@ export async function chamarTodasQueSoEntraram(ids?: string[]): Promise<{ ok: bo
       mensagem: `Não foi: a Meta está bloqueando as mensagens prontas (${saude.motivos[0] ?? "a conta do WhatsApp não pode iniciar conversas"}). Ninguém foi chamada.`,
     };
   }
-  const [{ data: contas }, uso] = await Promise.all([
-    admin.from("profiles").select("id, nome, email, telefone").eq("status", "aprovada").eq("plano", "teste").not("telefone", "is", null),
-    usoDasContas(),
-  ]);
+  const { data: contas } = await admin.from("profiles").select("id, nome, email, telefone").in("id", escolhidas).eq("status", "aprovada").not("telefone", "is", null);
   let enviadas = 0;
   let recusadas = 0;
   for (const c of contas ?? []) {
-    if (escolhidas && !escolhidas.has(c.id)) continue;
-    if (uso.get(c.id)?.nivel !== "so_entrou" || (await jaRecebeu(admin, c.id, "ajuda_inicio", "whatsapp"))) continue;
     const r = await enviarAtivacao(admin, c, "ajuda_inicio", true, true);
     if (r.ok) enviadas++;
     else recusadas++;
   }
   revalidatePath("/admin");
-  if (!enviadas && !recusadas) return { ok: true, mensagem: "Ninguém para chamar: todas que só entraram já receberam no WhatsApp." };
+  if (!enviadas && !recusadas) return { ok: false, mensagem: "Nenhuma das contas marcadas está liberada e com WhatsApp." };
   if (!enviadas)
     return {
       ok: false,
-      mensagem: `A Meta recusou as ${recusadas}. O modelo "vaguinha_ajuda_inicio" já está Ativo no WhatsApp Manager? Se ainda estiver em análise, espere e tente de novo.`,
+      mensagem: `A Meta recusou ${recusadas === 1 ? "a mensagem" : `as ${recusadas}`}. O modelo "vaguinha_ajuda_inicio" está Ativo no WhatsApp Manager?`,
     };
   return { ok: true, mensagem: `${enviadas} chamada${enviadas === 1 ? "" : "s"} no WhatsApp${recusadas ? ` (${recusadas} a Meta recusou: número inválido?)` : ""}.` };
 }

@@ -27,12 +27,19 @@ export type UsoConta = {
 
 export const NIVEL_USO: Record<NivelUso, { rotulo: string; tom: string; explica: string }> = {
   usando: { rotulo: "Usando", tom: "bg-sucesso text-sucesso-texto", explica: "marcando horários nos últimos 3 dias" },
-  configurando: { rotulo: "Configurando", tom: "bg-aviso text-aviso-texto", explica: "cadastrou coisas, mas ainda marca pouco" },
-  parou: { rotulo: "Parou", tom: "bg-destructive/10 text-destructive", explica: "mexeu, mas nada há mais de 3 dias" },
+  configurando: { rotulo: "Configurando", tom: "bg-aviso text-aviso-texto", explica: "cadastrou coisas nos últimos 2 dias, mas ainda marca pouco" },
+  parou: { rotulo: "Parou", tom: "bg-destructive/10 text-destructive", explica: "mexeu, mas depois não fez mais nada" },
   so_entrou: { rotulo: "Só entrou", tom: "bg-muted text-muted-foreground", explica: "não cadastrou nada" },
 };
 
-const TRES_DIAS = 3 * 86_400_000;
+const DIA = 86_400_000;
+/** Quem já usa de verdade (3 horários ou mais, ou recebeu pelo link) vira "Parou" depois deste tempo sem nada novo. */
+export const DIAS_PAROU_USANDO = 3;
+/**
+ * Quem ainda estava configurando vira "Parou" mais cedo (17/11/2026): o teste dura só 5 dias, e quem cadastrou um
+ * serviço e sumiu ficava 3 dias aparecendo como "Configurando". Com 2 dias dá tempo de chamar antes do teste acabar.
+ */
+export const DIAS_PAROU_CONFIGURANDO = 2;
 
 function maisRecente(atual: string | null, nova: string) {
   return !atual || nova > atual ? nova : atual;
@@ -108,10 +115,12 @@ export async function usoDasContas(): Promise<Map<string, UsoConta>> {
 
   for (const c of uso.values()) {
     const algo = c.clientes + c.servicos + c.marcados + c.importados > 0;
-    const recente = c.ultimaAtividade ? agora - new Date(c.ultimaAtividade).getTime() <= TRES_DIAS : false;
+    const usaDeVerdade = c.marcados >= 3 || c.pelolink > 0;
+    const parado = c.ultimaAtividade ? agora - new Date(c.ultimaAtividade).getTime() : Infinity;
+    const recente = parado <= (usaDeVerdade ? DIAS_PAROU_USANDO : DIAS_PAROU_CONFIGURANDO) * DIA;
     if (!algo) c.nivel = "so_entrou";
     else if (!recente) c.nivel = "parou";
-    else if (c.marcados >= 3 || c.pelolink > 0) c.nivel = "usando";
+    else if (usaDeVerdade) c.nivel = "usando";
     else c.nivel = "configurando";
   }
   return uso;

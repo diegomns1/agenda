@@ -6,7 +6,8 @@ import { ListaContas } from "@/features/admin/components/ListaContas";
 import { NIVEL_USO, usoDasContas, type NivelUso } from "@/features/admin/uso";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { BotaoChamarTodas, type ContaParaChamar } from "@/features/ativacao/components/BotoesAtivacao";
-import { formatarDataISO, hojeISO } from "@/lib/datas";
+import { formatarData, formatarDataISO, hojeISO } from "@/lib/datas";
+import { PLANOS } from "@/lib/planos";
 import { formatarTelefone } from "@/lib/telefone";
 import { cn } from "@/lib/utils";
 
@@ -44,17 +45,34 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
   // última chamada de cada conta (mensagem de ativação)
   const chamadas = new Map<string, { tipo: string; canal: string; enviado_em: string }>();
   for (const e of envios ?? []) if (!chamadas.has(e.profissional_id)) chamadas.set(e.profissional_id, e);
-  // botão "Chamar no WhatsApp": quem só entrou, tem número e ainda não recebeu a ajuda POR WhatsApp
-  const ajudaNoZap = new Set((envios ?? []).filter((e) => e.tipo === "ajuda_inicio" && e.canal === "whatsapp").map((e) => e.profissional_id));
+  // botão "Chamar no WhatsApp": contas liberadas, com número, de qualquer categoria menos "Usando".
+  // Guarda quando a oferta de ajuda já saiu pelo WhatsApp (a lista vem do mais novo para o mais antigo).
+  const ajudaNoZap = new Map<string, string>();
+  for (const e of envios ?? []) {
+    if (e.tipo === "ajuda_inicio" && e.canal === "whatsapp" && !ajudaNoZap.has(e.profissional_id)) ajudaNoZap.set(e.profissional_id, e.enviado_em);
+  }
   const hoje = hojeISO();
-  const paraChamar: ContaParaChamar[] = contas
-    .filter((c) => c.status === "aprovada" && c.plano === "teste" && c.telefone && uso.get(c.id)?.nivel === "so_entrou" && !ajudaNoZap.has(c.id))
-    .map((c) => ({
+  const paraChamar: ContaParaChamar[] = [];
+  for (const c of contas) {
+    const nivel = uso.get(c.id)?.nivel;
+    if (c.status !== "aprovada" || !c.telefone || !nivel || nivel === "usando") continue;
+    const jaFoi = ajudaNoZap.get(c.id);
+    paraChamar.push({
       id: c.id,
       nome: c.nome,
-      telefone: formatarTelefone(c.telefone!),
-      detalhe: !c.ativa_ate ? "teste" : c.ativa_ate < hoje ? `teste acabou em ${formatarDataISO(c.ativa_ate)}` : `teste até ${formatarDataISO(c.ativa_ate)}`,
-    }));
+      telefone: formatarTelefone(c.telefone),
+      detalhe:
+        c.plano !== "teste"
+          ? `plano ${PLANOS[c.plano].nome}`
+          : !c.ativa_ate
+            ? "teste"
+            : c.ativa_ate < hoje
+              ? `teste acabou em ${formatarDataISO(c.ativa_ate)}`
+              : `teste até ${formatarDataISO(c.ativa_ate)}`,
+      categoria: nivel,
+      jaChamada: jaFoi ? formatarData(jaFoi, "dd/MM") : null,
+    });
+  }
   const porNivel = { usando: 0, configurando: 0, parou: 0, so_entrou: 0 } as Record<NivelUso, number>;
   for (const c of contas) {
     const u = uso.get(c.id);
@@ -138,8 +156,9 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
             : "Toque num dos níveis para ver só aquelas contas."}
         </p>
         <p className="text-xs text-muted-foreground">
-          Usando = marcou 3 horários ou mais nos últimos 3 dias (ou recebeu pelo link). Configurando = cadastrou serviços ou clientes,
-          mas ainda marca pouco. Parou = nada nos últimos 3 dias. Só entrou = não cadastrou nada. Só números: ninguém vê os dados das clientes.
+          Usando = marcou 3 horários ou mais (ou recebeu pelo link) e mexeu nos últimos 3 dias. Configurando = cadastrou serviços ou
+          clientes nos últimos 2 dias, mas ainda marca pouco. Parou = mexeu e depois não fez mais nada. Só entrou = não cadastrou nada.
+          Só números: ninguém vê os dados das clientes.
         </p>
         <p className="text-xs text-muted-foreground">
           Automático: quem só entrou recebe uma oferta de ajuda 1 dia depois do cadastro, e no último dia do teste vai um pedido de
