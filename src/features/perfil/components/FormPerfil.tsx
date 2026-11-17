@@ -11,12 +11,11 @@ import { BotaoEnviar } from "@/components/formulario/BotaoEnviar";
 import { Aviso } from "@/components/formulario/Aviso";
 import { ESTADO_INICIAL, type EstadoForm } from "@/components/formulario/tipos";
 import { SeletorRamo } from "@/components/formulario/SeletorRamo";
-import { EscolhaTratamento } from "@/components/formulario/EscolhaTratamento";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { formatarTelefone } from "@/lib/telefone";
-import { obterRamo, TEMAS_PAINEL, type TemaPainel, type Tratamento } from "@/lib/ramos";
+import { obterRamo, TEMAS_PAINEL, type TemaPainel } from "@/lib/ramos";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/types/database";
 import { SeletorCores, type Cores } from "./SeletorCores";
@@ -127,7 +126,6 @@ export function FormPerfil({ perfil, secao, urlBase, podeAgendamentoOnline }: Pr
             </CardHeader>
             <CardContent className="grid gap-4">
               <SeletorRamo ramoInicial={v?.ramo ?? perfil.ramo} outroInicial={v?.ramo_outro ?? perfil.ramo_outro} erro={estado.erros?.ramo?.[0]} />
-              <EscolhaTratamento inicial={(v?.tratamento as Tratamento | undefined) ?? perfil.tratamento} erro={estado.erros?.tratamento?.[0]} />
             </CardContent>
           </Card>
         </>

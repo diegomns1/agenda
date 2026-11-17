@@ -58,10 +58,6 @@ const camposPerfil = z.object({
   antecedencia_min_horas: z.coerce.number().int().min(0).max(72),
   ramo: z.string().trim().max(40).optional().transform((v) => v || null),
   ramo_outro: z.string().trim().max(60).optional().transform((v) => v || null),
-  tratamento: z
-    .string()
-    .optional()
-    .transform((v) => (v === "ela" || v === "ele" || v === "neutro" ? v : null)),
   tema: z.enum(["rosa", "grafite", "azul", "verde", "lavanda"]).catch("rosa"),
   expediente: z.object({
     "0": dia, "1": dia, "2": dia, "3": dia, "4": dia, "5": dia, "6": dia,
@@ -70,7 +66,7 @@ const camposPerfil = z.object({
 
 /*
  * O Perfil é dividido em telas (15/11/2026): cada uma salva só os seus campos.
- *   dados     — nome, negócio, WhatsApp, Instagram, endereço, ramo e tratamento
+ *   dados     — nome, negócio, WhatsApp, Instagram, endereço e ramo
  *   horarios  — expediente e intervalo da grade
  *   aparencia — tema do painel e cores da marca
  *   link      — link de agendamento (endereço, ativo, confirmação, antecedência)
@@ -80,7 +76,7 @@ export type SecaoPerfil = (typeof SECOES_PERFIL)[number];
 
 export const ESQUEMAS_SECAO = {
   dados: camposPerfil
-    .pick({ nome: true, nome_negocio: true, telefone: true, instagram: true, endereco: true, ramo: true, ramo_outro: true, tratamento: true })
+    .pick({ nome: true, nome_negocio: true, telefone: true, instagram: true, endereco: true, ramo: true, ramo_outro: true })
     .refine((d) => d.ramo !== "outro" || d.ramo_outro, { message: "Escreva qual é o seu ramo", path: ["ramo"] }),
   horarios: camposPerfil.pick({ expediente: true, intervalo_grade_min: true }),
   aparencia: camposPerfil.pick({ tema: true, cor_primaria: true, cor_secundaria: true }),

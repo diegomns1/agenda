@@ -26,7 +26,6 @@ export const esquemaCadastro = z
       .string()
       .optional()
       .refine((v) => v === "on", "Para continuar, aceite os Termos de Uso e a Política de Privacidade"),
-    tratamento: z.enum(["ela", "ele", "neutro"], { error: "Escolha uma opção" }),
     ramo: z.string().trim().min(1, "Escolha o seu ramo (ou Outros)").max(40),
     ramo_outro: z.string().trim().max(60).optional().transform((v) => v || null),
   })

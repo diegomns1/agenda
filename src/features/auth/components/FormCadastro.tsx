@@ -9,7 +9,6 @@ import { BotaoEnviar } from "@/components/formulario/BotaoEnviar";
 import { Aviso } from "@/components/formulario/Aviso";
 import { ESTADO_INICIAL } from "@/components/formulario/tipos";
 import { SeletorRamo } from "@/components/formulario/SeletorRamo";
-import { EscolhaTratamento } from "@/components/formulario/EscolhaTratamento";
 import { sugerirEmail } from "@/features/auth/sugerir-email";
 import { rastrear, rastrearCadastroGoogle } from "@/features/rastreio/navegador";
 
@@ -129,10 +128,6 @@ export function FormCadastro() {
         <legend className="sr-only">Sobre o seu trabalho</legend>
         <p className="text-sm text-muted-foreground">Para o painel já abrir com as palavras do seu ramo:</p>
         <SeletorRamo ramoInicial={estado.valores?.ramo} outroInicial={estado.valores?.ramo_outro} erro={estado.erros?.ramo?.[0]} />
-        <EscolhaTratamento
-          inicial={estado.valores?.tratamento as "ela" | "ele" | "neutro" | undefined}
-          erro={estado.erros?.tratamento?.[0]}
-        />
         <Campo
           rotulo="Seu WhatsApp"
           nome="telefone"

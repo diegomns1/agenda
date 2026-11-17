@@ -50,9 +50,12 @@ export type ChaveVariavel = (typeof VARIAVEIS)[number]["chave"];
 
 export const EMOJIS = ["😊", "🥰", "✨", "💖", "💅", "💅🏽", "💇‍♀️", "💈", "✂️", "📅", "⏰", "📍", "💲", "✅", "🔄", "❌", "🙏", "🌸", "💬", "⚠️"];
 
-/** Textos padrão. O de agradecimento concorda com o tratamento da profissional (obrigada/obrigado). */
-export function modeloPadrao(tipo: TipoMensagem, tratamento: Profile["tratamento"] = null): string {
-  const obrigado = tratamento === "ele" ? "Obrigado" : tratamento === "ela" ? "Obrigada" : "Agradeço";
+/**
+ * Textos padrão, neutros para todo mundo (16/11/2026: "Agradeço a visita" no lugar de "Obrigada/Obrigado pela visita").
+ * O segundo parâmetro ficou só para não mexer em quem chama; não é mais usado.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- mantido para compatibilidade com quem já passa o perfil
+export function modeloPadrao(tipo: TipoMensagem, _tratamento: Profile["tratamento"] = null): string {
   switch (tipo) {
     case "lembrete":
       return "Oi, {nome}! Tudo bem? ✨\n\nPassando para lembrar do seu horário:\n📅 {dia}\n⏰ {hora}\n✨ {servico}\n📍 {endereco}\n\nPosso confirmar? 😊";
@@ -63,7 +66,7 @@ export function modeloPadrao(tipo: TipoMensagem, tratamento: Profile["tratamento
     case "cancelamento":
       return "Oi, {nome}. Seu horário de {servico} marcado para {dia} às {hora} foi cancelado.\n\nQuando quiser marcar de novo, é só escolher um horário aqui: {link}";
     case "agradecimento":
-      return `${obrigado === "Agradeço" ? "Agradeço a visita" : `${obrigado} pela visita`}, {nome}! 💖\n\nFoi um prazer te atender. Quando quiser voltar, é só marcar por aqui: {link}`;
+      return "Agradeço a visita, {nome}! 💖\n\nFoi um prazer te atender. Quando quiser voltar, é só marcar por aqui: {link}";
   }
 }
 

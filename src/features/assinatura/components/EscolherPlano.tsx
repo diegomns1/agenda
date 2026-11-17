@@ -14,19 +14,7 @@ import { Label } from "@/components/ui/label";
 import { formatarPreco, PLANOS, type Plano } from "@/lib/planos";
 import { cn } from "@/lib/utils";
 
-const DESCRICAO: Record<PlanoAssinavel, string[]> = {
-  essencial: ["Agenda por dia, semana e mês", "Clientes com histórico", "Serviços e valores", "App no celular"],
-  profissional: ["Tudo do Essencial", "Link para marcarem sozinhos", "Lembretes 1 dia e 1 hora antes", "WhatsApp com mensagem pronta"],
-  premium: [
-    "Tudo do Profissional",
-    "Lembrete automático pelo seu WhatsApp",
-    "Assistente de IA",
-    "Stories do dia, semana e mês",
-    "Stories gerados com IA (30 por mês)",
-    "Relatórios do mês",
-    "Aviso de horário que vagou",
-  ],
-};
+// o que cada plano inclui vem de lib/planos.ts (o mesmo texto do site)
 
 /** Mesmos valores de FORMAS_PAGAMENTO em lib/asaas.ts (que é só do servidor). Sem boleto, por decisão do Diego. */
 type Forma = "PIX" | "CREDIT_CARD";
@@ -104,9 +92,14 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
                       <span className="gradiente-marca rounded-full px-2 py-0.5 text-mini font-bold text-white">Mais escolhido</span>
                     ) : null}
                   </div>
-                  <span className="text-xl font-extrabold tracking-tight">{formatarPreco(p.preco)}</span>
+                  <span className="grid">
+                    <span className="text-xs text-muted-foreground">
+                      De <s className="tabular-nums">{formatarPreco(p.precoAnterior).replace("/mês", "")}</s> por
+                    </span>
+                    <span className="text-xl font-extrabold tracking-tight tabular-nums">{formatarPreco(p.preco)}</span>
+                  </span>
                   <ul className="grid gap-1 text-xs text-muted-foreground">
-                    {DESCRICAO[id].map((t) => (
+                    {p.itens.map((t) => (
                       <li key={t} className="flex items-start gap-1.5">
                         <CheckIcon className="mt-0.5 size-3 shrink-0 text-primary" />
                         {t}

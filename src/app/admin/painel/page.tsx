@@ -116,10 +116,6 @@ export default async function PaginaPainelDono() {
             <BarrasRanking itens={p.porGrupo} />
           </div>
           <div className="rounded-2xl border bg-card p-4">
-            <h2 className="mb-3 font-semibold">Como preferem ser tratados</h2>
-            <BarrasRanking itens={p.porTratamento} />
-          </div>
-          <div className="rounded-2xl border bg-card p-4">
             <h2 className="mb-3 font-semibold">Contas ativas por plano</h2>
             <BarrasRanking itens={p.porPlano} />
           </div>

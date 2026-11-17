@@ -13,7 +13,7 @@ const CAMPOS_TEXTO = [
   "nome", "nome_negocio", "telefone", "instagram",
   "cor_primaria", "cor_secundaria", "intervalo_grade_min", "endereco",
   "slug", "agendamento_online", "confirmacao_online", "antecedencia_min_horas",
-  "ramo", "ramo_outro", "tratamento", "tema",
+  "ramo", "ramo_outro", "tema",
 ];
 
 function revalidarPerfil() {
@@ -62,7 +62,6 @@ export async function salvarPerfil(_: EstadoForm, formData: FormData): Promise<E
       endereco: d.endereco,
       ramo: d.ramo,
       ramo_outro: d.ramo === "outro" ? d.ramo_outro : null,
-      tratamento: d.tratamento,
     };
   } else if (secao === "horarios") {
     const r = ESQUEMAS_SECAO.horarios.safeParse(bruto);

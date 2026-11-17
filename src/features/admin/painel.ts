@@ -2,7 +2,7 @@ import "server-only";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { contaVencida, dataDe, formatarDataISO, hojeISO, inicioDoDia, somarMeses } from "@/lib/datas";
-import { GRUPOS, nomeDoRamo, obterRamo, OUTRO_RAMO, TRATAMENTOS, type Tratamento } from "@/lib/ramos";
+import { GRUPOS, nomeDoRamo, obterRamo, OUTRO_RAMO } from "@/lib/ramos";
 import { PLANOS, type Plano } from "@/lib/planos";
 
 /* Painel do dono (Admin). Lê com a service_role porque precisa de números de TODAS as contas
@@ -28,7 +28,6 @@ export type PainelDono = {
   cadastrosPorMes: { chave: string; rotulo: string; valor: number }[];
   porRamo: { nome: string; valor: number; detalhe?: string }[];
   porGrupo: { nome: string; valor: number }[];
-  porTratamento: { nome: string; valor: number }[];
   porPlano: { nome: string; valor: number; detalhe?: string }[];
   outrosDigitados: string[];
   /** Funil dos anúncios (cadastros dos últimos 30 dias por campanha/anúncio, vindo dos utm_*). */
@@ -66,7 +65,7 @@ export async function montarPainelDono(): Promise<PainelDono> {
   const leitor = admin ?? (await criarClienteServidor());
 
   const [perfisRes, cobrRes, agRes, evRes, iaRes] = await Promise.all([
-    leitor.from("profiles").select("id, status, plano, ativa_ate, ramo, ramo_outro, tratamento, asaas_subscription_id, created_at, origem_anuncio"),
+    leitor.from("profiles").select("id, status, plano, ativa_ate, ramo, ramo_outro, asaas_subscription_id, created_at, origem_anuncio"),
     admin ? admin.from("cobrancas").select("valor, status, pago_em").gte("pago_em", inicioMes) : Promise.resolve(null),
     admin ? admin.from("agendamentos").select("id", { count: "exact", head: true }).eq("tipo", "atendimento").gte("inicio", inicioMes) : Promise.resolve(null),
     admin
@@ -116,12 +115,6 @@ export async function montarPainelDono(): Promise<PainelDono> {
       }
       return { nome: nomeDoRamo(chave), valor };
     })
-    .sort((a, b) => b.valor - a.valor);
-
-  const porTratamento = (["ela", "ele", "neutro"] as Tratamento[])
-    .map((t) => ({ nome: t === "neutro" ? "Prefere não dizer" : TRATAMENTOS[t].rotulo, valor: perfis.filter((p) => p.tratamento === t).length }))
-    .concat([{ nome: "Não informado", valor: perfis.filter((p) => !p.tratamento).length }])
-    .filter((i) => i.valor > 0)
     .sort((a, b) => b.valor - a.valor);
 
   const porPlano = (Object.keys(PLANOS) as Plano[])
@@ -175,7 +168,6 @@ export async function montarPainelDono(): Promise<PainelDono> {
     cadastrosPorMes,
     porRamo,
     porGrupo: [...contagemGrupo.entries()].map(([nome, valor]) => ({ nome, valor })).sort((a, b) => b.valor - a.valor),
-    porTratamento,
     porPlano,
     outrosDigitados,
   };

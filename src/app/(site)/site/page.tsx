@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 /*
  * Site público (etapa 5 do plano de design, com as regras da Taste Skill):
- * - o título diz o que é e para quem; a primeira tela tem um fato concreto (5 dias grátis, R$ 29,90);
+ * - o título diz o que é e para quem; a primeira tela tem um fato concreto (5 dias grátis, o preço do Essencial);
  * - uma ação principal com o mesmo texto no menu, no topo e no fim ("Começar o teste grátis");
  * - nada aparece "surgindo" ao rolar; só o topo entra uma vez ao carregar; cartões sobem 2px no hover;
  * - cada recurso mostra um pedaço da tela real em vez de ícone genérico;
@@ -42,34 +42,11 @@ const PASSOS = [
   { titulo: "Divulgue o link", texto: "Coloque o link na bio, poste os stories e deixe os lembretes avisarem você." },
 ];
 
+// o texto de cada plano (para quem é e o que inclui) vem de lib/planos.ts, igual ao da tela de assinatura
 const PLANOS_SITE = [
-  {
-    id: "essencial" as const,
-    destaque: false,
-    para: "Para organizar a agenda.",
-    itens: ["Agenda por dia, semana e mês", "Clientes com histórico", "Serviços e valores", "Importar do Google Agenda", "App no celular com sua logo e cores"],
-  },
-  {
-    id: "profissional" as const,
-    destaque: false,
-    para: "Para clientes pedirem horário pelo link e receberem lembrete.",
-    itens: ["Tudo do Essencial", "Link de agendamento", "Aviso no seu celular 1 dia e 1 hora antes", "WhatsApp com a mensagem pronta", "Lista de quem falta avisar"],
-  },
-  {
-    id: "premium" as const,
-    destaque: true,
-    para: "Para os lembretes saírem sozinhos e ter uma assistente no WhatsApp.",
-    itens: [
-      "Tudo do Profissional",
-      "Lembrete automático pelo seu WhatsApp, 1 dia e 2 horas antes",
-      "Assistente de IA no seu WhatsApp",
-      "Stories do dia, da semana e do mês",
-      "Story do horário que vagou",
-      "Story de serviço com foto e valor",
-      "Stories gerados com IA (30 por mês)",
-      "Relatório do mês: quanto entrou, faltas e remarcações",
-    ],
-  },
+  { id: "essencial" as const, destaque: false },
+  { id: "profissional" as const, destaque: false },
+  { id: "premium" as const, destaque: true },
 ];
 
 const DUVIDAS = [
@@ -359,13 +336,17 @@ export default function PaginaSite() {
                     <span className="absolute -top-3 left-6 rounded-full bg-vinho px-3 py-1 text-xs font-bold text-white">Mais escolhido</span>
                   ) : null}
                   <h3 className="text-lg font-bold text-vinho">{plano.nome}</h3>
-                  <p className="text-sm text-muted-foreground">{p.para}</p>
-                  <p className="mt-4 flex items-baseline gap-1">
+                  <p className="text-sm text-muted-foreground">{plano.para}</p>
+                  {/* preço anterior riscado: "de R$ 29,90 por R$ 19,90" */}
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    De <s className="tabular-nums">{formatarPreco(plano.precoAnterior).replace("/mês", "")}</s> por
+                  </p>
+                  <p className="flex items-baseline gap-1">
                     <span className="text-4xl font-extrabold tracking-tight tabular-nums">{formatarPreco(plano.preco).replace("/mês", "")}</span>
                     <span className="text-sm text-muted-foreground">por mês</span>
                   </p>
                   <ul className="mt-6 grid gap-2.5 text-sm">
-                    {p.itens.map((t) => (
+                    {plano.itens.map((t) => (
                       <li key={t} className="flex items-start gap-2">
                         <CheckIcon className="mt-0.5 size-4 shrink-0 text-vinho" />
                         {t}

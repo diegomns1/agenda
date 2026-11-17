@@ -181,27 +181,10 @@ export function termosDoRamo(id: string | null | undefined) {
 }
 
 // ---------------------------------------------------------------------------
-// Tratamento (ela / ele / neutro) e tema do painel
+// Tema do painel
+// (A pergunta "como prefere ser chamada(o)" saiu em 16/11/2026: os textos são neutros para todo mundo.
+//  A coluna profiles.tratamento continua no banco, com o que as contas antigas responderam, mas não é mais usada.)
 // ---------------------------------------------------------------------------
-
-export const TRATAMENTOS = {
-  ela: { rotulo: "Ela", exemplo: "Bem-vinda" },
-  ele: { rotulo: "Ele", exemplo: "Bem-vindo" },
-  neutro: { rotulo: "Prefiro não dizer", exemplo: "Boas-vindas" },
-} as const;
-
-export type Tratamento = keyof typeof TRATAMENTOS;
-
-export function ehTratamento(v: unknown): v is Tratamento {
-  return typeof v === "string" && v in TRATAMENTOS;
-}
-
-/** Escolhe a palavra conforme o tratamento: flexao(t, "pronta", "pronto", "tudo pronto"). */
-export function flexao(t: Tratamento | null | undefined, feminino: string, masculino: string, neutro?: string) {
-  if (t === "ele") return masculino;
-  if (t === "neutro") return neutro ?? masculino;
-  return feminino;
-}
 
 export const TEMAS_PAINEL = {
   rosa: { nome: "Rosa Vaguinha", cores: ["#702D50", "#D799AF", "#FCF6F1"] },
@@ -217,7 +200,3 @@ export function ehTemaPainel(v: unknown): v is TemaPainel {
   return typeof v === "string" && v in TEMAS_PAINEL;
 }
 
-/** Tema inicial conforme o tratamento escolhido no cadastro (dá para trocar no Perfil). */
-export function temaPadrao(t: Tratamento | null | undefined): TemaPainel {
-  return t === "ele" ? "grafite" : "rosa";
-}

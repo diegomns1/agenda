@@ -6,6 +6,7 @@ import { LogoVaguinha } from "@/components/marca/LogoVaguinha";
 import { Button } from "@/components/ui/button";
 import { ACAO_PRINCIPAL_SITE, URL_APP, URL_SITE } from "@/lib/constantes";
 import { EMAIL_CONTATO, EMPRESA } from "@/lib/legal";
+import { PLANOS, formatarPreco } from "@/lib/planos";
 
 export const metadata: Metadata = {
   metadataBase: new URL(URL_SITE),
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     url: URL_SITE,
     siteName: "Vaguinha",
     title: "Vaguinha · Agenda no celular para profissionais de beleza e saúde",
-    description: "Agenda, clientes, lembretes e link de agendamento. 5 dias grátis; planos a partir de R$ 29,90 por mês.",
+    description: `Agenda, clientes, lembretes e link de agendamento. 5 dias grátis; planos a partir de ${formatarPreco(PLANOS.essencial.preco).replace("/mês", "")} por mês.`,
   },
   twitter: { card: "summary_large_image" },
 };

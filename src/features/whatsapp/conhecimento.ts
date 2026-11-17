@@ -10,6 +10,7 @@ import { URL_APP } from "@/lib/constantes";
  */
 
 const preco = (p: keyof typeof PLANOS) => formatarPreco(PLANOS[p].preco);
+const antes = (p: "essencial" | "profissional" | "premium") => formatarPreco(PLANOS[p].precoAnterior);
 // com utm: o Painel do dono mostra quantos cadastros vieram da conversa com a IA no WhatsApp.
 // Sempre com https://: sem ele, em alguns celulares o WhatsApp não deixa tocar no link (12/11/2026).
 export const LINK_CADASTRO = `${URL_APP}/cadastro?utm_source=whatsapp&utm_medium=ia`;
@@ -48,10 +49,13 @@ Site: ${LINK_SITE}
 # Planos (mensais, sem fidelidade, Pix ou cartão de crédito)
 - Teste grátis: ${DIAS_TESTE} dias, não pede cartão. Tem os recursos do Essencial.
 - Essencial: ${preco("essencial")}. Agenda, clientes, serviços, importar do Google, app no celular com logo e cores.
-- Profissional: ${preco("profissional")}. Tudo do Essencial + link de agendamento + lembretes 1 dia e 1 hora antes
-  + WhatsApp com a mensagem pronta + lista de quem falta avisar.
+- Profissional: ${preco("profissional")}. Tudo do Essencial + link para o cliente marcar sozinho + aviso no celular da
+  profissional 1 dia e 1 hora antes de cada horário + lembrete pronto para ela enviar pelo WhatsApp com um toque.
 - Premium: ${preco("premium")}. Tudo do Profissional + lembrete automático pelo WhatsApp da profissional
   + assistente de IA no WhatsApp + stories (com a opção de gerar com IA, 30 por mês) + relatório do mês.
+- Os preços baixaram R$ 10 em 16/11/2026 e valem para todo mundo, sem prazo para acabar: o Essencial era
+  ${antes("essencial")}, o Profissional ${antes("profissional")} e o Premium ${antes("premium")}. Se alguém citar o valor
+  antigo, diga o valor de hoje. Não diga que é promoção por tempo limitado nem crie pressa.
 - Se cancelar, os dados continuam guardados.
 - Quando o teste acaba: nada é cobrado (o teste não pede cartão). A agenda fica pausada até escolher um plano,
   e clientes, serviços e horários continuam guardados. Não existe teste dos planos Profissional e Premium.
