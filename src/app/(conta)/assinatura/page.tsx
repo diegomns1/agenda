@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { obterPerfil, situacaoDaConta } from "@/lib/auth";
-import { asaasConfigurado, ambienteAsaas, obterAssinatura } from "@/lib/asaas";
+import { asaasConfigurado, ambienteAsaas, ErroAsaas, obterAssinatura } from "@/lib/asaas";
 import { formatarDataISO, hojeISO } from "@/lib/datas";
 import { PLANOS } from "@/lib/planos";
 import { listarCobrancas } from "@/features/assinatura/queries";
@@ -21,12 +21,27 @@ export default async function PaginaAssinatura() {
   const configurado = asaasConfigurado();
   const cobrancas = configurado ? await listarCobrancas() : [];
   // forma de pagamento da assinatura atual (Pix ou cartão), para já vir marcada
-  const assinatura = configurado && perfil.asaas_subscription_id ? await obterAssinatura(perfil.asaas_subscription_id).catch(() => null) : null;
-  const formaAtual = assinatura?.billingType === "CREDIT_CARD" ? "CREDIT_CARD" : assinatura?.billingType === "PIX" ? "PIX" : null;
+  let naoExisteMais = false; // o Asaas respondeu "não encontrada"
+  const assinatura =
+    configurado && perfil.asaas_subscription_id
+      ? await obterAssinatura(perfil.asaas_subscription_id).catch((e) => {
+          if (e instanceof ErroAsaas && e.status === 404) naoExisteMais = true;
+          return null;
+        })
+      : null;
+  // Assinatura apagada ou encerrada direto no Asaas (16/11/2026): para o painel é como não ter assinatura.
+  // Sem isto a tela dizia "Este já é o seu plano" e travava o botão: a pessoa não conseguia assinar de novo.
+  // (Se a consulta ao Asaas falhou por outro motivo, `assinatura` é null e vale o que está guardado no perfil.)
+  const encerrada = naoExisteMais || Boolean(assinatura && (assinatura.deleted || assinatura.status !== "ACTIVE"));
+  const temAssinatura = Boolean(perfil.asaas_subscription_id) && !encerrada;
+  const formaAtual = encerrada ? null : assinatura?.billingType === "CREDIT_CARD" ? "CREDIT_CARD" : assinatura?.billingType === "PIX" ? "PIX" : null;
   const hoje = hojeISO();
   const emTeste = perfil.plano === "teste";
   const planoAtual = PLANOS[perfil.plano];
-  const pendente = cobrancas.find((c) => c.status === "PENDING" || c.status === "OVERDUE");
+  // mensalidade em aberto (as da assinatura encerrada não valem mais: o link delas não existe)
+  const pendente = cobrancas.find(
+    (c) => (c.status === "PENDING" || c.status === "OVERDUE") && !(encerrada && c.assinatura_id === perfil.asaas_subscription_id),
+  );
 
   return (
     <div className="grid gap-5">
@@ -42,7 +57,7 @@ export default async function PaginaAssinatura() {
             Plano {planoAtual.nome}
             {situacao === "vencida" ? (
               <Badge variant="destructive">Vencida</Badge>
-            ) : perfil.asaas_subscription_id ? (
+            ) : temAssinatura ? (
               <Badge>Assinatura ativa</Badge>
             ) : emTeste ? (
               <Badge variant="secondary">Teste grátis</Badge>
@@ -93,10 +108,10 @@ export default async function PaginaAssinatura() {
             planoAtual={perfil.plano}
             planoAssinado={perfil.plano_assinado}
             cpfCnpj={perfil.cpf_cnpj}
-            temAssinatura={Boolean(perfil.asaas_subscription_id)}
+            temAssinatura={temAssinatura}
             formaAtual={formaAtual}
           />
-          <AcoesAssinatura temAssinatura={Boolean(perfil.asaas_subscription_id)} ativaAte={perfil.ativa_ate} />
+          <AcoesAssinatura temAssinatura={temAssinatura} ativaAte={perfil.ativa_ate} />
           <HistoricoCobrancas cobrancas={cobrancas} />
           {ambienteAsaas() === "sandbox" ? (
             <p className="text-xs text-muted-foreground">Ambiente de testes do Asaas: nenhuma cobrança real é feita.</p>
