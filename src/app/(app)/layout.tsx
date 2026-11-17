@@ -9,6 +9,8 @@ import { RegistroSW } from "@/components/pwa/RegistroSW";
 import { AvisoInstalar } from "@/components/pwa/AvisoInstalar";
 import { BotaoAssistente } from "@/features/assistente/components/BotaoAssistente";
 import { estadoWhatsApp } from "@/features/whatsapp/estado";
+import { AvisoAoEntrar } from "@/features/novidades/components/AvisoAoEntrar";
+import { dataDe, diasEntre, hojeISO } from "@/lib/datas";
 
 /** Área da profissional: exige conta aprovada e dentro da validade. */
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
@@ -25,6 +27,10 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
   ]);
 
   const bloqueados = { "/stories": !podeStories, "/relatorios": !temRecurso(perfil.plano, "relatorios"), "/lembretes": !podeLembretes };
+
+  // aviso ao entrar: dias que faltam do teste grátis (0 = termina hoje) e novidades que ela ainda não viu
+  const hoje = hojeISO();
+  const diasDeTeste = perfil.plano === "teste" && perfil.ativa_ate ? diasEntre(hoje, perfil.ativa_ate).length - 1 : null;
 
   return (
     // data-tema troca as cores do painel (globals.css); "rosa" é o padrão da marca.
@@ -43,6 +49,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
       <BarraInferior bloqueados={bloqueados} />
       <BarraLateral bloqueados={bloqueados} />
       <BotaoAssistente estado={whatsapp} />
+      <AvisoAoEntrar usuarioId={perfil.id} hoje={hoje} diasDeTeste={diasDeTeste} contaCriadaEm={dataDe(perfil.created_at)} />
       <RegistroSW />
     </div>
   );
