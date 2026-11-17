@@ -29,6 +29,17 @@ export function lerOrigemCookie(valor: string | null | undefined): OrigemCookie 
 export const WHATSAPP_VAGUINHA = SUPORTE_WHATSAPP;
 export const LINK_WHATSAPP_SITE = `https://wa.me/${WHATSAPP_VAGUINHA}?text=${encodeURIComponent("Oi! Vim pelo site e quero saber mais sobre o Vaguinha.")}`;
 
+/**
+ * Valor estimado de cada etapa, em reais (17/11/2026). O Diagnóstico do Gerenciador de Eventos reclamava que os
+ * eventos de Lead e StartTrial do site iam "sem preço e moeda". Não é dinheiro que entrou: é uma estimativa de
+ * quanto vale cada passo, para a Meta comparar um com o outro (o plano mais barato custa R$ 19,90).
+ * A campanha otimiza por quantidade, não por valor: estes números só entram nos relatórios da Meta.
+ * O valor de verdade vai no Subscribe (primeiro pagamento). Usado no pixel do navegador e na API de Conversões,
+ * que precisam mandar o mesmo valor para o mesmo evento.
+ */
+export const VALOR_ESTIMADO = { Lead: 2, StartTrial: 5, CompleteRegistration: 15 } as const;
+export const MOEDA = "BRL";
+
 /** Etiqueta de verificação do domínio vaguinha.app na Meta (Configurações do negócio → Domínios). Não é segredo. */
 export const META_VERIFICACAO_DOMINIO = "62xj6bxqtp9k4fx721s1ooe99st4kc";
 

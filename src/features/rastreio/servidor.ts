@@ -5,7 +5,7 @@ import { URL_APP } from "@/lib/constantes";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import type { OrigemAnuncio, Profile } from "@/types/database";
 import type { NivelUso } from "@/features/admin/uso";
-import { COOKIE_CONSENTIMENTO, COOKIE_ORIGEM, lerOrigemCookie } from "./comum";
+import { COOKIE_CONSENTIMENTO, COOKIE_ORIGEM, lerOrigemCookie, MOEDA, VALOR_ESTIMADO } from "./comum";
 
 /*
  * API de Conversões da Meta (eventos mandados pelo servidor), 11/11/2026.
@@ -103,7 +103,8 @@ async function enviar(evento: Evento, eventId: string, pessoa: Pessoa, origem: O
       action_source: "website",
       event_source_url: origem.pagina ?? `${URL_APP}/cadastro`,
       user_data: dadosDaPessoa(pessoa, origem),
-      ...(valor != null ? { custom_data: { value: Number(valor.toFixed(2)), currency: "BRL" } } : {}),
+      // Lead e StartTrial vão com o valor estimado da etapa (o Diagnóstico da Meta pede preço e moeda); Subscribe, com o valor pago
+      custom_data: { value: Number((valor ?? (evento === "Subscribe" ? 0 : VALOR_ESTIMADO[evento])).toFixed(2)), currency: MOEDA },
     },
   ]);
 }
@@ -209,7 +210,7 @@ export async function sincronizarEtapasCrm(admin: ReturnType<typeof criarCliente
         action_source: "website",
         event_source_url: `${URL_APP}/`,
         user_data: userData,
-        custom_data: { content_name: "Conta configurada" },
+        custom_data: { content_name: "Conta configurada", value: VALOR_ESTIMADO.CompleteRegistration, currency: MOEDA },
       });
     }
     novas.forEach((e, i) => {

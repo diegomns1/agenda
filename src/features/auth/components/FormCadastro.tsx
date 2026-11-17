@@ -11,6 +11,7 @@ import { ESTADO_INICIAL } from "@/components/formulario/tipos";
 import { SeletorRamo } from "@/components/formulario/SeletorRamo";
 import { sugerirEmail } from "@/features/auth/sugerir-email";
 import { rastrear, rastrearCadastroGoogle } from "@/features/rastreio/navegador";
+import { MOEDA, VALOR_ESTIMADO } from "@/features/rastreio/comum";
 
 /*
  * Cadastro (etapa 5): o fácil primeiro (nome, e-mail, senha), depois o que personaliza o painel.
@@ -37,7 +38,7 @@ export function FormCadastro() {
       if (destino) window.location.assign(destino);
     };
     if (!eventoId) return abrir();
-    rastrear("Lead", {}, eventoId);
+    rastrear("Lead", { value: VALOR_ESTIMADO.Lead, currency: MOEDA }, eventoId);
     rastrearCadastroGoogle(eventoId, abrir);
   }, [estado.ok, estado.destino, eventoId]);
 
