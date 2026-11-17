@@ -66,7 +66,7 @@ export type Profile = {
   origem_anuncio: OrigemAnuncio | null;
   /** eventos já enviados à Meta: { lead?: data, start_trial?: data, subscribe?: data } */
   eventos_meta: Partial<
-    Record<"lead" | "start_trial" | "subscribe" | "crm_cadastrou" | "crm_configurando" | "crm_usando" | "crm_assinou", string>
+    Record<"lead" | "start_trial" | "subscribe" | "crm_cadastrou" | "crm_configurando" | "crm_usando" | "crm_assinou" | "conta_configurada", string>
   >;
   slug: string | null;
   agendamento_online: boolean;

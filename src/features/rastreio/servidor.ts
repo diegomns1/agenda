@@ -160,6 +160,18 @@ export function etapaAlcancada(nivel: NivelUso | undefined, assinou: boolean) {
   return 0;
 }
 
+/*
+ * "Conta configurada" como evento de SITE (17/11/2026).
+ * A meta "leads qualificados" da Meta só existe para anúncio de formulário instantâneo: as etapas de CRM acima
+ * chegam e servem para medir, mas a campanha de site não consegue otimizar por elas. O caminho que funciona para
+ * campanha de site é ter um evento de site mais fundo no funil e escolhê-lo como evento de conversão do conjunto.
+ * Por isso, quando a conta cadastra o primeiro serviço ou cliente (etapa "Configurando" em diante), o painel manda
+ * também um CompleteRegistration ("Registro concluído"), com action_source "website" e os mesmos dados do cadastro
+ * (cookies da Meta, IP e navegador), que é o que a Meta precisa para ligar o evento ao clique no anúncio.
+ * Uma vez por conta (eventos_meta.conta_configurada). Só de quem aceitou os cookies de medição.
+ */
+export const EVENTO_CONTA_CONFIGURADA = "CompleteRegistration";
+
 /** Só olha contas recentes: lead velho não ajuda a Meta a aprender. */
 const DIAS_FUNIL = 60;
 
@@ -184,9 +196,22 @@ export async function sincronizarEtapasCrm(admin: ReturnType<typeof criarCliente
     const ja = (p.eventos_meta ?? {}) as Profile["eventos_meta"];
     const ate = etapaAlcancada(nivelDe(p.id), Boolean(ja.subscribe));
     const novas = ETAPAS_CRM.slice(0, ate + 1).filter((e) => !ja[e.chave]);
-    if (!novas.length) continue;
+    // chegou em "Configurando" (ou passou): evento de site, para a campanha poder otimizar por ele
+    const configurou = ate >= 1 && !ja.conta_configurada;
+    if (!novas.length && !configurou) continue;
     const userData = dadosDaPessoa(p as Pessoa, origem);
     const quando = new Date().toISOString();
+    if (configurou) {
+      eventos.push({
+        event_name: EVENTO_CONTA_CONFIGURADA,
+        event_time: agora,
+        event_id: `conta_configurada:${p.id}`,
+        action_source: "website",
+        event_source_url: `${URL_APP}/`,
+        user_data: userData,
+        custom_data: { content_name: "Conta configurada" },
+      });
+    }
     novas.forEach((e, i) => {
       eventos.push({
         event_name: e.nome,
@@ -198,7 +223,10 @@ export async function sincronizarEtapasCrm(admin: ReturnType<typeof criarCliente
         custom_data: { event_source: "crm", lead_event_source: "Vaguinha" },
       });
     });
-    marcar.push({ id: p.id, eventos: { ...ja, ...Object.fromEntries(novas.map((e) => [e.chave, quando])) } });
+    marcar.push({
+      id: p.id,
+      eventos: { ...ja, ...Object.fromEntries(novas.map((e) => [e.chave, quando])), ...(configurou ? { conta_configurada: quando } : {}) },
+    });
   }
 
   let enviadas = 0;
