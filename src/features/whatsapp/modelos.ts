@@ -5,7 +5,7 @@
  * Usado pela ativação automática (features/ativacao) e pelo botão "Mensagem pronta" da Central.
  */
 
-export type IdModelo = "ajuda_inicio" | "feedback_teste" | "retomar_conversa";
+export type IdModelo = "ajuda_inicio" | "feedback_teste" | "parou" | "retomar_conversa";
 
 export type ModeloMensagem = {
   id: IdModelo;
@@ -33,6 +33,15 @@ export const MODELOS: Record<IdModelo, ModeloMensagem> = {
     para: "conta",
     texto: (nome) =>
       `Oi, ${nome}! Seu teste grátis da Vaguinha termina hoje. Posso te pedir 1 minutinho? O que faltou pra agenda funcionar pra você? Sua resposta ajuda muito a gente a melhorar.`,
+  },
+  // cadastrado na Meta em 19/11/2026 (categoria Marketing): para quem começou a configurar e parou
+  parou: {
+    id: "parou",
+    nome: "vaguinha_retomar_uso",
+    rotulo: "Chamar quem parou de usar",
+    para: "conta",
+    texto: (nome) =>
+      `Oi, ${nome}! Aqui é a Serena, da Vaguinha 😊 Vi que você começou a montar sua agenda e depois deu uma pausa. Ficou alguma dúvida ou faltou alguma coisa? Me responde aqui que eu te ajudo a terminar.`,
   },
   retomar_conversa: {
     id: "retomar_conversa",

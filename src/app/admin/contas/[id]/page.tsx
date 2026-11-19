@@ -113,7 +113,7 @@ export default async function PaginaConta({ params }: PageProps<"/admin/contas/[
           <ul className="grid gap-1 text-xs text-muted-foreground">
             {envios.map((e) => (
               <li key={e.enviado_em + e.canal}>
-                {formatarData(e.enviado_em, "dd/MM HH:mm")} · {e.tipo === "ajuda_inicio" ? "oferta de ajuda" : "pedido de feedback"} ·{" "}
+                {formatarData(e.enviado_em, "dd/MM HH:mm")} · {e.tipo === "ajuda_inicio" ? "oferta de ajuda" : e.tipo === "parou" ? "chamada de quem parou" : "pedido de feedback"} ·{" "}
                 {e.canal === "whatsapp" ? "WhatsApp" : "e-mail"} · <span className={e.ok ? undefined : "font-semibold text-destructive"}>{comoFoi(e)}</span>
                 {e.manual ? " · pelo botão" : " · automática"}
               </li>

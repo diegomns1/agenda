@@ -13,13 +13,14 @@ import type { Profile } from "@/types/database";
  * Mensagens de ativação (13/11/2026): chamar quem criou a conta e não usou.
  *   ajuda_inicio   — 1 dia depois do cadastro, para quem não cadastrou nada.
  *   feedback_teste — no último dia do teste grátis, perguntando o que faltou.
+ *   parou          — quem começou a configurar e parou (19/11/2026). Só WhatsApp, uma vez por conta.
  * WhatsApp por MODELO aprovado pela Meta (a pessoa nunca escreveu para o número, então mensagem livre não pode).
  * Sem telefone, ou se a Meta recusar (modelo ainda não aprovado), vai por e-mail.
  * A resposta da pessoa cai na Central e a Serena atende no modo suporte (o número bate com o cadastro).
  * Cada conta recebe cada tipo uma vez só (tabela ativacao_envios, migração 0024).
  */
 
-export type TipoAtivacao = "ajuda_inicio" | "feedback_teste";
+export type TipoAtivacao = "ajuda_inicio" | "feedback_teste" | "parou";
 type Admin = ReturnType<typeof criarClienteAdmin>;
 type Pessoa = Pick<Profile, "id" | "nome" | "email" | "telefone">;
 
@@ -27,12 +28,14 @@ type Pessoa = Pick<Profile, "id" | "nome" | "email" | "telefone">;
 export const MODELO_WHATSAPP: Record<TipoAtivacao, string> = {
   ajuda_inicio: process.env.WHATSAPP_MODELO_AJUDA || MODELOS.ajuda_inicio.nome,
   feedback_teste: process.env.WHATSAPP_MODELO_FEEDBACK || MODELOS.feedback_teste.nome,
+  parou: process.env.WHATSAPP_MODELO_PAROU || MODELOS.parou.nome,
 };
 
 /** Texto dos modelos, IGUAL ao cadastrado na Meta (fica em whatsapp/modelos.ts, um lugar só). */
 export const TEXTO_MODELO: Record<TipoAtivacao, (nome: string) => string> = {
   ajuda_inicio: MODELOS.ajuda_inicio.texto,
   feedback_teste: MODELOS.feedback_teste.texto,
+  parou: MODELOS.parou.texto,
 };
 
 export type ResultadoAtivacao = { canal: "whatsapp" | "email" | null; ok: boolean; erro?: string };
@@ -118,6 +121,8 @@ export async function enviarAtivacao(
   /** só WhatsApp: se a Meta recusar, NÃO cai no e-mail */
   soWhatsapp = false,
 ): Promise<ResultadoAtivacao> {
+  // "parou" não tem versão por e-mail: é só WhatsApp
+  if (tipo === "parou") soWhatsapp = true;
   if (!manual && !(await precisaReceber(admin, p, tipo))) return { canal: null, ok: false, erro: "já recebeu" };
   const nome = primeiroNome(p.nome) || "tudo bem";
   const numero = normalizarTelefone(p.telefone);

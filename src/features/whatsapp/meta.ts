@@ -175,6 +175,55 @@ export async function saudeDoEnvio(): Promise<SaudeDoEnvio | null> {
   }
 }
 
+/** Id da conta do WhatsApp Business (WABA): da variável WHATSAPP_WABA_ID ou, se não tiver, do estado de saúde do número. */
+let wabaGuardada: string | null = null;
+async function idDaContaWhatsapp(): Promise<string | null> {
+  if (process.env.WHATSAPP_WABA_ID) return process.env.WHATSAPP_WABA_ID;
+  if (wabaGuardada) return wabaGuardada;
+  try {
+    const r = await fetch(`https://graph.facebook.com/${VERSAO}/${process.env.WHATSAPP_PHONE_NUMBER_ID}?fields=health_status`, {
+      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!r.ok) return null;
+    const json = (await r.json()) as { health_status?: { entities?: { entity_type?: string; id?: string }[] } };
+    wabaGuardada = json.health_status?.entities?.find((e) => e.entity_type === "WABA")?.id ?? null;
+    return wabaGuardada;
+  } catch {
+    return null;
+  }
+}
+
+const statusGuardado = new Map<string, { em: number; status: string | null }>();
+
+/**
+ * Situação do modelo de mensagem na Meta: "APPROVED" (Ativo), "PENDING" (Em análise), "REJECTED"...
+ * Devolve null se não deu para saber (sem chave, Meta fora do ar). Consulta guardada por 10 min.
+ * O envio automático só começa com o modelo aprovado: antes disso cada tentativa seria recusada.
+ */
+export async function statusDoModelo(nome: string): Promise<string | null> {
+  if (!envioConfigurado()) return null;
+  const guardado = statusGuardado.get(nome);
+  if (guardado && Date.now() - guardado.em < SAUDE_VALE_MS) return guardado.status;
+  const waba = await idDaContaWhatsapp();
+  if (!waba) return null;
+  try {
+    const r = await fetch(`https://graph.facebook.com/${VERSAO}/${waba}/message_templates?name=${encodeURIComponent(nome)}&fields=name,status`, {
+      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!r.ok) return null;
+    const json = (await r.json()) as { data?: { name?: string; status?: string }[] };
+    const status = json.data?.find((m) => m.name === nome)?.status ?? "NAO_EXISTE";
+    statusGuardado.set(nome, { em: Date.now(), status });
+    return status;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Bloqueia (ou desbloqueia) o número na Meta: bloqueado, a pessoa não consegue mais escrever para o WhatsApp oficial.
  * A Meta só bloqueia quem escreveu nas últimas 24 h (erro 131047); nesse caso o bloqueio fica só no painel.

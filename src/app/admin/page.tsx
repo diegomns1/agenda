@@ -51,16 +51,18 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
   for (const e of envios ?? []) if (!chamadas.has(e.profissional_id)) chamadas.set(e.profissional_id, e);
   // botão "Chamar no WhatsApp": contas liberadas, com número, de qualquer categoria menos "Usando".
   // Guarda quando a oferta de ajuda já saiu pelo WhatsApp (a lista vem do mais novo para o mais antigo).
-  const ajudaNoZap = new Map<string, string>();
+  // (por tipo de mensagem: "Parou" recebe a mensagem própria, as outras categorias a oferta de ajuda)
+  const ultimaNoZap = new Map<string, string>();
   for (const e of envios ?? []) {
-    if (e.tipo === "ajuda_inicio" && e.canal === "whatsapp" && !ajudaNoZap.has(e.profissional_id)) ajudaNoZap.set(e.profissional_id, e.enviado_em);
+    const chave = `${e.profissional_id}:${e.tipo}`;
+    if (e.canal === "whatsapp" && !ultimaNoZap.has(chave)) ultimaNoZap.set(chave, e.enviado_em);
   }
   const hoje = hojeISO();
   const paraChamar: ContaParaChamar[] = [];
   for (const c of contas) {
     const nivel = uso.get(c.id)?.nivel;
     if (c.status !== "aprovada" || !c.telefone || !nivel || nivel === "usando") continue;
-    const jaFoi = ajudaNoZap.get(c.id);
+    const jaFoi = ultimaNoZap.get(`${c.id}:${nivel === "parou" ? "parou" : "ajuda_inicio"}`);
     paraChamar.push({
       id: c.id,
       nome: c.nome,
@@ -194,8 +196,9 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
           Só números: ninguém vê os dados das clientes.
         </p>
         <p className="text-xs text-muted-foreground">
-          Automático: quem só entrou recebe uma oferta de ajuda 1 dia depois do cadastro, e no último dia do teste vai um pedido de
-          feedback (WhatsApp, ou e-mail para quem não deu o número). Das 9h às 20h, uma vez por conta.
+          Automático: quem só entrou recebe uma oferta de ajuda 1 dia depois do cadastro, no último dia do teste vai um pedido de
+          feedback (WhatsApp, ou e-mail para quem não deu o número), e quem estava configurando e ficou 2 dias parada recebe uma
+          mensagem perguntando o que faltou (só WhatsApp). Das 9h às 20h, uma vez por conta.
         </p>
         <BotaoChamarTodas contas={paraChamar} />
       </section>

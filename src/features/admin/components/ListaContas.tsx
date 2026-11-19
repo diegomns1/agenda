@@ -46,7 +46,7 @@ function LinhaUso({ u, chamada }: { u: UsoConta; chamada?: Chamada }) {
         {partes.join(" · ")} · último acesso {haQuanto(u.ultimoAcesso)}
         {u.ultimaAtividade ? ` · mexeu ${haQuanto(u.ultimaAtividade)}` : ""}
         {chamada
-          ? ` · chamada (${chamada.tipo === "ajuda_inicio" ? "ajuda" : "feedback"}, ${chamada.canal === "whatsapp" ? "WhatsApp" : "e-mail"}) ${haQuanto(chamada.enviado_em)}`
+          ? ` · chamada (${chamada.tipo === "ajuda_inicio" ? "ajuda" : chamada.tipo === "parou" ? "parou" : "feedback"}, ${chamada.canal === "whatsapp" ? "WhatsApp" : "e-mail"}) ${haQuanto(chamada.enviado_em)}`
           : ""}
       </span>
     </div>

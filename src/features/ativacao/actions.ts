@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { ehAdmin, obterUsuario } from "@/lib/auth";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
-import { enviarAtivacao, type TipoAtivacao } from "./enviar";
+import { enviarAtivacao, MODELO_WHATSAPP, type TipoAtivacao } from "./enviar";
 import { saudeDoEnvio } from "@/features/whatsapp/meta";
 
 /* Botões do Admin para chamar quem não está usando (o automático roda sozinho; isto é para mandar agora). */
@@ -36,7 +36,7 @@ const MAXIMO_POR_VEZ = 60;
  * lista (17/11/2026: de qualquer categoria, não só "Só entrou"; e manda de novo para quem já recebeu, se ele marcar).
  * Conferido de novo aqui: a conta precisa estar liberada e ter número.
  */
-export async function chamarContas(ids: string[]): Promise<{ ok: boolean; mensagem: string }> {
+export async function chamarContas(ids: string[], tipo: "ajuda_inicio" | "parou" = "ajuda_inicio"): Promise<{ ok: boolean; mensagem: string }> {
   const admin = await exigirAdmin();
   const escolhidas = [...new Set(ids)].slice(0, MAXIMO_POR_VEZ);
   if (escolhidas.length === 0) return { ok: false, mensagem: "Marque pelo menos uma conta." };
@@ -52,16 +52,19 @@ export async function chamarContas(ids: string[]): Promise<{ ok: boolean; mensag
   let enviadas = 0;
   let recusadas = 0;
   for (const c of contas ?? []) {
-    const r = await enviarAtivacao(admin, c, "ajuda_inicio", true, true);
-    if (r.ok) enviadas++;
-    else recusadas++;
+    const r = await enviarAtivacao(admin, c, tipo, true, true);
+    if (r.ok) {
+      enviadas++;
+      // o automático não manda de novo para quem já foi chamada pelo botão (sem a migração 0034, ignora)
+      if (tipo === "parou") await admin.from("profiles").update({ aviso_parou_em: new Date().toISOString() }).eq("id", c.id);
+    } else recusadas++;
   }
   revalidatePath("/admin");
   if (!enviadas && !recusadas) return { ok: false, mensagem: "Nenhuma das contas marcadas está liberada e com WhatsApp." };
   if (!enviadas)
     return {
       ok: false,
-      mensagem: `A Meta recusou ${recusadas === 1 ? "a mensagem" : `as ${recusadas}`}. O modelo "vaguinha_ajuda_inicio" está Ativo no WhatsApp Manager?`,
+      mensagem: `A Meta recusou ${recusadas === 1 ? "a mensagem" : `as ${recusadas}`}. O modelo "${MODELO_WHATSAPP[tipo]}" está Ativo no WhatsApp Manager?`,
     };
   return { ok: true, mensagem: `${enviadas} chamada${enviadas === 1 ? "" : "s"} no WhatsApp${recusadas ? ` (${recusadas} a Meta recusou: número inválido?)` : ""}.` };
 }

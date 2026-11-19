@@ -77,6 +77,8 @@ export type Profile = {
   aviso_vencimento_para: string | null; // "AAAA-MM-DD"
   /** vencimento para o qual o e-mail "sua assinatura venceu" já saiu (migração 0030) */
   aviso_vencido_para?: string | null;
+  /** quando saiu a mensagem automática para quem parou de usar (migração 0034) */
+  aviso_parou_em?: string | null;
   asaas_customer_id: string | null;
   asaas_subscription_id: string | null;
   plano_assinado: "essencial" | "profissional" | "premium" | null;
@@ -434,7 +436,7 @@ export type Database = {
         Row: {
           id: number;
           profissional_id: string;
-          tipo: "ajuda_inicio" | "feedback_teste";
+          tipo: "ajuda_inicio" | "feedback_teste" | "parou";
           canal: "whatsapp" | "email";
           ok: boolean;
           erro: string | null;
@@ -445,7 +447,7 @@ export type Database = {
         };
         Insert: {
           profissional_id: string;
-          tipo: "ajuda_inicio" | "feedback_teste";
+          tipo: "ajuda_inicio" | "feedback_teste" | "parou";
           canal: "whatsapp" | "email";
           ok?: boolean;
           erro?: string | null;

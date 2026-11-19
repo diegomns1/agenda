@@ -40,7 +40,7 @@ export type ContaParaChamar = {
   telefone: string;
   detalhe: string;
   categoria: CategoriaChamada;
-  /** "dd/MM" da última oferta de ajuda que saiu pelo WhatsApp, se já saiu */
+  /** "dd/MM" da última vez que a mensagem desta categoria saiu pelo WhatsApp, se já saiu */
   jaChamada: string | null;
 };
 
@@ -68,6 +68,11 @@ export function BotaoChamarTodas({ contas }: { contas: ContaParaChamar[] }) {
   if (!contas.length) return null;
 
   const daCategoria = contas.filter((c) => c.categoria === categoria);
+  // quem parou recebe a mensagem própria ("começou a montar sua agenda e deu uma pausa"); o resto, a oferta de ajuda
+  const mensagem =
+    categoria === "parou"
+      ? "\"Vi que você começou a montar sua agenda e depois deu uma pausa. Ficou alguma dúvida?\""
+      : "\"Conseguiu cadastrar seus serviços e marcar o primeiro horário?\"";
   const escolhidas = daCategoria.filter((c) => marcadas.has(c.id));
   const quantas = (id: CategoriaChamada) => contas.filter((c) => c.categoria === id).length;
 
@@ -86,7 +91,10 @@ export function BotaoChamarTodas({ contas }: { contas: ContaParaChamar[] }) {
 
   function chamar() {
     iniciar(async () => {
-      const r = await chamarContas(escolhidas.map((c) => c.id));
+      const r = await chamarContas(
+        escolhidas.map((c) => c.id),
+        categoria === "parou" ? "parou" : "ajuda_inicio",
+      );
       if (r.ok) toast.success(r.mensagem);
       else toast.error(r.mensagem);
       if (r.ok) {
@@ -114,8 +122,8 @@ export function BotaoChamarTodas({ contas }: { contas: ContaParaChamar[] }) {
           <DialogHeader>
             <DialogTitle>Quem chamar no WhatsApp</DialogTitle>
             <DialogDescription>
-              Vai a oferta de ajuda da Serena (&quot;Conseguiu cadastrar seus serviços e marcar o primeiro horário?&quot;). Escolha a
-              categoria e desmarque quem não deve receber. A Meta cobra por cada mensagem enviada.
+              A Serena manda {mensagem}. Escolha a categoria e desmarque quem não deve receber. A Meta cobra por cada mensagem
+              enviada.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-wrap gap-2" role="tablist" aria-label="Categoria">

@@ -11,6 +11,7 @@ import { registrarEnvio } from "@/features/ativacao/enviar";
 import { MODELOS, type IdModelo } from "./modelos";
 import { primeiroNome } from "@/lib/texto";
 import { DIAS_SEM_RESPOSTA } from "./prazos";
+import { seloDaEtapa, usoDasContasGuardado } from "@/features/admin/uso";
 
 /*
  * Central do WhatsApp (só admin): kanban de contatos, conversa, assumir / devolver ao robô e responder.
@@ -18,8 +19,16 @@ import { DIAS_SEM_RESPOSTA } from "./prazos";
  */
 
 export type ContatoCentral = WhatsappContato & {
-  /** profissional ligada (cadastro com o mesmo número ou assistente conectada) */
-  profissional: { nome: string; plano: string; conectada: boolean } | null;
+  /**
+   * profissional ligada (cadastro com o mesmo número ou assistente conectada).
+   * `etapa`: em que etapa de uso a conta está (Só entrou, Configurando, Usando, Parou de configurar/usar).
+   */
+  profissional: {
+    nome: string;
+    plano: string;
+    conectada: boolean;
+    etapa: { nivel: string; rotulo: string; tom: string; dias: number | null } | null;
+  } | null;
   /** `status`: "falhou" quando a Meta avisou que a última mensagem enviada não foi entregue */
   ultima: { de: string; texto: string; status?: string | null } | null;
 };
@@ -61,13 +70,15 @@ export async function listarContatos(): Promise<ContatoCentral[]> {
 
   const ids = [...new Set(lista.map((c) => c.profissional_id).filter((x): x is string => Boolean(x)))];
   const telefones = lista.map((c) => c.telefone);
-  const [perfis, vinculos, ultimas] = await Promise.all([
+  const [perfis, vinculos, ultimas, uso] = await Promise.all([
     ids.length ? admin.from("profiles").select("id, nome, plano").in("id", ids) : Promise.resolve({ data: [] }),
     ids.length ? admin.from("whatsapp_vinculos").select("profissional_id").in("profissional_id", ids) : Promise.resolve({ data: [] }),
     // última mensagem de cada um (busca as recentes e fica com a primeira de cada telefone)
     telefones.length
       ? admin.from("whatsapp_mensagens").select("telefone, de, texto, criado_em, status").in("telefone", telefones).order("criado_em", { ascending: false }).limit(1500)
       : Promise.resolve({ data: [] }),
+    // etapa de uso de cada conta (a conta pesada é guardada por 2 min; se falhar, os cartões saem sem o selo)
+    ids.length ? usoDasContasGuardado().catch(() => null) : Promise.resolve(null),
   ]);
   const perfilPorId = new Map((perfis.data ?? []).map((p) => [p.id, p]));
   const conectadas = new Set((vinculos.data ?? []).map((v) => v.profissional_id));
@@ -80,7 +91,14 @@ export async function listarContatos(): Promise<ContatoCentral[]> {
     const p = c.profissional_id ? perfilPorId.get(c.profissional_id) : null;
     return {
       ...c,
-      profissional: p ? { nome: p.nome, plano: p.plano, conectada: conectadas.has(p.id) } : null,
+      profissional: p
+        ? {
+            nome: p.nome,
+            plano: p.plano,
+            conectada: conectadas.has(p.id),
+            etapa: uso?.get(p.id) ? seloDaEtapa(uso.get(p.id)!) : null,
+          }
+        : null,
       ultima: ultimaPorTel.get(c.telefone) ?? null,
     };
   });
@@ -196,7 +214,7 @@ export async function mandarMensagemPronta(telefone: string, id: IdModelo): Prom
   if (!r) return { ok: false, erro: `A Meta recusou. O modelo "${modelo.nome}" já está Ativo no WhatsApp Manager?` };
   await admin.from("whatsapp_mensagens").insert({ telefone, de: "equipe", texto: modelo.texto(nome), wamid: r.wamid && r.wamid !== "simulado" ? r.wamid : null, status: "enviada" });
   await admin.from("whatsapp_contatos").update({ ultima_msg_em: new Date().toISOString(), nao_lidas: 0 }).eq("telefone", telefone);
-  if (c.profissional_id && (id === "ajuda_inicio" || id === "feedback_teste")) {
+  if (c.profissional_id && (id === "ajuda_inicio" || id === "feedback_teste" || id === "parou")) {
     await registrarEnvio(admin, { id: c.profissional_id }, id, "whatsapp", true, null, true, r.wamid);
   }
   return { ok: true };

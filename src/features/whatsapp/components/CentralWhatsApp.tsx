@@ -246,6 +246,16 @@ function Cartao({
           <span className="shrink-0 text-xs text-muted-foreground">{quando(c.ultima_msg_em)}</span>
         </div>
         <div className="flex flex-wrap gap-1 empty:hidden">
+          {/* em que etapa de uso a conta está (e onde parou), com as cores da tela de Contas */}
+          {c.profissional?.etapa ? (
+            <span
+              className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-mini font-bold", c.profissional.etapa.tom)}
+              title={c.profissional.etapa.dias === null ? "Ainda não cadastrou nada" : `Última atividade há ${c.profissional.etapa.dias} dia${c.profissional.etapa.dias === 1 ? "" : "s"}`}
+            >
+              {c.profissional.etapa.rotulo}
+              {c.profissional.etapa.nivel === "parou" && c.profissional.etapa.dias !== null ? ` · ${c.profissional.etapa.dias} d` : ""}
+            </span>
+          ) : null}
           {c.profissional ? (
             <Etiqueta>
               {c.profissional.plano}

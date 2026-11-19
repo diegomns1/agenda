@@ -45,6 +45,35 @@ function maisRecente(atual: string | null, nova: string) {
   return !atual || nova > atual ? nova : atual;
 }
 
+/** Quem já usa de verdade: 3 horários marcados no painel ou algum pedido pelo link. */
+export function usaDeVerdade(u: Pick<UsoConta, "marcados" | "pelolink">) {
+  return u.marcados >= 3 || u.pelolink > 0;
+}
+
+/**
+ * Selo da etapa para a Central do WhatsApp (19/11/2026): em que etapa a conta está e, se parou, onde parou
+ * ("Parou de configurar" ou "Parou de usar"). `dias`: há quantos dias não faz nada (null se nunca fez).
+ */
+export function seloDaEtapa(u: UsoConta, agora = Date.now()) {
+  const dias = u.ultimaAtividade ? Math.floor((agora - new Date(u.ultimaAtividade).getTime()) / DIA) : null;
+  const rotulo =
+    u.nivel === "parou" ? (usaDeVerdade(u) ? "Parou de usar" : "Parou de configurar") : NIVEL_USO[u.nivel].rotulo;
+  return { nivel: u.nivel, rotulo, tom: NIVEL_USO[u.nivel].tom, dias };
+}
+
+let usoGuardado: { em: number; valor: Promise<Map<string, UsoConta>> } | null = null;
+
+/** Mesmo que usoDasContas, mas reaproveita a conta feita há menos de 2 min (a Central atualiza de 10 em 10 s). */
+export function usoDasContasGuardado(): Promise<Map<string, UsoConta>> {
+  if (usoGuardado && Date.now() - usoGuardado.em < 2 * 60_000) return usoGuardado.valor;
+  const valor = usoDasContas().catch((e) => {
+    usoGuardado = null;
+    throw e;
+  });
+  usoGuardado = { em: Date.now(), valor };
+  return valor;
+}
+
 /** Uso de todas as contas (as listas aqui ainda são pequenas: busca tudo de uma vez e conta no servidor). */
 export async function usoDasContas(): Promise<Map<string, UsoConta>> {
   const admin = criarClienteAdmin();
@@ -115,12 +144,12 @@ export async function usoDasContas(): Promise<Map<string, UsoConta>> {
 
   for (const c of uso.values()) {
     const algo = c.clientes + c.servicos + c.marcados + c.importados > 0;
-    const usaDeVerdade = c.marcados >= 3 || c.pelolink > 0;
+    const usa = usaDeVerdade(c);
     const parado = c.ultimaAtividade ? agora - new Date(c.ultimaAtividade).getTime() : Infinity;
-    const recente = parado <= (usaDeVerdade ? DIAS_PAROU_USANDO : DIAS_PAROU_CONFIGURANDO) * DIA;
+    const recente = parado <= (usa ? DIAS_PAROU_USANDO : DIAS_PAROU_CONFIGURANDO) * DIA;
     if (!algo) c.nivel = "so_entrou";
     else if (!recente) c.nivel = "parou";
-    else if (usaDeVerdade) c.nivel = "usando";
+    else if (usa) c.nivel = "usando";
     else c.nivel = "configurando";
   }
   return uso;
