@@ -11,16 +11,16 @@ import { MAXIMO_NO_AVISO, NOVIDADES, type Novidade } from "../conteudo";
 
 /*
  * Aviso que abre quando a profissional entra no painel (17/11/2026). Uma caixa só, com até duas partes:
- *   1. "Seu teste grátis termina em X dias", com o botão de assinar: nos últimos 3 dias do teste,
- *      só na primeira vez que ela entra em cada dia.
+ *   1. "Seu teste grátis termina hoje", com o botão de assinar: só no último dia do teste (19/11/2026: antes eram
+ *      os últimos 3 dias, e era aviso demais), na primeira vez que ela entra.
  *   2. Novidades do painel: uma vez por novidade (ela vê só o que ainda não viu).
  * O que já foi visto fica guardado no próprio aparelho (localStorage): sem tabela nova. Em outro aparelho o aviso
  * aparece de novo uma vez, o que é aceitável. Se o navegador não deixar guardar, o aviso não abre (melhor não
  * mostrar do que mostrar toda hora).
  */
 
-/** O teste "está acabando" quando faltam estes dias ou menos. */
-const AVISAR_FALTANDO = 3;
+/** O aviso do teste aparece quando faltam estes dias ou menos (0 = só no último dia). */
+const AVISAR_FALTANDO = 0;
 
 type Props = {
   usuarioId: string;
