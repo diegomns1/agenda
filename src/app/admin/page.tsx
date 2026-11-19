@@ -6,6 +6,7 @@ import { ListaContas } from "@/features/admin/components/ListaContas";
 import { NIVEL_USO, usoDasContas, type NivelUso } from "@/features/admin/uso";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { BotaoChamarTodas, type ContaParaChamar } from "@/features/ativacao/components/BotoesAtivacao";
+import { CopiarLista } from "@/features/admin/components/CopiarLista";
 import { formatarData, formatarDataISO, hojeISO } from "@/lib/datas";
 import { PLANOS } from "@/lib/planos";
 import { formatarTelefone } from "@/lib/telefone";
@@ -21,20 +22,23 @@ function ehNivel(v: unknown): v is NivelUso {
   return typeof v === "string" && v in NIVEL_USO;
 }
 
-/** Endereço da lista com os filtros escolhidos (situação da conta e nível de uso). */
-function endereco(status?: StatusConta, nivel?: NivelUso) {
+/** Endereço da lista com os filtros escolhidos (situação da conta, nível de uso e "teste acabou"). */
+function endereco(status?: StatusConta, nivel?: NivelUso, fim?: boolean) {
   const q = new URLSearchParams();
   if (status) q.set("status", status);
   if (nivel) q.set("uso", nivel);
+  if (fim) q.set("fim", "1");
   const texto = q.toString();
   return texto ? `/admin?${texto}` : "/admin";
 }
 
 export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">) {
-  const { status, uso: usoPedido } = await searchParams;
+  const { status, uso: usoPedido, fim } = await searchParams;
   const filtro = ehStatus(status) ? status : undefined;
   // toque em "Usando", "Parou"...: mostra só as contas liberadas daquele nível
   const filtroUso = ehNivel(usoPedido) ? usoPedido : undefined;
+  // "Teste acabou" (19/11/2026): contas no teste grátis cuja validade já passou e que não assinaram
+  const soTesteAcabou = fim === "1";
 
   const [contas, contagem, uso, { data: envios }] = await Promise.all([
     listarContas(filtro),
@@ -79,7 +83,18 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
     if (u && c.status === "aprovada") porNivel[u.nivel]++;
   }
   const total = Object.values(contagem).reduce((a, b) => a + b, 0);
-  const contasDaLista = filtroUso ? contas.filter((c) => c.status === "aprovada" && uso.get(c.id)?.nivel === filtroUso) : contas;
+  const testeAcabou = (c: (typeof contas)[number]) => c.status === "aprovada" && c.plano === "teste" && Boolean(c.ativa_ate) && c.ativa_ate! < hoje;
+  const qtdTesteAcabou = contas.filter(testeAcabou).length;
+  const qtdTesteAcabouSemUsar = contas.filter((c) => testeAcabou(c) && uso.get(c.id)?.nivel === "so_entrou").length;
+  const contasDaLista = contas.filter(
+    (c) =>
+      (!filtroUso || (c.status === "aprovada" && uso.get(c.id)?.nivel === filtroUso)) &&
+      (!soTesteAcabou || testeAcabou(c)),
+  );
+  // para colar no WhatsApp ou numa planilha: nome e telefone de quem está na lista filtrada
+  const textoDaLista = contasDaLista
+    .map((c) => `${c.nome} — ${c.telefone ? formatarTelefone(c.telefone) : "sem WhatsApp"}${c.ativa_ate ? ` — teste até ${formatarDataISO(c.ativa_ate)}` : ""}`)
+    .join("\n");
 
   const filtros: { chave?: StatusConta; rotulo: string; qtd: number }[] = [
     { rotulo: "Todas", qtd: total },
@@ -107,7 +122,7 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
           return (
             <Link
               key={f.rotulo}
-              href={endereco(f.chave, filtroUso)}
+              href={endereco(f.chave, filtroUso, soTesteAcabou)}
               className={cn(
                 "shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors",
                 ativo
@@ -130,7 +145,7 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
               <Link
                 key={n}
                 // tocar de novo no que já está escolhido tira o filtro
-                href={endereco(filtro, ativo ? undefined : n)}
+                href={endereco(filtro, ativo ? undefined : n, soTesteAcabou)}
                 aria-current={ativo ? "true" : undefined}
                 title={`${NIVEL_USO[n].explica}. Toque para ver só estas contas.`}
                 className={cn(
@@ -144,17 +159,35 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
               </Link>
             );
           })}
-          {filtroUso ? (
+          {/* combina com os níveis: "Teste acabou" + "Só entrou" = acabou o teste e não mexeu em nada */}
+          <Link
+            href={endereco(filtro, filtroUso, !soTesteAcabou)}
+            aria-current={soTesteAcabou ? "true" : undefined}
+            title="Contas no teste grátis que já passou da data e não assinaram. Toque de novo para tirar o filtro."
+            className={cn(
+              "inline-flex min-h-8 items-center rounded-full border border-foreground/15 bg-background px-3 font-semibold text-foreground transition-shadow hover:ring-2 hover:ring-foreground/15",
+              soTesteAcabou && "ring-2 ring-foreground/60",
+            )}
+          >
+            Teste acabou {qtdTesteAcabou}
+          </Link>
+          {filtroUso || soTesteAcabou ? (
             <Link href={endereco(filtro)} className="inline-flex min-h-8 items-center rounded-full border bg-background px-3 font-semibold text-muted-foreground hover:bg-muted">
               Ver todas
             </Link>
           ) : null}
         </div>
         <p className="text-xs text-muted-foreground">
-          {filtroUso
-            ? `Mostrando só as contas liberadas em "${NIVEL_USO[filtroUso].rotulo}" (${contasDaLista.length}).`
-            : "Toque num dos níveis para ver só aquelas contas."}
+          {filtroUso || soTesteAcabou
+            ? `Mostrando ${contasDaLista.length} conta${contasDaLista.length === 1 ? "" : "s"}: ${[
+                soTesteAcabou ? "teste grátis acabou" : null,
+                filtroUso ? `"${NIVEL_USO[filtroUso].rotulo}"` : null,
+              ]
+                .filter(Boolean)
+                .join(" e ")}.`
+            : `Toque num dos níveis para ver só aquelas contas. ${qtdTesteAcabouSemUsar} conta${qtdTesteAcabouSemUsar === 1 ? "" : "s"} terminou o teste sem cadastrar nada: toque em "Teste acabou" e depois em "Só entrou".`}
         </p>
+        {(filtroUso || soTesteAcabou) && contasDaLista.length ? <CopiarLista texto={textoDaLista} quantas={contasDaLista.length} /> : null}
         <p className="text-xs text-muted-foreground">
           Usando = marcou 3 horários ou mais (ou recebeu pelo link) e mexeu nos últimos 3 dias. Configurando = cadastrou serviços ou
           clientes nos últimos 2 dias, mas ainda marca pouco. Parou = mexeu e depois não fez mais nada. Só entrou = não cadastrou nada.
