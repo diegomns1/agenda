@@ -101,6 +101,12 @@ async function rodarParou(admin: ReturnType<typeof criarClienteAdmin>, uso: Awai
     .eq("ok", true)
     .gte("enviado_em", limite);
   const receberamHaPouco = new Set((recentes ?? []).map((r) => r.profissional_id));
+  // bloqueadas ou em "Robôs e spam" na Central também ficam de fora
+  const { data: barrados } = await admin
+    .from("whatsapp_contatos")
+    .select("profissional_id, bloqueado, etapa")
+    .in("profissional_id", pararam.map((c) => c.id));
+  for (const b of barrados ?? []) if (b.profissional_id && (b.bloqueado || b.etapa === "spam")) receberamHaPouco.add(b.profissional_id);
 
   let enviados = 0;
   for (const c of pararam) {
