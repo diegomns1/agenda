@@ -197,7 +197,7 @@ async function avisarVencimentos(admin: ReturnType<typeof criarClienteAdmin>): P
     // No último dia sai só o "seu teste termina hoje" (WhatsApp, ou e-mail para quem não deu o número) e o aviso no painel.
     if (p.plano === "teste") continue;
     // mensalidade em aberto: o e-mail leva o link para pagar com um toque (os avisos do Asaas estão desligados)
-    const link = p.plano === "teste" ? null : await linkDaMensalidade(admin, p.id);
+    const link = await linkDaMensalidade(admin, p.id);
     const r = await enviarEmail(emailVencimentoProximo(p.email, p.nome, p.plano, p.ativa_ate, dias, link));
     if (r.enviado) {
       await admin.from("profiles").update({ aviso_vencimento_para: p.ativa_ate }).eq("id", p.id);
