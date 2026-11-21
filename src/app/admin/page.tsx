@@ -198,7 +198,8 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
         <p className="text-xs text-muted-foreground">
           Automático: quem só entrou recebe uma oferta de ajuda 1 dia depois do cadastro, no último dia do teste vai um pedido de
           feedback (WhatsApp, ou e-mail para quem não deu o número), e quem estava configurando e ficou 2 dias parada recebe uma
-          mensagem perguntando o que faltou (só WhatsApp). Das 9h às 20h, uma vez por conta.
+          mensagem perguntando o que faltou (só WhatsApp). Das 9h às 20h, uma vez por conta. Limpeza: conta que terminou o teste há 2
+          dias, recebeu mensagem, não respondeu e não cadastrou nada (nem serviço, nem cliente, nem horário) é apagada sozinha, às 4h.
         </p>
         <BotaoChamarTodas contas={paraChamar} />
       </section>

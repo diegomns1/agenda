@@ -9,6 +9,7 @@ import { usoDasContas } from "@/features/admin/uso";
 import { sincronizarEtapasCrm } from "@/features/rastreio/servidor";
 import { rodarLembretesAutomaticos } from "@/features/whatsapp-proprio/lembretes";
 import { limparConversasParadas } from "@/features/whatsapp/limpeza";
+import { limparContasAbandonadas } from "@/features/admin/limpeza-contas";
 import { diasEntre, formatarData, hojeISO, horaDe, somarDias } from "@/lib/datas";
 import { primeiroNome } from "@/lib/texto";
 import { temRecurso } from "@/lib/planos";
@@ -91,6 +92,8 @@ async function executar(request: NextRequest) {
     await limparConversasParadas(admin)
       .then((r) => r.apagadas && console.log("[cron] conversas paradas apagadas:", r.apagadas))
       .catch((e) => console.error("[cron] limpeza da Central", e instanceof Error ? e.message : e));
+    // contas que terminaram o teste há 2 dias, receberam mensagem, não responderam e não cadastraram nada
+    await limparContasAbandonadas(admin).catch((e) => console.error("[cron] limpeza de contas", e instanceof Error ? e.message : e));
   }
 
   const agora = new Date();
