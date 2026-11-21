@@ -5,17 +5,21 @@ import { paraAudioDeVoz, SemConversor } from "@/features/whatsapp/audio";
 import { erroDeJanela } from "@/features/whatsapp/janela";
 import { enviarMidia, subirMidia } from "@/features/whatsapp/meta";
 import { BUCKET_WHATSAPP, extensaoDe, rotuloMidia } from "@/features/whatsapp/midia";
+import { paraVideoDoWhatsapp, VideoInvalido } from "@/features/whatsapp/video";
 
 export const dynamic = "force-dynamic";
 
 /*
  * Central do WhatsApp: mandar foto, áudio gravado ou documento (13/11/2026). Só admin.
- * Corpo multipart: telefone, tipo ("imagem" | "audio" | "documento"), legenda (opcional), arquivo.
+ * Corpo multipart: telefone, tipo ("imagem" | "audio" | "video" | "documento"), legenda (opcional), arquivo.
  * Foto chega já em JPEG (a Central converte e reduz no navegador). Áudio é convertido para áudio de voz (OGG/Opus).
+ * Vídeo (21/11/2026) é convertido para MP4 H.264 de até 16 MB, que é o que a Meta aceita (features/whatsapp/video.ts).
  * Vai para a Meta, fica guardado no bucket privado (para a Central mostrar) e o robô sai da conversa.
  */
 
-const LIMITE = 10 * 1024 * 1024; // o nginx aceita até 10 MB
+const LIMITE = 10 * 1024 * 1024;
+/** Vídeo de celular é grande: chega até 64 MB (o nginx precisa aceitar) e sai convertido com até 16 MB. */
+const LIMITE_VIDEO = 64 * 1024 * 1024;
 const TIPOS_DOCUMENTO = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "text/plain"];
 
 function erro(texto: string, status = 400) {
@@ -29,14 +33,16 @@ export async function POST(request: NextRequest) {
   try {
     form = await request.formData();
   } catch {
-    return erro("Arquivo grande demais ou envio interrompido (máximo 10 MB).");
+    return erro("Arquivo grande demais ou envio interrompido (máximo 10 MB; vídeo, 64 MB).");
   }
   const telefone = String(form.get("telefone") ?? "").replace(/\D/g, "");
   const tipo = String(form.get("tipo") ?? "");
   const legenda = String(form.get("legenda") ?? "").trim().slice(0, 1000);
   const arquivo = form.get("arquivo");
-  if (!telefone || !(arquivo instanceof File) || !["imagem", "audio", "documento"].includes(tipo)) return erro("Envio incompleto.");
-  if (arquivo.size > LIMITE) return erro("Arquivo grande demais (máximo 10 MB).");
+  if (!telefone || !(arquivo instanceof File) || !["imagem", "audio", "video", "documento"].includes(tipo)) return erro("Envio incompleto.");
+  if (tipo === "video" ? arquivo.size > LIMITE_VIDEO : arquivo.size > LIMITE) {
+    return erro(tipo === "video" ? "Vídeo grande demais (máximo 64 MB). Mande um trecho menor." : "Arquivo grande demais (máximo 10 MB).");
+  }
 
   const admin = criarClienteAdmin();
   const janela = await erroDeJanela(admin, telefone);
@@ -48,6 +54,19 @@ export async function POST(request: NextRequest) {
 
   if (tipo === "imagem" && !["image/jpeg", "image/png"].includes(mime)) return erro("Mande a foto em JPG ou PNG.");
   if (tipo === "documento" && !TIPOS_DOCUMENTO.includes(mime)) return erro("Esse tipo de arquivo não vai pelo WhatsApp. Use PDF, Word, Excel ou texto.");
+  if (tipo === "video") {
+    if (!mime.startsWith("video/")) return erro("Esse arquivo não é um vídeo.");
+    try {
+      dados = await paraVideoDoWhatsapp(dados, mime);
+      mime = "video/mp4";
+      nome = "video.mp4";
+    } catch (e) {
+      if (e instanceof VideoInvalido) return erro(e.message);
+      if (e instanceof SemConversor) return erro("O conversor de vídeo (ffmpeg) não está instalado no servidor.", 500);
+      console.error("[whatsapp] vídeo", e);
+      return erro("Não consegui preparar o vídeo. Tente de novo.", 500);
+    }
+  }
   if (tipo === "audio") {
     try {
       dados = await paraAudioDeVoz(dados, mime);
@@ -62,7 +81,7 @@ export async function POST(request: NextRequest) {
 
   const mediaId = await subirMidia(dados, mime, nome);
   if (!mediaId) return erro("A Meta não aceitou o arquivo. Tente de novo; se continuar, me mande um print.", 502);
-  const tipoMeta = tipo === "imagem" ? "image" : tipo === "audio" ? "audio" : "document";
+  const tipoMeta = tipo === "imagem" ? "image" : tipo === "audio" ? "audio" : tipo === "video" ? "video" : "document";
   const wamid = await enviarMidia(telefone, tipoMeta, mediaId, { legenda, nome });
   if (wamid === null) return erro("A Meta não entregou a mensagem. Tente de novo; se continuar, me mande um print.", 502);
 
@@ -71,7 +90,7 @@ export async function POST(request: NextRequest) {
   const { error: erroBucket } = await admin.storage.from(BUCKET_WHATSAPP).upload(path, dados, { contentType: mime });
   if (erroBucket) console.error("[whatsapp] cópia da mídia enviada", erroBucket.message);
 
-  const tipoBanco = tipo as "imagem" | "audio" | "documento";
+  const tipoBanco = tipo as "imagem" | "audio" | "video" | "documento";
   await admin.from("whatsapp_mensagens").insert({
     telefone,
     de: "equipe",

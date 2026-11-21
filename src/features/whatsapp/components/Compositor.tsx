@@ -7,13 +7,16 @@ import { Button } from "@/components/ui/button";
 
 /*
  * Caixa de escrever da Central, no jeito do WhatsApp (13/11/2026):
- *  - clipe: foto (vai em JPEG, reduzida no navegador) ou documento, com legenda;
+ *  - clipe: foto (vai em JPEG, reduzida no navegador), vídeo (o servidor converte para o WhatsApp) ou documento, com legenda;
  *  - microfone (aparece quando não tem texto): grava, mostra o tempo, lixeira para desistir e seta para mandar;
  *  - texto: Enter manda, Shift+Enter quebra linha.
  * Foto, documento e áudio vão por /api/admin/whatsapp/enviar; o texto continua pela função de sempre.
  */
 
-type Anexo = { arquivo: File; tipo: "imagem" | "documento"; previa: string | null };
+type Anexo = { arquivo: File; tipo: "imagem" | "video" | "documento"; previa: string | null };
+
+/** Vídeo de celular é grande: o servidor aceita até 64 MB e converte para os 16 MB do WhatsApp. */
+const LIMITE_VIDEO_MB = 64;
 
 const LADO_MAXIMO = 1600;
 
@@ -33,7 +36,7 @@ async function fotoParaJpeg(arquivo: File): Promise<File> {
   return new File([blob], arquivo.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
 }
 
-async function enviarArquivo(telefone: string, tipo: "imagem" | "audio" | "documento", arquivo: Blob, nome: string, legenda = "") {
+async function enviarArquivo(telefone: string, tipo: "imagem" | "audio" | "video" | "documento", arquivo: Blob, nome: string, legenda = "") {
   const form = new FormData();
   form.append("telefone", telefone);
   form.append("tipo", tipo);
@@ -113,6 +116,9 @@ export function Compositor({
       if (arquivo.type.startsWith("image/")) {
         const jpeg = await fotoParaJpeg(arquivo);
         setAnexo({ arquivo: jpeg, tipo: "imagem", previa: URL.createObjectURL(jpeg) });
+      } else if (arquivo.type.startsWith("video/") || /\.(mp4|mov|3gp|webm|m4v)$/i.test(arquivo.name)) {
+        if (arquivo.size > LIMITE_VIDEO_MB * 1024 * 1024) throw new Error(`Vídeo grande demais (máximo ${LIMITE_VIDEO_MB} MB). Mande um trecho menor.`);
+        setAnexo({ arquivo, tipo: "video", previa: URL.createObjectURL(arquivo) });
       } else {
         if (arquivo.size > 10 * 1024 * 1024) throw new Error("Arquivo grande demais (máximo 10 MB).");
         setAnexo({ arquivo, tipo: "documento", previa: null });
@@ -126,6 +132,7 @@ export function Compositor({
 
   function enviarAnexo() {
     if (!anexo) return;
+    if (anexo.tipo === "video") toast.info("Enviando o vídeo. Ele é convertido para o WhatsApp, pode levar até 1 minuto.");
     void mandar(async () => {
       await enviarArquivo(telefone, anexo.tipo, anexo.arquivo, anexo.arquivo.name, legenda.trim());
       setAnexo(null);
@@ -191,7 +198,9 @@ export function Compositor({
     return (
       <div className="grid gap-2 rounded-2xl border bg-background p-2">
         <div className="flex items-center gap-3">
-          {anexo.previa ? (
+          {anexo.previa && anexo.tipo === "video" ? (
+            <video src={anexo.previa} muted playsInline preload="metadata" className="size-16 shrink-0 rounded-lg bg-black object-cover" />
+          ) : anexo.previa ? (
             // eslint-disable-next-line @next/next/no-img-element -- prévia local (blob:)
             <img src={anexo.previa} alt="Prévia da foto" className="size-16 shrink-0 rounded-lg object-cover" />
           ) : (
@@ -199,7 +208,9 @@ export function Compositor({
               <FileTextIcon className="size-7 text-muted-foreground" aria-hidden />
             </span>
           )}
-          <p className="min-w-0 flex-1 truncate text-sm font-medium">{anexo.tipo === "imagem" ? "Foto" : anexo.arquivo.name}</p>
+          <p className="min-w-0 flex-1 truncate text-sm font-medium">
+            {anexo.tipo === "imagem" ? "Foto" : anexo.tipo === "video" ? `Vídeo · ${(anexo.arquivo.size / 1024 / 1024).toFixed(1)} MB` : anexo.arquivo.name}
+          </p>
           <Button type="button" variant="ghost" size="icon" onClick={() => setAnexo(null)} disabled={enviando} aria-label="Tirar o anexo">
             <XIcon />
           </Button>
@@ -233,7 +244,7 @@ export function Compositor({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt"
+        accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt"
         className="hidden"
         onChange={escolher}
       />
@@ -244,7 +255,7 @@ export function Compositor({
         className="size-11 shrink-0 rounded-full text-muted-foreground"
         onClick={() => inputRef.current?.click()}
         disabled={enviando}
-        aria-label="Anexar foto ou documento"
+        aria-label="Anexar foto, vídeo ou documento"
       >
         <PaperclipIcon />
       </Button>

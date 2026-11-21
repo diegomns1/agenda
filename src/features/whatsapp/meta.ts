@@ -95,7 +95,7 @@ export async function subirMidia(dados: Buffer, mime: string, nome: string): Pro
 /** Manda foto, áudio ou documento já subido (subirMidia). Devolve o wamid ou null. */
 export async function enviarMidia(
   para: string,
-  tipo: "image" | "audio" | "document",
+  tipo: "image" | "audio" | "video" | "document",
   mediaId: string,
   extra: { legenda?: string; nome?: string } = {},
 ): Promise<string | null> {
