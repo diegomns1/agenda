@@ -16,7 +16,8 @@ import { responderAtendimento, type AnexoIA, type ModoAtendimento } from "./aten
 import { normalizar, numeroDeEmpresa, pareceRespostaAutomatica } from "./robo";
 import { apagarMidiaVelha, BUCKET_WHATSAPP, guardarMidiaRecebida, rotuloMidia } from "./midia";
 import { transcreverAudio } from "./transcrever";
-import { enviarBotoes, enviarTexto, mostrarDigitando } from "./meta";
+import { enviarBotoes, enviarTexto, enviarVideoPorLink, mostrarDigitando } from "./meta";
+import { VIDEO_INSTALAR } from "./videos";
 
 /*
  * O que acontece com cada mensagem que chega no WhatsApp oficial da Vaguinha (Central do WhatsApp, 11/11/2026).
@@ -567,6 +568,12 @@ async function atender(
   if (await chegouOutraDepois(admin, contato.telefone, wamid, 0)) return;
 
   await responder(admin, contato.telefone, r.texto);
+  // vídeo de como instalar o app, logo depois do texto que apresenta (21/11/2026)
+  if (r.videoInstalar) {
+    const wamidVideo = await enviarVideoPorLink(contato.telefone, VIDEO_INSTALAR.url, VIDEO_INSTALAR.legenda);
+    if (wamidVideo) await registrar(admin, contato.telefone, "robo", VIDEO_INSTALAR.registro, wamidVideo === "simulado" ? undefined : wamidVideo);
+    else await registrar(admin, contato.telefone, "sistema", "⚠️ A Meta não entregou o vídeo de como instalar o app");
+  }
   if (r.chamarEquipe) await chamarDiego(admin, contato, r.chamarEquipe);
 }
 

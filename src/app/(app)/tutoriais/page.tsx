@@ -57,6 +57,8 @@ export default async function PaginaTutoriais({ searchParams }: { searchParams: 
                         allowFullScreen
                       />
                     </div>
+                  ) : t.video && /\.mp4$/i.test(t.video) ? (
+                    <video src={t.video} controls playsInline preload="metadata" className="max-h-[70svh] w-full rounded-xl bg-black" />
                   ) : t.video ? (
                     <a href={t.video} target="_blank" rel="noopener" className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
                       <PlayCircleIcon className="size-4" aria-hidden />

@@ -85,7 +85,8 @@ export const TUTORIAIS: Tutorial[] = [
       "Android: abra no Chrome e toque em Instalar quando aparecer o aviso (ou menu ⋮ → Instalar app).",
       "Abra pelo ícone novo e, quando o celular perguntar, permita as notificações.",
     ],
-    video: null,
+    // o mesmo vídeo que a Serena manda no WhatsApp (features/whatsapp/videos.ts), 21/11/2026
+    video: "https://www.vaguinha.app/site/videos/instalar-app.mp4",
   },
   {
     id: "lembretes",

@@ -106,6 +106,11 @@ export async function enviarMidia(
   return chamarMetaComId({ to: para, type: tipo, [tipo]: conteudo });
 }
 
+/** Manda um vídeo que está num endereço público (a Meta baixa de lá). MP4 H.264/AAC até 16 MB. Devolve o wamid ou null. */
+export async function enviarVideoPorLink(para: string, link: string, legenda?: string): Promise<string | null> {
+  return chamarMetaComId({ to: para, type: "video", video: { link, ...(legenda ? { caption: legenda.slice(0, 1024) } : {}) } });
+}
+
 /**
  * Mensagem por MODELO aprovado pela Meta (WhatsApp Manager → Modelos de mensagem). É o único jeito de chamar
  * alguém que não escreveu nas últimas 24 h. `variaveis` preenche {{1}}, {{2}}... do corpo, na ordem.

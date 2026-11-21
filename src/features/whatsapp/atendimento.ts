@@ -7,6 +7,7 @@ import { primeiroNome } from "@/lib/texto";
 import type { Profile } from "@/types/database";
 import type { MensagemChat } from "@/features/assistente/tipos";
 import { CONHECIMENTO, LINK_CADASTRO } from "./conhecimento";
+import { VIDEO_INSTALAR, videoInstalarDisponivel } from "./videos";
 
 /*
  * Cérebro do WhatsApp oficial para quem NÃO está usando a assistente da agenda:
@@ -40,6 +41,8 @@ export type ResultadoAtendimento = {
   silencio?: boolean;
   chamarEquipe: string | null;
   mandouLink: boolean;
+  /** pediu para mandar o vídeo de como instalar o app (sai logo depois do texto) */
+  videoInstalar?: boolean;
   anotado: { nome?: string; ramo?: string };
   custoUsd: number;
 };
@@ -117,6 +120,18 @@ Se a pessoa for cliente de uma profissional (quer marcar horário com alguém), 
 e que ela deve falar direto com a profissional.`,
   suporte: `MODO SUPORTE. A pessoa já tem cadastro no Vaguinha. Ajude a usar o painel com base na BASE DE CONHECIMENTO.
 Se ela for do plano Premium e ainda não conectou a assistente, explique como conectar (Perfil → Assistente no WhatsApp).`,
+};
+
+/** Só existe para a Serena quando o vídeo está publicado (videos.ts). */
+const FERRAMENTA_VIDEO_INSTALAR: Anthropic.Beta.BetaTool = {
+  name: "enviar_video_instalar",
+  description:
+    "Manda para a pessoa um vídeo curto que mostra como colocar o Vaguinha na tela do celular (instalar como app, no Android e no iPhone) " +
+    "e liberar as notificações. Use quando ela perguntar como instalar, baixar o app, colocar na tela inicial, achar o app no celular " +
+    "ou quando os lembretes/notificações não chegam porque não instalou. Uma vez por conversa. O vídeo sai logo depois da sua mensagem: " +
+    "escreva só 1 frase curta apresentando (ex.: \"Te mandei um vídeo rapidinho mostrando como faz\"), sem repetir o passo a passo.",
+  strict: true,
+  input_schema: { type: "object", properties: {}, required: [], additionalProperties: false },
 };
 
 export const FERRAMENTAS_ATENDIMENTO: Anthropic.Beta.BetaTool[] = [
@@ -300,7 +315,7 @@ export async function responderAtendimento(e: EntradaAtendimento): Promise<Resul
         max_tokens: 4096, // inclui o raciocínio do Sonnet antes de responder
         output_config: { effort: "medium" },
         system,
-        tools: FERRAMENTAS_ATENDIMENTO,
+        tools: videoInstalarDisponivel() ? [...FERRAMENTAS_ATENDIMENTO, FERRAMENTA_VIDEO_INSTALAR] : FERRAMENTAS_ATENDIMENTO,
         messages: juntas,
       });
       tokens.entrada += msg.usage.input_tokens;
@@ -330,6 +345,14 @@ export async function responderAtendimento(e: EntradaAtendimento): Promise<Resul
           } else if (c.name === "enviar_link_cadastro") {
             resultado.mandouLink = true;
             saida = { link: LINK_CADASTRO };
+          } else if (c.name === "enviar_video_instalar") {
+            const jaMandou = e.historico.some((m) => m.papel === "assistente" && m.texto.includes(VIDEO_INSTALAR.registro));
+            if (jaMandou) {
+              saida = { erro: "O vídeo já foi mandado nesta conversa. Não mande de novo: explique em texto, curto, com o que está na base." };
+            } else {
+              resultado.videoInstalar = true;
+              saida = { ok: true, aviso: "O vídeo vai logo depois da sua mensagem. Escreva só 1 frase curta apresentando, sem o passo a passo." };
+            }
           } else if (c.name === "anotar_contato") {
             if (entrada.nome) resultado.anotado.nome = String(entrada.nome).slice(0, 80);
             if (entrada.ramo) resultado.anotado.ramo = String(entrada.ramo).slice(0, 80);
