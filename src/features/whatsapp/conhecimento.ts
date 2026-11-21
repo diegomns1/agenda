@@ -111,7 +111,12 @@ Empresa: DIG STUDIO CRIATIVO LTDA (CNPJ 64.540.250/0001-05), Ourinhos/SP.
 - Esqueceu a senha: na tela de login, "Esqueci minha senha".
 - Conta ainda não liberada: sair e entrar de novo no painel (se pediu confirmação de e-mail, procurar também no spam).
   Se mesmo assim aparecer "Falta pouco para liberar sua conta", ou a conta foi recusada/suspensa, chamar a equipe.
-- Instalar como app: no iPhone, Safari → Compartilhar → Adicionar à Tela de Início; no Android, aceitar o aviso de instalar.
+- Instalar como app: no iPhone, Safari → Compartilhar → Adicionar à Tela de Início; no Android, aceitar o aviso de instalar
+  (ou menu ⋮ do Chrome → "Instalar app"; em alguns celulares a opção se chama "Adicionar à tela inicial").
+  A opção só aparece com o Vaguinha aberto no próprio Chrome (não no navegador de dentro do Instagram ou do WhatsApp).
+- Liberar as notificações: abrir o Vaguinha pelo ícone novo da tela de início, ir em Lembretes e tocar em
+  "Ativar notificações neste aparelho", e tocar em Permitir quando o celular perguntar. No iPhone só funciona abrindo pelo
+  ícone da tela de início (pelo Safari não dá). Depois disso o aviso chega mesmo com o app fechado.
 - Lembretes não chegam: precisa ter o app adicionado à tela de início e permitir notificações.
 - Lembrete automático (Premium): no painel, tocar no sininho para abrir Lembretes → cartão "Lembrete pelo seu WhatsApp"
   → Conectar (com código, pelo próprio celular, ou com QR Code, pelo computador) → ligar "Mandar lembretes sozinha".

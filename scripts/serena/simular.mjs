@@ -160,6 +160,11 @@ async function rodar(c) {
     conversa.push({ de: "serena", texto: r.texto, avisos, equipe: r.chamarEquipe, link: r.mandouLink });
     if (r.chamarEquipe) equipe.push(r.chamarEquipe);
     historico.push({ papel: "voce", texto }, { papel: "assistente", texto: r.texto });
+    if (r.videoInstalar) {
+      // no servidor o vídeo de verdade sai logo depois do texto (features/whatsapp/videos.ts)
+      conversa.push({ de: "sistema", texto: "A Serena mandou um vídeo de 28 s mostrando como colocar o Vaguinha na tela do celular (Android e iPhone) e liberar as notificações" });
+      historico.push({ papel: "assistente", texto: "🎥 Vídeo: como colocar o Vaguinha na tela do celular" });
+    }
     if (r.anotado.nome) jaSabe.nome = r.anotado.nome;
     if (r.anotado.ramo) jaSabe.ramo = r.anotado.ramo;
     if (r.chamarEquipe) jaSabe.equipeChamada = true;
