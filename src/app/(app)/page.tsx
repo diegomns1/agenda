@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BellIcon, BriefcaseIcon, CalendarDaysIcon, CalendarPlusIcon, ChartColumnIcon, ChevronRightIcon, UserRoundPenIcon, type LucideIcon } from "lucide-react";
-import { termosDoRamo } from "@/lib/ramos";
+import { obterRamo, termosDoRamo } from "@/lib/ramos";
+import { SERVICOS_SUGERIDOS } from "@/features/servicos/schema";
+import { ComecarComSugeridos } from "@/features/servicos/components/ComecarComSugeridos";
 import { listarVagas } from "@/features/relatorios/vagas";
 import { resumoDoMes } from "@/features/relatorios/dados";
 import { VagasAbertas } from "@/features/relatorios/components/VagasAbertas";
@@ -126,6 +128,14 @@ export default async function PaginaHoje() {
           </Link>
         ) : null}
       </section>
+
+      {/* sem nenhum serviço: os do ramo dela, com um toque (o primeiro passo que mais travava) */}
+      {nServicos === 0 ? (
+        <ComecarComSugeridos
+          sugestoes={obterRamo(perfil?.ramo)?.sugestoes ?? SERVICOS_SUGERIDOS}
+          ramo={obterRamo(perfil?.ramo)?.nome.toLowerCase() ?? null}
+        />
+      ) : null}
 
       <PrimeirosPassos passos={passos} estado={estadoPassos} />
 

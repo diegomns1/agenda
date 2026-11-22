@@ -11,7 +11,9 @@ import { URL_APP } from "@/lib/constantes";
 import { VERSAO_TERMOS } from "@/lib/legal";
 import { OUTRO_RAMO, obterRamo } from "@/lib/ramos";
 import { emailDoAdmin, enviarEmail } from "@/lib/email";
-import { aprovacaoAutomatica } from "./aprovacao";
+import { aprovacaoAutomatica, aprovarTesteAutomatico } from "./aprovacao";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
+import type { Profile } from "@/types/database";
 import { emailCadastroRecebido, emailNovoCadastroAdmin } from "@/features/emails/modelos";
 import { valoresDoForm, type EstadoForm } from "@/components/formulario/tipos";
 import {
@@ -128,8 +130,16 @@ export async function cadastrar(_: EstadoForm, formData: FormData): Promise<Esta
     };
   }
 
-  // Com sessão (confirmação de e-mail desligada no Supabase): a tela avisa a Meta e o Google do cadastro e depois
-  // abre a agenda. Um redirect daqui pularia esse aviso (era por isso que a conversão do Google não aparecia).
+  // Com sessão (confirmação de e-mail desligada no Supabase), o teste é liberado AQUI (22/11/2026). Antes só era
+  // liberado quando o painel abria, e quem fechava a tela no segundo de espera ficava "Aguardando aprovação"
+  // sem conseguir usar. Se falhar, o caminho antigo (primeira entrada no painel) continua valendo.
+  if (automatica && novoId) {
+    const { data: perfilNovo } = await criarClienteAdmin().from("profiles").select("*").eq("id", novoId).maybeSingle();
+    await aprovarTesteAutomatico(perfilNovo as Profile | null).catch((e) => console.error("[cadastro] liberar teste", e));
+  }
+
+  // A tela avisa a Meta e o Google do cadastro e depois abre a agenda. Um redirect daqui pularia esse aviso
+  // (era por isso que a conversão do Google não aparecia).
   return { ok: true, mensagem: "Cadastro feito! Abrindo a sua agenda...", destino: "/" };
 }
 
