@@ -5,6 +5,7 @@ import { asaasConfigurado, ambienteAsaas, ErroAsaas, obterAssinatura } from "@/l
 import { formatarDataISO, hojeISO } from "@/lib/datas";
 import { PLANOS } from "@/lib/planos";
 import { listarCobrancas } from "@/features/assinatura/queries";
+import { mensalidadeAPagar } from "@/features/assinatura/regras";
 import { EscolherPlano } from "@/features/assinatura/components/EscolherPlano";
 import { HistoricoCobrancas } from "@/features/assinatura/components/HistoricoCobrancas";
 import { AcoesAssinatura } from "@/features/assinatura/components/AcoesAssinatura";
@@ -38,10 +39,8 @@ export default async function PaginaAssinatura() {
   const hoje = hojeISO();
   const emTeste = perfil.plano === "teste";
   const planoAtual = PLANOS[perfil.plano];
-  // mensalidade em aberto (as da assinatura encerrada não valem mais: o link delas não existe)
-  const pendente = cobrancas.find(
-    (c) => (c.status === "PENDING" || c.status === "OVERDUE") && !(encerrada && c.assinatura_id === perfil.asaas_subscription_id),
-  );
+  // mensalidade em aberto que vence primeiro (as da assinatura encerrada não valem mais: o link delas não existe)
+  const pendente = mensalidadeAPagar(cobrancas.filter((c) => !(encerrada && c.assinatura_id === perfil.asaas_subscription_id)));
 
   return (
     <div className="grid gap-5">
@@ -112,7 +111,7 @@ export default async function PaginaAssinatura() {
             formaAtual={formaAtual}
           />
           <AcoesAssinatura temAssinatura={temAssinatura} ativaAte={perfil.ativa_ate} />
-          <HistoricoCobrancas cobrancas={cobrancas} />
+          <HistoricoCobrancas cobrancas={cobrancas} aPagar={pendente?.id ?? null} hoje={hoje} />
           {ambienteAsaas() === "sandbox" ? (
             <p className="text-xs text-muted-foreground">Ambiente de testes do Asaas: nenhuma cobrança real é feita.</p>
           ) : null}

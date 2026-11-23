@@ -1,5 +1,5 @@
 import { ExternalLinkIcon } from "lucide-react";
-import { formaDePagamento, rotuloStatusCobranca } from "@/features/assinatura/regras";
+import { cobrancaEmAberto, formaDePagamento, rotuloStatusCobranca } from "@/features/assinatura/regras";
 import { formatarData, formatarDataISO } from "@/lib/datas";
 import { PLANOS } from "@/lib/planos";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,14 @@ const TOM = {
   neutro: "bg-muted text-muted-foreground",
 };
 
-export function HistoricoCobrancas({ cobrancas }: { cobrancas: Cobranca[] }) {
+type Props = {
+  cobrancas: Cobranca[];
+  /** a mensalidade que vence primeiro: só ela (e as já vencidas) ganha o botão Pagar, para ninguém pagar a do mês seguinte no lugar */
+  aPagar: string | null;
+  hoje: string;
+};
+
+export function HistoricoCobrancas({ cobrancas, aPagar, hoje }: Props) {
   return (
     <Card>
       <CardHeader>
@@ -37,7 +44,7 @@ export function HistoricoCobrancas({ cobrancas }: { cobrancas: Cobranca[] }) {
                     </p>
                   </div>
                   <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", TOM[s.tom])}>{s.texto}</span>
-                  {c.link && (c.status === "PENDING" || c.status === "OVERDUE") ? (
+                  {c.link && cobrancaEmAberto(c.status) && (c.id === aPagar || c.vencimento <= hoje) ? (
                     <a href={c.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-primary underline underline-offset-4">
                       <ExternalLinkIcon className="size-3.5" />
                       Pagar

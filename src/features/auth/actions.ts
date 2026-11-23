@@ -100,12 +100,14 @@ export async function cadastrar(_: EstadoForm, formData: FormData): Promise<Esta
   });
   if (error) return { erro: traduzirErroAuth(error.message), valores };
 
-  // Anúncios: guarda de onde veio e manda o Lead à Meta (depois de responder, sem atrasar o cadastro)
+  // Anúncios: guarda de onde veio e manda o Lead à Meta (sem esperar, para não atrasar o cadastro)
   const novoId = data.user?.id;
+  let registro: Promise<unknown> | undefined;
   if (novoId) {
     const origem = await origemDoPedido();
     const eventoId = String(formData.get("evento_id") ?? "").slice(0, 64) || null;
-    after(() => registrarCadastro(novoId, origem, eventoId).catch((e) => console.error("[meta] cadastro", e)));
+    registro = registrarCadastro(novoId, origem, eventoId).catch((e) => console.error("[meta] cadastro", e));
+    after(() => registro);
   }
 
   // E-mails de aviso (não bloqueiam o cadastro se falharem ou não estiverem configurados)
@@ -135,7 +137,7 @@ export async function cadastrar(_: EstadoForm, formData: FormData): Promise<Esta
   // sem conseguir usar. Se falhar, o caminho antigo (primeira entrada no painel) continua valendo.
   if (automatica && novoId) {
     const { data: perfilNovo } = await criarClienteAdmin().from("profiles").select("*").eq("id", novoId).maybeSingle();
-    await aprovarTesteAutomatico(perfilNovo as Profile | null).catch((e) => console.error("[cadastro] liberar teste", e));
+    await aprovarTesteAutomatico(perfilNovo as Profile | null, registro).catch((e) => console.error("[cadastro] liberar teste", e));
   }
 
   // A tela avisa a Meta e o Google do cadastro e depois abre a agenda. Um redirect daqui pularia esse aviso

@@ -42,7 +42,13 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
     const r = (await assinar(prev, fd)) as Resultado;
     if (r.ok) {
       toast.success(r.mensagem);
-      if (r.linkPagamento) window.open(r.linkPagamento, "_blank", "noopener");
+      if (r.linkPagamento) {
+        // No celular o navegador costuma bloquear a aba nova aberta depois da espera do servidor: aí o pagamento
+        // abre nesta mesma tela (sem "noopener" de propósito: com ele, window.open devolve sempre null).
+        const aba = window.open(r.linkPagamento, "_blank");
+        if (aba) aba.opener = null;
+        else window.location.assign(r.linkPagamento);
+      }
     } else if (r.erro) {
       toast.error(r.erro);
     }
@@ -171,7 +177,7 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
             {mesmoPlano ? <span className="text-xs text-muted-foreground">Este já é o seu plano.</span> : null}
           </div>
           <p className="text-xs text-muted-foreground">
-            A página de pagamento abre em uma nova aba: {forma === "PIX" ? "QR Code e Pix copia-e-cola" : "tela segura do Asaas para digitar o cartão"}. Depois
+            Ao tocar no botão, a página de pagamento abre: {forma === "PIX" ? "QR Code e Pix copia-e-cola" : "tela segura do Asaas para digitar o cartão"}. Depois
             de pagar, volte aqui: a confirmação costuma levar menos de um minuto.
           </p>
         </form>

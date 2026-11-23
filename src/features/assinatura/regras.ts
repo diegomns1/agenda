@@ -85,6 +85,20 @@ export function rotuloStatusCobranca(status: string): { texto: string; tom: "ok"
   }
 }
 
+export function cobrancaEmAberto(status: string) {
+  return status === "PENDING" || status === "OVERDUE";
+}
+
+/**
+ * A mensalidade que a pessoa deve pagar AGORA: a em aberto que vence primeiro (23/11/2026).
+ * O Asaas já gera a do mês seguinte junto com a primeira. Como a lista vem da mais nova para a mais antiga, a tela
+ * mostrava a do mês que vem: quem acabava de assinar lia "vencimento daqui a um mês" e não pagava (e houve quem
+ * pagasse a do mês seguinte, deixando a primeira vencida).
+ */
+export function mensalidadeAPagar<T extends { status: string; vencimento: string }>(cobrancas: T[]): T | null {
+  return cobrancas.filter((c) => cobrancaEmAberto(c.status)).sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0] ?? null;
+}
+
 export function cobrancaPaga(status: string) {
   return status === "RECEIVED" || status === "CONFIRMED" || status === "RECEIVED_IN_CASH";
 }

@@ -22,8 +22,10 @@ export function aprovacaoAutomatica() {
 /**
  * Libera o teste grátis de uma conta pendente. Só vale para conta nova: pendente, plano Teste e sem validade
  * (quem foi recusada ou suspensa não passa por aqui). Devolve true se liberou agora.
+ * `esperar`: no cadastro, o registro da origem (que manda o Lead). O StartTrial precisa vir DEPOIS dele: sem a origem
+ * gravada não há consentimento e o evento não sai, e os dois ao mesmo tempo apagavam a marca um do outro (23/11/2026).
  */
-export async function aprovarTesteAutomatico(perfil: Profile | null): Promise<boolean> {
+export async function aprovarTesteAutomatico(perfil: Profile | null, esperar?: Promise<unknown>): Promise<boolean> {
   if (!aprovacaoAutomatica() || !perfil) return false;
   if (perfil.status !== "pendente" || perfil.plano !== "teste" || perfil.ativa_ate) return false;
 
@@ -45,6 +47,7 @@ export async function aprovarTesteAutomatico(perfil: Profile | null): Promise<bo
   if (!data?.length) return false;
 
   after(async () => {
+    await esperar;
     // Anúncios: StartTrial na Meta (entrou no painel = lead que começou o teste)
     await registrarAprovacao(perfil.id).catch((e) => console.error("[meta] aprovação", e));
     // Boas-vindas com a data final do teste e o primeiro passo
