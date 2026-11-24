@@ -4,8 +4,8 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { CheckIcon, MessageCircleIcon, UndoIcon } from "lucide-react";
 import { marcarClienteAvisada } from "@/features/lembretes/actions";
-import { linkMensagem } from "@/features/lembretes/mensagem";
-import type { Mensagens } from "@/features/mensagens/modelos";
+import { LinkWhatsApp } from "@/features/mensagens/components/LinkWhatsApp";
+import { montarMensagemDoAtendimento, type Mensagens } from "@/features/mensagens/modelos";
 import { Button } from "@/components/ui/button";
 import type { Agendamento } from "@/types/database";
 
@@ -59,15 +59,14 @@ export function BotaoLembrarCliente({ agendamento, telefone, mensagens, tamanho 
 
   return (
     <Button asChild size={tamanho} variant={destaque ? "default" : "outline"} className={className} disabled={pendente}>
-      <a
-        href={linkMensagem(telefone, mensagens.modelos.lembrete, agendamento, mensagens.contexto)}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => marcar(true)}
+      <LinkWhatsApp
+        telefone={telefone}
+        mensagem={montarMensagemDoAtendimento(mensagens.modelos.lembrete, agendamento, mensagens.contexto)}
+        aoAbrir={() => marcar(true)}
       >
         <MessageCircleIcon className={destaque ? undefined : "text-whatsapp"} />
         Enviar lembrete
-      </a>
+      </LinkWhatsApp>
     </Button>
   );
 }

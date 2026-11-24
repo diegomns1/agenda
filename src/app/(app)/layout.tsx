@@ -9,6 +9,7 @@ import { RegistroSW } from "@/components/pwa/RegistroSW";
 import { AvisoInstalar } from "@/components/pwa/AvisoInstalar";
 import { BotaoAssistente } from "@/features/assistente/components/BotaoAssistente";
 import { estadoWhatsApp } from "@/features/whatsapp/estado";
+import { EscolherWhatsApp } from "@/features/mensagens/components/EscolherWhatsApp";
 import { AvisoAoEntrar } from "@/features/novidades/components/AvisoAoEntrar";
 import { dataDe, diasEntre, hojeISO } from "@/lib/datas";
 
@@ -50,6 +51,7 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
       <BarraLateral bloqueados={bloqueados} />
       <BotaoAssistente estado={whatsapp} />
       <AvisoAoEntrar usuarioId={perfil.id} hoje={hoje} diasDeTeste={diasDeTeste} contaCriadaEm={dataDe(perfil.created_at)} />
+      <EscolherWhatsApp />
       <RegistroSW />
     </div>
   );

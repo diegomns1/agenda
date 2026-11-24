@@ -9,7 +9,8 @@ import { iniciais } from "@/lib/texto";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatarData } from "@/lib/datas";
-import { formatarTelefone, linkWhatsApp } from "@/lib/telefone";
+import { formatarTelefone } from "@/lib/telefone";
+import { LinkWhatsApp } from "@/features/mensagens/components/LinkWhatsApp";
 
 export const metadata: Metadata = { title: "Cliente" };
 
@@ -51,10 +52,10 @@ export default async function PaginaCliente({ params }: PageProps<"/clientes/[id
             <>
               <span className="text-base">{formatarTelefone(cliente.telefone)}</span>
               <Button asChild variant="outline" size="sm">
-                <a href={linkWhatsApp(cliente.telefone)} target="_blank" rel="noopener noreferrer">
+                <LinkWhatsApp telefone={cliente.telefone}>
                   <MessageCircleIcon />
                   Abrir conversa
-                </a>
+                </LinkWhatsApp>
               </Button>
             </>
           ) : (

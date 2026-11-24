@@ -21,6 +21,12 @@ export type Novidade = {
 
 export const NOVIDADES: Novidade[] = [
   {
+    data: "2026-11-24",
+    titulo: "Escolha por qual WhatsApp mandar",
+    texto: "Tem o WhatsApp normal e o Business no mesmo celular? Agora o painel pergunta qual abrir e lembra da sua escolha.",
+    acao: { href: "/mensagens", rotulo: "Escolher agora" },
+  },
+  {
     data: "2026-11-16",
     titulo: "Planos R$ 10 mais baratos",
     texto: "O Essencial agora custa R$ 19,90, o Profissional R$ 29,90 e o Premium R$ 49,90 por mês.",

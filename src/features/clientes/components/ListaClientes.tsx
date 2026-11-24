@@ -9,7 +9,8 @@ import { FormCliente } from "./FormCliente";
 import { EstadoVazio } from "@/components/layout/EstadoVazio";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { formatarTelefone, linkWhatsApp } from "@/lib/telefone";
+import { LinkWhatsApp } from "@/features/mensagens/components/LinkWhatsApp";
+import { formatarTelefone } from "@/lib/telefone";
 import { iniciais } from "@/lib/texto";
 import type { Cliente } from "@/types/database";
 
@@ -73,9 +74,9 @@ export function ListaClientes({ clientes, total, busca }: Props) {
               </Link>
               {c.telefone ? (
                 <Button asChild variant="ghost" size="icon" className="size-toque text-whatsapp sm:size-toque" aria-label={`Abrir WhatsApp de ${c.nome}`}>
-                  <a href={linkWhatsApp(c.telefone)} target="_blank" rel="noopener noreferrer">
+                  <LinkWhatsApp telefone={c.telefone}>
                     <IconeWhatsApp className="size-5" />
-                  </a>
+                  </LinkWhatsApp>
                 </Button>
               ) : null}
             </li>

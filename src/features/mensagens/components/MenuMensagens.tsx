@@ -5,8 +5,8 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { CheckIcon, ChevronDownIcon, PencilLineIcon } from "lucide-react";
 import { marcarClienteAvisada } from "@/features/lembretes/actions";
-import { linkMensagem } from "@/features/lembretes/mensagem";
-import { SITUACOES, type Mensagens, type TipoMensagem } from "@/features/mensagens/modelos";
+import { abrirWhatsApp } from "@/features/mensagens/abrirWhatsApp";
+import { montarMensagemDoAtendimento, SITUACOES, type Mensagens, type TipoMensagem } from "@/features/mensagens/modelos";
 import { IconeWhatsApp } from "@/components/marca/IconeWhatsApp";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { linkWhatsApp } from "@/lib/telefone";
 import type { Agendamento } from "@/types/database";
 
 type Props = {
@@ -64,24 +63,25 @@ export function MenuMensagens({ agendamento: a, telefone, mensagens, className }
       <DropdownMenuContent align="start" className="w-64">
         <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Abre o WhatsApp com o texto pronto</DropdownMenuLabel>
         {opcoes(a).map((tipo) => (
-          <DropdownMenuItem key={tipo} asChild className="min-h-toque gap-2.5 text-destaque">
-            <a
-              href={linkMensagem(telefone, mensagens.modelos[tipo], a, mensagens.contexto)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => aoEnviar(tipo)}
-            >
-              <span aria-hidden>{SITUACOES[tipo].emoji}</span>
-              {SITUACOES[tipo].rotulo}
-              {tipo === "lembrete" && avisada ? <CheckIcon className="ml-auto size-4 text-sucesso-forte" aria-label="já enviado" /> : null}
-            </a>
+          <DropdownMenuItem
+            key={tipo}
+            className="min-h-toque gap-2.5 text-destaque"
+            onSelect={() =>
+              abrirWhatsApp({
+                telefone,
+                mensagem: montarMensagemDoAtendimento(mensagens.modelos[tipo], a, mensagens.contexto),
+                aoAbrir: () => aoEnviar(tipo),
+              })
+            }
+          >
+            <span aria-hidden>{SITUACOES[tipo].emoji}</span>
+            {SITUACOES[tipo].rotulo}
+            {tipo === "lembrete" && avisada ? <CheckIcon className="ml-auto size-4 text-sucesso-forte" aria-label="já enviado" /> : null}
           </DropdownMenuItem>
         ))}
-        <DropdownMenuItem asChild className="min-h-toque gap-2.5 text-destaque">
-          <a href={linkWhatsApp(telefone)} target="_blank" rel="noopener noreferrer">
-            <span aria-hidden>💬</span>
-            Conversa em branco
-          </a>
+        <DropdownMenuItem className="min-h-toque gap-2.5 text-destaque" onSelect={() => abrirWhatsApp({ telefone })}>
+          <span aria-hidden>💬</span>
+          Conversa em branco
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="min-h-toque gap-2.5 text-sm text-muted-foreground">

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { obterPerfil } from "@/lib/auth";
 import { URL_APP } from "@/lib/constantes";
 import { EditorMensagens } from "@/features/mensagens/components/EditorMensagens";
+import { PreferenciaWhatsApp } from "@/features/mensagens/components/PreferenciaWhatsApp";
 import { contextoDoPerfil, modeloPadrao, TIPOS_MENSAGEM, todosOsModelos, type TipoMensagem } from "@/features/mensagens/modelos";
 
 export const metadata: Metadata = { title: "Mensagens" };
@@ -21,6 +22,7 @@ export default async function PaginaMensagens() {
           Monte os textos do seu jeito, com emoji e tudo. Nome, dia, hora, serviço, valor e endereço entram sozinhos na hora de enviar.
         </p>
       </div>
+      <PreferenciaWhatsApp />
       <EditorMensagens modelos={todosOsModelos(perfil)} padroes={padroes} contexto={contextoDoPerfil(perfil, URL_APP)} />
     </div>
   );
