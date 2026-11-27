@@ -115,7 +115,8 @@ export const TUTORIAIS: Tutorial[] = [
       "As mensagens saem entre 7h e 21h, com um intervalo entre uma e outra. Você continua usando o WhatsApp normalmente.",
       "Essa conexão não é oficial do WhatsApp. Por isso a Vaguinha manda poucas mensagens e só para quem tem horário marcado. Dá para desligar quando quiser.",
     ],
-    video: null,
+    // vídeo "Conecte seu WhatsApp" (27/11/2026): vai junto quando o Diego manda este tutorial pela Central
+    video: "https://www.vaguinha.app/site/videos/lembrete-automatico.mp4",
     acao: { href: "/lembretes", rotulo: "Conectar meu WhatsApp" },
   },
   {
