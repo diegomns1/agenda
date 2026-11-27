@@ -196,6 +196,13 @@ export async function obterPagamento(id: string) {
   return chamar<AsaasPagamento>(`/payments/${id}`);
 }
 
+/** Pix da cobrança: código copia-e-cola (payload) e QR em PNG base64 (encodedImage). */
+export type AsaasPix = { encodedImage: string; payload: string; expirationDate?: string };
+
+export async function obterPix(id: string) {
+  return chamar<AsaasPix>(`/payments/${encodeURIComponent(id)}/pixQrCode`);
+}
+
 /** Link da página de pagamento de uma cobrança (Pix copia-e-cola, boleto ou cartão). */
 export function linkDePagamento(p: AsaasPagamento) {
   return p.invoiceUrl ?? null;

@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { obterPerfil, situacaoDaConta } from "@/lib/auth";
-import { asaasConfigurado, ambienteAsaas, ErroAsaas, obterAssinatura } from "@/lib/asaas";
+import { asaasConfigurado, ambienteAsaas, ErroAsaas, obterAssinatura, obterPix } from "@/lib/asaas";
 import { formatarDataISO, hojeISO } from "@/lib/datas";
 import { PLANOS } from "@/lib/planos";
 import { listarCobrancas } from "@/features/assinatura/queries";
 import { mensalidadeAPagar } from "@/features/assinatura/regras";
 import { EscolherPlano } from "@/features/assinatura/components/EscolherPlano";
 import { HistoricoCobrancas } from "@/features/assinatura/components/HistoricoCobrancas";
+import { PagarComPix } from "@/features/assinatura/components/PagarComPix";
 import { AcoesAssinatura } from "@/features/assinatura/components/AcoesAssinatura";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,8 @@ export default async function PaginaAssinatura() {
   const planoAtual = PLANOS[perfil.plano];
   // mensalidade em aberto que vence primeiro (as da assinatura encerrada não valem mais: o link delas não existe)
   const pendente = mensalidadeAPagar(cobrancas.filter((c) => !(encerrada && c.assinatura_id === perfil.asaas_subscription_id)));
+  // mensalidade por Pix: o código aparece aqui mesmo (abrir a página do Asaas falhava no celular)
+  const pix = pendente && pendente.forma === "PIX" && configurado ? await obterPix(pendente.asaas_id).catch(() => null) : null;
 
   return (
     <div className="grid gap-5">
@@ -74,11 +77,22 @@ export default async function PaginaAssinatura() {
                   : "Sem data de término definida."}
           </CardDescription>
         </CardHeader>
-        {pendente ? (
+        {pendente && pix?.payload ? (
+          <CardContent>
+            <PagarComPix
+              asaasId={pendente.asaas_id}
+              valor={Number(pendente.valor)}
+              vencimento={pendente.vencimento}
+              codigo={pix.payload}
+              qr={pix.encodedImage ?? null}
+              link={pendente.link}
+            />
+          </CardContent>
+        ) : pendente ? (
           <CardContent>
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-aviso-borda/60 bg-aviso px-3 py-2.5 text-sm text-aviso-texto">
               <span>
-                Mensalidade de <strong>R$ {pendente.valor.toFixed(2).replace(".", ",")}</strong> com vencimento em{" "}
+                Mensalidade de <strong>R$ {Number(pendente.valor).toFixed(2).replace(".", ",")}</strong> com vencimento em{" "}
                 <strong>{formatarDataISO(pendente.vencimento)}</strong> aguardando pagamento.
               </span>
               {pendente.link ? (

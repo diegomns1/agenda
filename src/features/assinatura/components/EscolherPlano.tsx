@@ -42,7 +42,10 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
     const r = (await assinar(prev, fd)) as Resultado;
     if (r.ok) {
       toast.success(r.mensagem);
-      if (r.linkPagamento) {
+      if (r.linkPagamento && fd.get("forma") === "PIX") {
+        // Pix: o código aparece no topo desta tela (a página recarrega sozinha depois da ação)
+        setTimeout(() => document.getElementById("pagar-pix")?.scrollIntoView({ behavior: "smooth", block: "center" }), 400);
+      } else if (r.linkPagamento) {
         // No celular o navegador costuma bloquear a aba nova aberta depois da espera do servidor: aí o pagamento
         // abre nesta mesma tela (sem "noopener" de propósito: com ele, window.open devolve sempre null).
         const aba = window.open(r.linkPagamento, "_blank");
@@ -168,7 +171,7 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
             <BotaoEnviar className="w-auto px-6" textoCarregando="Gerando cobrança..." disabled={mesmoPlano}>
               {soTrocaForma ? "Trocar forma de pagamento" : temAssinatura ? `Mudar para ${PLANOS[plano].nome}` : `Assinar ${PLANOS[plano].nome}`}
             </BotaoEnviar>
-            {estado.ok && estado.linkPagamento ? (
+            {estado.ok && estado.linkPagamento && forma !== "PIX" ? (
               <a href={estado.linkPagamento} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-primary underline underline-offset-4">
                 <ExternalLinkIcon className="size-4" />
                 Abrir página de pagamento
@@ -177,8 +180,9 @@ export function EscolherPlano({ planoAtual, planoAssinado, cpfCnpj, temAssinatur
             {mesmoPlano ? <span className="text-xs text-muted-foreground">Este já é o seu plano.</span> : null}
           </div>
           <p className="text-xs text-muted-foreground">
-            Ao tocar no botão, a página de pagamento abre: {forma === "PIX" ? "QR Code e Pix copia-e-cola" : "tela segura do Asaas para digitar o cartão"}. Depois
-            de pagar, volte aqui: a confirmação costuma levar menos de um minuto.
+            {forma === "PIX"
+              ? "Ao tocar no botão, o código Pix aparece aqui mesmo: é só copiar e colar no app do banco. A confirmação costuma levar menos de um minuto."
+              : "Ao tocar no botão, abre a tela segura do Asaas para digitar o cartão. Depois de pagar, volte aqui: a confirmação costuma levar menos de um minuto."}
           </p>
         </form>
       </CardContent>

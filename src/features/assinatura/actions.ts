@@ -21,10 +21,11 @@ import {
   linkDePagamento,
   listarPagamentosDaAssinatura,
   obterAssinatura,
+  obterPagamento,
   type AsaasPagamento,
 } from "@/lib/asaas";
 import type { EstadoForm } from "@/components/formulario/tipos";
-import { cpfCnpjValido, ehPlanoAssinavel, normalizarCpfCnpj, type PlanoAssinavel } from "./regras";
+import { cobrancaPaga, cpfCnpjValido, ehPlanoAssinavel, normalizarCpfCnpj, type PlanoAssinavel } from "./regras";
 
 function revalidar() {
   revalidatePath("/assinatura");
@@ -193,6 +194,28 @@ export async function cancelarAssinatura(): Promise<EstadoForm> {
     ok: true,
     mensagem: perfil.ativa_ate ? `Assinatura cancelada. Seu acesso continua até a data já paga.` : "Assinatura cancelada.",
   };
+}
+
+/**
+ * A mensalidade já foi paga? (a tela do Pix pergunta de tempos em tempos). Só responde sobre cobrança da própria
+ * profissional: a busca na tabela passa pela RLS. Quem libera o acesso continua sendo o webhook do Asaas.
+ */
+export async function situacaoDaMensalidade(asaasId: string): Promise<{ paga: boolean }> {
+  const perfil = await obterPerfil();
+  if (!perfil || !asaasConfigurado()) return { paga: false };
+  const supabase = await criarClienteServidor();
+  const { data: cobranca } = await supabase.from("cobrancas").select("status, plano").eq("asaas_id", asaasId).maybeSingle();
+  if (!cobranca) return { paga: false };
+  if (cobrancaPaga(cobranca.status)) return { paga: true };
+  try {
+    const p = await obterPagamento(asaasId);
+    if (!cobrancaPaga(p.status)) return { paga: false };
+    await espelharCobranca(supabase, perfil.id, cobranca.plano, p);
+    revalidar();
+    return { paga: true };
+  } catch {
+    return { paga: false };
+  }
 }
 
 /** Busca no Asaas o estado atual das cobranças (botão "Atualizar" na página). */
