@@ -173,7 +173,7 @@ export function BotaoTutoriais({ contato, janelaAberta, aoEnviar }: { contato: C
   function mandar(id: string) {
     setEnviando(id);
     iniciar(async () => {
-      const r = await mandarTutorial(contato.telefone, id);
+      const r = await mandarTutorial(contato.telefone, id).catch(() => ({ ok: false, erro: "Sem conexão com o painel. Tente de novo." }));
       setEnviando(null);
       if (!r.ok) {
         toast.error(r.erro ?? "Não foi.");
