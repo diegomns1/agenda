@@ -4,6 +4,7 @@ import { STATUS_CONTA, type StatusConta } from "@/lib/constantes";
 import { contarPorStatus, listarContas } from "@/features/admin/queries";
 import { ListaContas } from "@/features/admin/components/ListaContas";
 import { NIVEL_USO, usoDasContas, type NivelUso } from "@/features/admin/uso";
+import { situacaoDosPagamentos } from "@/features/admin/pagamentos";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { BotaoChamarTodas, type ContaParaChamar } from "@/features/ativacao/components/BotoesAtivacao";
 import { CopiarLista } from "@/features/admin/components/CopiarLista";
@@ -22,18 +23,23 @@ function ehNivel(v: unknown): v is NivelUso {
   return typeof v === "string" && v in NIVEL_USO;
 }
 
-/** Endereço da lista com os filtros escolhidos (situação da conta, nível de uso e "teste acabou"). */
-function endereco(status?: StatusConta, nivel?: NivelUso, fim?: boolean) {
+type FiltroPagamento = "assinantes" | "aberto";
+
+/** Endereço da lista com os filtros escolhidos (situação da conta, nível de uso, "teste acabou" e pagamento). */
+function endereco(status?: StatusConta, nivel?: NivelUso, fim?: boolean, pg?: FiltroPagamento) {
   const q = new URLSearchParams();
   if (status) q.set("status", status);
   if (nivel) q.set("uso", nivel);
   if (fim) q.set("fim", "1");
+  if (pg) q.set("pg", pg);
   const texto = q.toString();
   return texto ? `/admin?${texto}` : "/admin";
 }
 
 export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">) {
-  const { status, uso: usoPedido, fim } = await searchParams;
+  const { status, uso: usoPedido, fim, pg } = await searchParams;
+  // "Assinantes" e "Pix em aberto" (27/11/2026)
+  const filtroPg: FiltroPagamento | undefined = pg === "assinantes" || pg === "aberto" ? pg : undefined;
   const filtro = ehStatus(status) ? status : undefined;
   // toque em "Usando", "Parou"...: mostra só as contas liberadas daquele nível
   const filtroUso = ehNivel(usoPedido) ? usoPedido : undefined;
@@ -58,6 +64,11 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
     if (e.canal === "whatsapp" && !ultimaNoZap.has(chave)) ultimaNoZap.set(chave, e.enviado_em);
   }
   const hoje = hojeISO();
+  const pagamentos = await situacaoDosPagamentos(criarClienteAdmin(), contas, hoje);
+  const ehAssinante = (id: string) => ["assinante", "atrasada"].includes(pagamentos.get(id)?.tipo ?? "");
+  const temAberto = (id: string) => Boolean(pagamentos.get(id)?.aberta);
+  const qtdAssinantes = contas.filter((c) => ehAssinante(c.id)).length;
+  const qtdAberto = contas.filter((c) => temAberto(c.id)).length;
   const paraChamar: ContaParaChamar[] = [];
   for (const c of contas) {
     const nivel = uso.get(c.id)?.nivel;
@@ -91,7 +102,8 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
   const contasDaLista = contas.filter(
     (c) =>
       (!filtroUso || (c.status === "aprovada" && uso.get(c.id)?.nivel === filtroUso)) &&
-      (!soTesteAcabou || testeAcabou(c)),
+      (!soTesteAcabou || testeAcabou(c)) &&
+      (!filtroPg || (filtroPg === "assinantes" ? ehAssinante(c.id) : temAberto(c.id))),
   );
   // para colar no WhatsApp ou numa planilha: nome e telefone de quem está na lista filtrada
   const textoDaLista = contasDaLista
@@ -124,7 +136,7 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
           return (
             <Link
               key={f.rotulo}
-              href={endereco(f.chave, filtroUso, soTesteAcabou)}
+              href={endereco(f.chave, filtroUso, soTesteAcabou, filtroPg)}
               className={cn(
                 "shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors",
                 ativo
@@ -147,7 +159,7 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
               <Link
                 key={n}
                 // tocar de novo no que já está escolhido tira o filtro
-                href={endereco(filtro, ativo ? undefined : n, soTesteAcabou)}
+                href={endereco(filtro, ativo ? undefined : n, soTesteAcabou, filtroPg)}
                 aria-current={ativo ? "true" : undefined}
                 title={`${NIVEL_USO[n].explica}. Toque para ver só estas contas.`}
                 className={cn(
@@ -163,7 +175,7 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
           })}
           {/* combina com os níveis: "Teste acabou" + "Só entrou" = acabou o teste e não mexeu em nada */}
           <Link
-            href={endereco(filtro, filtroUso, !soTesteAcabou)}
+            href={endereco(filtro, filtroUso, !soTesteAcabou, filtroPg)}
             aria-current={soTesteAcabou ? "true" : undefined}
             title="Contas no teste grátis que já passou da data e não assinaram. Toque de novo para tirar o filtro."
             className={cn(
@@ -173,15 +185,38 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
           >
             Teste acabou {qtdTesteAcabou}
           </Link>
-          {filtroUso || soTesteAcabou ? (
+          <Link
+            href={endereco(filtro, filtroUso, soTesteAcabou, filtroPg === "assinantes" ? undefined : "assinantes")}
+            aria-current={filtroPg === "assinantes" ? "true" : undefined}
+            title="Contas com pelo menos uma mensalidade paga. Toque de novo para tirar o filtro."
+            className={cn(
+              "inline-flex min-h-8 items-center rounded-full bg-sucesso px-3 font-semibold text-sucesso-texto transition-shadow hover:ring-2 hover:ring-foreground/15",
+              filtroPg === "assinantes" && "ring-2 ring-foreground/60",
+            )}
+          >
+            Assinantes {qtdAssinantes}
+          </Link>
+          <Link
+            href={endereco(filtro, filtroUso, soTesteAcabou, filtroPg === "aberto" ? undefined : "aberto")}
+            aria-current={filtroPg === "aberto" ? "true" : undefined}
+            title="Geraram a cobrança (Pix ou cartão) e ainda não pagaram. Toque de novo para tirar o filtro."
+            className={cn(
+              "inline-flex min-h-8 items-center rounded-full bg-aviso px-3 font-semibold text-aviso-texto transition-shadow hover:ring-2 hover:ring-foreground/15",
+              filtroPg === "aberto" && "ring-2 ring-foreground/60",
+            )}
+          >
+            Pagamento em aberto {qtdAberto}
+          </Link>
+          {filtroUso || soTesteAcabou || filtroPg ? (
             <Link href={endereco(filtro)} className="inline-flex min-h-8 items-center rounded-full border bg-background px-3 font-semibold text-muted-foreground hover:bg-muted">
               Ver todas
             </Link>
           ) : null}
         </div>
         <p className="text-xs text-muted-foreground">
-          {filtroUso || soTesteAcabou
+          {filtroUso || soTesteAcabou || filtroPg
             ? `Mostrando ${contasDaLista.length} conta${contasDaLista.length === 1 ? "" : "s"}: ${[
+                filtroPg === "assinantes" ? "assinantes" : filtroPg === "aberto" ? "pagamento em aberto" : null,
                 soTesteAcabou ? "teste grátis acabou" : null,
                 filtroUso ? `"${NIVEL_USO[filtroUso].rotulo}"` : null,
               ]
@@ -189,7 +224,7 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
                 .join(" e ")}.`
             : `Toque num dos níveis para ver só aquelas contas. ${qtdTesteAcabouSemUsar} conta${qtdTesteAcabouSemUsar === 1 ? "" : "s"} terminou o teste sem cadastrar nada: toque em "Teste acabou" e depois em "Só entrou".`}
         </p>
-        {(filtroUso || soTesteAcabou) && contasDaLista.length ? <CopiarLista texto={textoDaLista} quantas={contasDaLista.length} /> : null}
+        {(filtroUso || soTesteAcabou || filtroPg) && contasDaLista.length ? <CopiarLista texto={textoDaLista} quantas={contasDaLista.length} /> : null}
         <p className="text-xs text-muted-foreground">
           Usando = marcou 3 horários ou mais (ou recebeu pelo link) e mexeu nos últimos 3 dias. Configurando = cadastrou serviços ou
           clientes nos últimos 2 dias, mas ainda marca pouco. Parou = mexeu e depois não fez mais nada. Só entrou = não cadastrou nada.
@@ -204,7 +239,7 @@ export default async function PaginaAdmin({ searchParams }: PageProps<"/admin">)
         <BotaoChamarTodas contas={paraChamar} />
       </section>
 
-      <ListaContas contas={contasDaLista} uso={uso} chamadas={chamadas} />
+      <ListaContas contas={contasDaLista} uso={uso} chamadas={chamadas} pagamentos={pagamentos} />
     </div>
   );
 }

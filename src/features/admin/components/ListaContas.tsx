@@ -7,6 +7,7 @@ import { nomeDoRamo } from "@/lib/ramos";
 import type { Profile } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { NIVEL_USO, type UsoConta } from "../uso";
+import type { SituacaoPagamento } from "../pagamentos";
 import { BadgeStatus } from "./BadgeStatus";
 
 function haQuanto(iso: string | null) {
@@ -53,7 +54,41 @@ function LinhaUso({ u, chamada }: { u: UsoConta; chamada?: Chamada }) {
   );
 }
 
-export function ListaContas({ contas, uso, chamadas }: { contas: Profile[]; uso?: Map<string, UsoConta>; chamadas?: Map<string, Chamada> }) {
+const real = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+
+/** Selo de pagamento: assinante, mensalidade atrasada ou cobrança gerada e não paga (27/11/2026). */
+function LinhaPagamento({ s }: { s: SituacaoPagamento }) {
+  const selo =
+    s.tipo === "assinante"
+      ? { texto: "Assinante", tom: "bg-sucesso text-sucesso-texto" }
+      : s.tipo === "atrasada"
+        ? { texto: "Mensalidade atrasada", tom: "bg-destructive/10 text-destructive" }
+        : { texto: s.aberta?.forma === "PIX" ? "Pix gerado, não pago" : "Cobrança gerada, não paga", tom: "bg-aviso text-aviso-texto" };
+  const partes = [
+    s.escolheu ? `escolheu o ${PLANOS[s.escolheu].nome}` : null,
+    s.pagas ? `${plural(s.pagas, "mensalidade paga", "mensalidades pagas")} (${real(s.totalPago)})` : null,
+    s.aberta ? `${real(s.aberta.valor)} em aberto desde ${formatarDataISO(s.aberta.vencimento)}` : null,
+    s.trocaPara ? `trocou para ${PLANOS[s.trocaPara].nome}: vale a partir da próxima mensalidade` : null,
+  ].filter(Boolean);
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+      <span className={cn("rounded-full px-2 py-0.5 font-semibold", selo.tom)}>{selo.texto}</span>
+      <span className="text-muted-foreground">{partes.join(" · ")}</span>
+    </div>
+  );
+}
+
+export function ListaContas({
+  contas,
+  uso,
+  chamadas,
+  pagamentos,
+}: {
+  contas: Profile[];
+  uso?: Map<string, UsoConta>;
+  chamadas?: Map<string, Chamada>;
+  pagamentos?: Map<string, SituacaoPagamento>;
+}) {
   if (contas.length === 0) {
     return (
       <p className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
@@ -86,6 +121,7 @@ export function ListaContas({ contas, uso, chamadas }: { contas: Profile[]; uso?
                 {" · cadastro em "}
                 {formatarData(c.created_at, "dd/MM/yyyy")}
               </p>
+              {pagamentos?.get(c.id) ? <LinhaPagamento s={pagamentos.get(c.id)!} /> : null}
               {uso?.get(c.id) ? <LinhaUso u={uso.get(c.id)!} chamada={chamadas?.get(c.id)} /> : null}
             </div>
             <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />

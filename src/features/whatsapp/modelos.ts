@@ -5,7 +5,7 @@
  * Usado pela ativação automática (features/ativacao) e pelo botão "Mensagem pronta" da Central.
  */
 
-export type IdModelo = "ajuda_inicio" | "feedback_teste" | "parou" | "retomar_conversa";
+export type IdModelo = "ajuda_inicio" | "feedback_teste" | "parou" | "retomar_conversa" | "assinatura" | "pagamento_aberto";
 
 export type ModeloMensagem = {
   id: IdModelo;
@@ -42,6 +42,24 @@ export const MODELOS: Record<IdModelo, ModeloMensagem> = {
     para: "conta",
     texto: (nome) =>
       `Oi, ${nome}! Aqui é a Serena, da Vaguinha 😊 Vi que você começou a montar sua agenda e depois deu uma pausa. Ficou alguma dúvida ou faltou alguma coisa? Me responde aqui que eu te ajudo a terminar.`,
+  },
+  // cadastrado na Meta em 27/11/2026 (categoria Utilidade): para falar com quem mexeu na assinatura ou no pagamento
+  assinatura: {
+    id: "assinatura",
+    nome: "vaguinha_assinatura",
+    rotulo: "Falar sobre a assinatura",
+    para: "conta",
+    texto: (nome) =>
+      `Oi, ${nome}! Aqui é o Diego, da Vaguinha. Estou falando sobre a sua assinatura: vi uma mudança no seu plano e quero confirmar se ficou tudo certo para você. Pode me responder por aqui?`,
+  },
+  // cadastrado na Meta em 27/11/2026 (categoria Utilidade): gerou o Pix (ou a cobrança no cartão) e não pagou
+  pagamento_aberto: {
+    id: "pagamento_aberto",
+    nome: "vaguinha_pagamento_aberto",
+    rotulo: "Ajudar a concluir o pagamento",
+    para: "conta",
+    texto: (nome) =>
+      `Oi, ${nome}! Aqui é o Diego, da Vaguinha. Vi que você começou a assinatura, mas o pagamento não foi concluído. Teve alguma dificuldade? Me responde aqui que eu te ajudo a finalizar.`,
   },
   retomar_conversa: {
     id: "retomar_conversa",
