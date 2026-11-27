@@ -67,7 +67,11 @@ function LinhaPagamento({ s }: { s: SituacaoPagamento }) {
   const partes = [
     s.escolheu ? `escolheu o ${PLANOS[s.escolheu].nome}` : null,
     s.pagas ? `${plural(s.pagas, "mensalidade paga", "mensalidades pagas")} (${real(s.totalPago)})` : null,
-    s.aberta ? `${real(s.aberta.valor)} em aberto desde ${formatarDataISO(s.aberta.vencimento)}` : null,
+    s.aberta
+      ? s.tipo === "assinante"
+        ? `cobrança de ${formatarDataISO(s.aberta.vencimento)} sobrando no Asaas (o acesso está pago): apague ou mude o vencimento lá`
+        : `${real(s.aberta.valor)} em aberto desde ${formatarDataISO(s.aberta.vencimento)}`
+      : null,
     s.trocaPara ? `trocou para ${PLANOS[s.trocaPara].nome}: vale a partir da próxima mensalidade` : null,
   ].filter(Boolean);
   return (

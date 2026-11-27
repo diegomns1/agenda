@@ -23,7 +23,13 @@ export type SituacaoPagamento = {
 };
 
 type Admin = ReturnType<typeof criarClienteAdmin>;
-type PerfilBase = { id: string; plano: Plano; plano_assinado: Exclude<Plano, "teste"> | null; asaas_subscription_id: string | null };
+type PerfilBase = {
+  id: string;
+  plano: Plano;
+  ativa_ate: string | null;
+  plano_assinado: Exclude<Plano, "teste"> | null;
+  asaas_subscription_id: string | null;
+};
 
 export async function situacaoDosPagamentos(admin: Admin, perfis: PerfilBase[], hoje: string) {
   const { data } = await admin.from("cobrancas").select("profissional_id, status, valor, vencimento, forma").limit(5000);
@@ -44,8 +50,11 @@ export async function situacaoDosPagamentos(admin: Admin, perfis: PerfilBase[], 
         .filter((c) => cobrancaEmAberto(c.status) && c.vencimento <= hoje)
         .sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0] ?? null;
     if (!pagas.length && !aberta) continue;
+    // "Atrasada" só quando o acesso pago já acabou. Com acesso em dia, a cobrança vencida é sobra no Asaas
+    // (ex.: pagou a do mês seguinte no lugar da primeira) e aparece como aviso, não como atraso.
+    const acessoEmDia = Boolean(p.ativa_ate && p.ativa_ate >= hoje);
     situacao.set(p.id, {
-      tipo: pagas.length ? (aberta ? "atrasada" : "assinante") : "aberto",
+      tipo: pagas.length ? (aberta && !acessoEmDia ? "atrasada" : "assinante") : "aberto",
       pagas: pagas.length,
       totalPago: pagas.reduce((s, c) => s + Number(c.valor), 0),
       aberta: aberta ? { valor: Number(aberta.valor), forma: aberta.forma, vencimento: aberta.vencimento } : null,
