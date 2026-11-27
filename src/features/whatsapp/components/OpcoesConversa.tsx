@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { BanIcon, EllipsisVerticalIcon, EraserIcon, Loader2Icon, SendIcon, ShieldCheckIcon, Trash2Icon } from "lucide-react";
+import { BanIcon, BookOpenIcon, EllipsisVerticalIcon, EraserIcon, Loader2Icon, PlayIcon, SendIcon, ShieldCheckIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,10 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { primeiroNome } from "@/lib/texto";
-import { bloquearContato, excluirContato, limparConversa, mandarMensagemPronta, type ContatoCentral } from "../central";
+import { bloquearContato, excluirContato, limparConversa, mandarMensagemPronta, mandarTutorial, type ContatoCentral } from "../central";
+import { TUTORIAIS } from "@/features/tutoriais/conteudo";
+import { videoDoTutorial } from "@/features/tutoriais/whatsapp";
+import { PLANOS } from "@/lib/planos";
 import { modelosPara, type IdModelo } from "../modelos";
 import { nomeDe } from "./colunas";
 
@@ -154,6 +157,78 @@ export function OpcoesConversa({
           ) : null}
         </AlertDialogContent>
       </AlertDialog>
+    </>
+  );
+}
+
+/**
+ * Mandar um tutorial com um toque (27/11/2026): o passo a passo da tela Tutoriais, o link da tela certa do painel
+ * e o vídeo, quando o tutorial tem. Só dentro das 24 h da última mensagem da pessoa (regra da Meta).
+ */
+export function BotaoTutoriais({ contato, janelaAberta, aoEnviar }: { contato: ContatoCentral; janelaAberta: boolean; aoEnviar: () => void }) {
+  const [aberto, setAberto] = useState(false);
+  const [enviando, setEnviando] = useState<string | null>(null);
+  const [, iniciar] = useTransition();
+
+  function mandar(id: string) {
+    setEnviando(id);
+    iniciar(async () => {
+      const r = await mandarTutorial(contato.telefone, id);
+      setEnviando(null);
+      if (!r.ok) {
+        toast.error(r.erro ?? "Não foi.");
+        return;
+      }
+      toast.success("Tutorial enviado.");
+      setAberto(false);
+      aoEnviar();
+    });
+  }
+
+  return (
+    <>
+      <Button variant="ghost" size="sm" className="h-9 gap-1.5 px-2.5" onClick={() => setAberto(true)} disabled={contato.bloqueado}>
+        <BookOpenIcon />
+        Tutorial
+      </Button>
+      <Dialog open={aberto} onOpenChange={(v) => !enviando && setAberto(v)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Mandar tutorial</DialogTitle>
+            <DialogDescription>
+              Toque no tutorial e ele vai na hora: passo a passo, link da tela no painel e o vídeo, quando tem.
+              {janelaAberta ? null : " Atenção: essa pessoa não escreve há mais de 24 h, e a Meta só deixa mandar depois que ela escrever de novo."}
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="grid gap-2">
+            {TUTORIAIS.map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  onClick={() => mandar(t.id)}
+                  disabled={enviando !== null}
+                  className="flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors hover:bg-muted/50 disabled:opacity-60"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
+                      {t.titulo}
+                      {t.plano ? <span className="rounded-full bg-primary/10 px-2 py-0.5 text-mini font-bold text-primary">{PLANOS[t.plano].nome}</span> : null}
+                      {videoDoTutorial(t) ? (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-mini font-bold text-muted-foreground">
+                          <PlayIcon className="size-3" aria-hidden />
+                          vídeo
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">{t.resumo}</span>
+                  </span>
+                  {enviando === t.id ? <Loader2Icon className="size-4 shrink-0 animate-spin" /> : <SendIcon className="size-4 shrink-0 text-primary" />}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

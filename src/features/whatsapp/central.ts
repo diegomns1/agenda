@@ -6,7 +6,9 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 import type { WhatsappContato, WhatsappMensagem } from "@/types/database";
 import { erroDeJanela } from "./janela";
 import { apagarArquivosDoContato, linksTemporarios } from "./midia";
-import { bloquearNaMeta, enviarModelo, enviarTexto, saudeDoEnvio } from "./meta";
+import { bloquearNaMeta, enviarModelo, enviarTexto, enviarVideoPorLink, saudeDoEnvio } from "./meta";
+import { TUTORIAIS } from "@/features/tutoriais/conteudo";
+import { textoDoTutorial, videoDoTutorial } from "@/features/tutoriais/whatsapp";
 import { registrarEnvio } from "@/features/ativacao/enviar";
 import { MODELOS, type IdModelo } from "./modelos";
 import { primeiroNome } from "@/lib/texto";
@@ -217,6 +219,39 @@ export async function mandarMensagemPronta(telefone: string, id: IdModelo): Prom
   if (c.profissional_id && (id === "ajuda_inicio" || id === "feedback_teste" || id === "parou")) {
     await registrarEnvio(admin, { id: c.profissional_id }, id, "whatsapp", true, null, true, r.wamid);
   }
+  return { ok: true };
+}
+
+/**
+ * Tutorial com um toque (27/11/2026): manda o passo a passo da tela Tutoriais e, se houver, o vídeo.
+ * É mensagem livre: só vai dentro das 24 h (72 h se veio de anúncio) depois da última mensagem da pessoa.
+ * Não muda quem atende a conversa (robô ou Diego).
+ */
+export async function mandarTutorial(telefone: string, id: string): Promise<{ ok: boolean; erro?: string }> {
+  const admin = await exigirAdmin();
+  const tutorial = TUTORIAIS.find((t) => t.id === id);
+  if (!tutorial) return { ok: false, erro: "Tutorial não encontrado." };
+  const janela = await erroDeJanela(admin, telefone);
+  if (janela) return { ok: false, erro: janela };
+
+  const video = videoDoTutorial(tutorial);
+  if (video) {
+    const wamid = await enviarVideoPorLink(telefone, video, tutorial.titulo);
+    if (!wamid) return { ok: false, erro: "A Meta não aceitou o vídeo. Tente de novo; se continuar, me mande um print." };
+    await admin.from("whatsapp_mensagens").insert({
+      telefone,
+      de: "equipe",
+      texto: `🎥 Vídeo: ${tutorial.titulo}`,
+      wamid: wamid === "simulado" ? null : wamid,
+      status: "enviada",
+    });
+  }
+  const texto = textoDoTutorial(tutorial);
+  if (!(await enviarTexto(telefone, texto))) {
+    return { ok: false, erro: video ? "O vídeo foi, mas o texto não. Tente mandar de novo." : "A Meta não aceitou a mensagem. Tente de novo." };
+  }
+  await admin.from("whatsapp_mensagens").insert({ telefone, de: "equipe", texto });
+  await admin.from("whatsapp_contatos").update({ ultima_msg_em: new Date().toISOString(), nao_lidas: 0 }).eq("telefone", telefone);
   return { ok: true };
 }
 

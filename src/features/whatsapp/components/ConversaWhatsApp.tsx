@@ -12,7 +12,7 @@ import { descreverNumero } from "../numero";
 import { COLUNAS, colunaDe, nomeDe, quando } from "./colunas";
 import { MidiaMensagem } from "./MidiaMensagem";
 import { Compositor } from "./Compositor";
-import { DialogoMensagemPronta, OpcoesConversa } from "./OpcoesConversa";
+import { BotaoTutoriais, DialogoMensagemPronta, OpcoesConversa } from "./OpcoesConversa";
 
 /** Conversa de um contato na Central: histórico, assumir / devolver ao robô, mover de coluna e responder. */
 export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: ContatoCentral; aoFechar: () => void; aoMudar: () => void }) {
@@ -80,7 +80,15 @@ export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: Cont
   return (
     <Dialog open onOpenChange={(aberto) => !aberto && aoFechar()}>
       <DialogContent className="flex h-[92svh] flex-col gap-0 p-0 sm:h-[85svh] sm:max-w-2xl">
-        <div className="absolute top-2.5 right-12 z-10">
+        <div className="absolute top-2.5 right-12 z-10 flex items-center gap-1">
+          <BotaoTutoriais
+            contato={contato}
+            janelaAberta={janelaAberta}
+            aoEnviar={() => {
+              void carregar();
+              aoMudar();
+            }}
+          />
           <OpcoesConversa
             contato={contato}
             aoAbrirPronta={() => setPronta(true)}
@@ -103,7 +111,7 @@ export function ConversaWhatsApp({ contato, aoFechar, aoMudar }: { contato: Cont
             aoMudar();
           }}
         />
-        <DialogHeader className="gap-1 border-b px-4 pt-4 pb-3 pr-24 text-left">
+        <DialogHeader className="gap-1 border-b px-4 pt-4 pb-3 pr-48 text-left">
           <DialogTitle className="truncate">{nomeDe(contato)}</DialogTitle>
           <DialogDescription className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="tabular-nums">{descreverNumero(tel)}</span>
