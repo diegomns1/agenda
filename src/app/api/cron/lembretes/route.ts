@@ -8,7 +8,7 @@ import { desligarAvisosDoAsaas } from "@/features/assinatura/avisos";
 import { usoDasContas } from "@/features/admin/uso";
 import { sincronizarEtapasCrm } from "@/features/rastreio/servidor";
 import { rodarLembretesAutomaticos } from "@/features/whatsapp-proprio/lembretes";
-import { limparConversasParadas } from "@/features/whatsapp/limpeza";
+import { limparConversasParadas, limparTesteAcabou } from "@/features/whatsapp/limpeza";
 import { limparContasAbandonadas } from "@/features/admin/limpeza-contas";
 import { diasEntre, formatarData, hojeISO, horaDe, somarDias } from "@/lib/datas";
 import { primeiroNome } from "@/lib/texto";
@@ -92,6 +92,10 @@ async function executar(request: NextRequest) {
     await limparConversasParadas(admin)
       .then((r) => r.apagadas && console.log("[cron] conversas paradas apagadas:", r.apagadas))
       .catch((e) => console.error("[cron] limpeza da Central", e instanceof Error ? e.message : e));
+    // "Teste acabou" há 7 dias e nunca escreveu: o cartão sai da Central (a conta fica)
+    await limparTesteAcabou(admin)
+      .then((r) => r.apagadas && console.log("[cron] cartões de teste acabado apagados:", r.apagadas))
+      .catch((e) => console.error("[cron] limpeza do teste acabado", e instanceof Error ? e.message : e));
     // contas que terminaram o teste há 2 dias, receberam mensagem, não responderam e não cadastraram nada
     await limparContasAbandonadas(admin).catch((e) => console.error("[cron] limpeza de contas", e instanceof Error ? e.message : e));
   }

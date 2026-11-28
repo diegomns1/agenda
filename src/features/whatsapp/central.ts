@@ -14,6 +14,7 @@ import { MODELOS, type IdModelo } from "./modelos";
 import { primeiroNome } from "@/lib/texto";
 import { DIAS_SEM_RESPOSTA } from "./prazos";
 import { seloDaEtapa, usoDasContasGuardado } from "@/features/admin/uso";
+import { contaVencida } from "@/lib/datas";
 
 /*
  * Central do WhatsApp (só admin): kanban de contatos, conversa, assumir / devolver ao robô e responder.
@@ -24,11 +25,13 @@ export type ContatoCentral = WhatsappContato & {
   /**
    * profissional ligada (cadastro com o mesmo número ou assistente conectada).
    * `etapa`: em que etapa de uso a conta está (Só entrou, Configurando, Usando, Parou de configurar/usar).
+   * `testeAcabou`: está no teste grátis e ele já venceu (o cartão vai para "Teste acabou").
    */
   profissional: {
     nome: string;
     plano: string;
     conectada: boolean;
+    testeAcabou: boolean;
     etapa: { nivel: string; rotulo: string; tom: string; dias: number | null } | null;
   } | null;
   /** `status`: "falhou" quando a Meta avisou que a última mensagem enviada não foi entregue */
@@ -73,7 +76,7 @@ export async function listarContatos(): Promise<ContatoCentral[]> {
   const ids = [...new Set(lista.map((c) => c.profissional_id).filter((x): x is string => Boolean(x)))];
   const telefones = lista.map((c) => c.telefone);
   const [perfis, vinculos, ultimas, uso] = await Promise.all([
-    ids.length ? admin.from("profiles").select("id, nome, plano").in("id", ids) : Promise.resolve({ data: [] }),
+    ids.length ? admin.from("profiles").select("id, nome, plano, ativa_ate").in("id", ids) : Promise.resolve({ data: [] }),
     ids.length ? admin.from("whatsapp_vinculos").select("profissional_id").in("profissional_id", ids) : Promise.resolve({ data: [] }),
     // última mensagem de cada um (busca as recentes e fica com a primeira de cada telefone)
     telefones.length
@@ -98,6 +101,7 @@ export async function listarContatos(): Promise<ContatoCentral[]> {
             nome: p.nome,
             plano: p.plano,
             conectada: conectadas.has(p.id),
+            testeAcabou: p.plano === "teste" && contaVencida(p.ativa_ate),
             etapa: uso?.get(p.id) ? seloDaEtapa(uso.get(p.id)!) : null,
           }
         : null,
@@ -162,6 +166,8 @@ export async function mudarAtendimento(telefone: string, atendimento: "humano" |
  */
 export async function moverContato(telefone: string, coluna: string): Promise<{ ok: boolean }> {
   const admin = await exigirAdmin();
+  // "Teste acabou" não existe no banco: é "Cadastrou" com o teste vencido
+  if (coluna === "teste_acabou") coluna = "cadastrou";
   let mudar: Partial<Omit<WhatsappContato, "telefone">>;
   if (coluna === "spam") mudar = { etapa: "spam", atendimento: "humano", nao_lidas: 0 };
   else if (coluna === "precisa" || coluna === "humano") mudar = { atendimento: coluna };

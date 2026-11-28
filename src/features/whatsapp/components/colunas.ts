@@ -1,5 +1,5 @@
-import { BadgeCheckIcon, BotIcon, BotOffIcon, HandIcon, Link2Icon, MoonIcon, UserRoundCheckIcon, UserRoundIcon, type LucideIcon } from "lucide-react";
-import { DIAS_SEM_RESPOSTA } from "../prazos";
+import { BadgeCheckIcon, BotIcon, BotOffIcon, HandIcon, HourglassIcon, Link2Icon, MoonIcon, UserRoundCheckIcon, UserRoundIcon, type LucideIcon } from "lucide-react";
+import { DIAS_APAGAR_TESTE_ACABOU, DIAS_SEM_RESPOSTA } from "../prazos";
 import type { ContatoCentral } from "../central";
 import { descreverNumero } from "../numero";
 
@@ -14,6 +14,14 @@ export const COLUNAS: Coluna[] = [
   { id: "robo", titulo: "Robô atendendo", explica: "Lead conversando com a Serena", Icone: BotIcon, tom: "bg-whatsapp" },
   { id: "link", titulo: "Recebeu o link do teste", explica: "A Serena já mandou o link de cadastro", Icone: Link2Icon, tom: "bg-whatsapp" },
   { id: "cadastrou", titulo: "Cadastrou", explica: "Criou a conta, está no teste", Icone: UserRoundCheckIcon, tom: "bg-sucesso-forte" },
+  // não é guardada no banco: é o cartão de "Cadastrou" cuja conta está no teste e o teste já venceu (28/11/2026)
+  {
+    id: "teste_acabou",
+    titulo: "Teste acabou",
+    explica: `Não assinou. Quem nunca respondeu sai ${DIAS_APAGAR_TESTE_ACABOU} dias depois`,
+    Icone: HourglassIcon,
+    tom: "bg-aviso-forte",
+  },
   { id: "assinou", titulo: "Assinou", explica: "Cliente pagante", Icone: BadgeCheckIcon, tom: "bg-sucesso-forte" },
   {
     id: "sem_resposta",
@@ -25,8 +33,16 @@ export const COLUNAS: Coluna[] = [
   { id: "spam", titulo: "Robôs e spam", explica: "A Serena não responde", Icone: BotOffIcon, tom: "bg-muted-foreground" },
 ];
 
-/** Em qual coluna o cartão aparece: spam primeiro, depois quem está atendendo, depois a etapa do funil. */
-export const colunaDe = (c: ContatoCentral) => (c.etapa === "spam" ? "spam" : c.atendimento !== "robo" ? c.atendimento : c.etapa);
+/**
+ * Em qual coluna o cartão aparece: spam primeiro, depois quem está atendendo, depois a etapa do funil
+ * ("Cadastrou" com o teste vencido aparece em "Teste acabou").
+ */
+export function colunaDe(c: ContatoCentral) {
+  if (c.etapa === "spam") return "spam";
+  if (c.atendimento !== "robo") return c.atendimento;
+  if (c.etapa === "cadastrou" && c.profissional?.testeAcabou) return "teste_acabou";
+  return c.etapa;
+}
 export const nomeDe = (c: ContatoCentral) => c.nome || c.profissional?.nome || c.nome_whatsapp || descreverNumero(c.telefone);
 
 /** "agora", "5 min", "3 h", "ontem", "12/11" */

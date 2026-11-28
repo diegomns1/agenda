@@ -84,7 +84,8 @@ export function CentralWhatsApp({ inicial, abrir }: { inicial: ContatoCentral[];
         if (x.telefone !== tel) return x;
         if (coluna === "spam") return { ...x, etapa: "spam", atendimento: "humano", nao_lidas: 0 };
         if (coluna === "precisa" || coluna === "humano") return { ...x, atendimento: coluna, etapa: x.etapa === "spam" ? "robo" : x.etapa };
-        return { ...x, atendimento: "robo", motivo_ajuda: null, etapa: coluna as ContatoCentral["etapa"] };
+        const etapa = (coluna === "teste_acabou" ? "cadastrou" : coluna) as ContatoCentral["etapa"];
+        return { ...x, atendimento: "robo", motivo_ajuda: null, etapa };
       }),
     );
     await moverContato(tel, coluna);

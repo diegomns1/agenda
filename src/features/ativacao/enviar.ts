@@ -38,7 +38,43 @@ export const TEXTO_MODELO: Record<TipoAtivacao, (nome: string) => string> = {
   parou: MODELOS.parou.texto,
 };
 
-export type ResultadoAtivacao = { canal: "whatsapp" | "email" | null; ok: boolean; erro?: string };
+/** `naoInsiste`: o automático decidiu não mandar mais nada para esta conta (ver motivoParaNaoInsistir). */
+export type ResultadoAtivacao = { canal: "whatsapp" | "email" | null; ok: boolean; erro?: string; naoInsiste?: boolean };
+
+/**
+ * Não insistir (28/11/2026, pedido do Diego). O automático não manda WhatsApp para quem:
+ *   - "nao_entregue": a última mensagem que mandamos não chegou (a Meta avisou: sem WhatsApp, versão antiga ou
+ *     bloqueou o número). Se ela escreveu depois disso, volta ao normal;
+ *   - "sem_resposta": já recebeu uma mensagem de ativação pelo WhatsApp e nunca respondeu.
+ * O botão do admin (envio manual) não passa por aqui.
+ */
+export async function motivoParaNaoInsistir(admin: Admin, p: { id: string }, numero: string): Promise<"nao_entregue" | "sem_resposta" | null> {
+  const [{ data: envios }, { data: contatos }] = await Promise.all([
+    admin.from("ativacao_envios").select("ok, erro, wamid, enviado_em").eq("profissional_id", p.id).eq("canal", "whatsapp").order("enviado_em", { ascending: true }),
+    admin.from("whatsapp_contatos").select("telefone").eq("profissional_id", p.id),
+  ]);
+  const telefones = [...new Set([...(contatos ?? []).map((c) => c.telefone), ...variacoesCelular(numero)])];
+  const { data: ultimas } = await admin
+    .from("whatsapp_mensagens")
+    .select("de, status, criado_em")
+    .in("telefone", telefones)
+    .order("criado_em", { ascending: false })
+    .limit(30);
+  const ultimaNossa = (ultimas ?? []).find((m) => m.de === "robo" || m.de === "equipe");
+  const ultimaDela = (ultimas ?? []).find((m) => m.de === "contato");
+  const depois = (x: string, y: string) => new Date(x).getTime() > new Date(y).getTime();
+
+  // não chegou: a última mensagem nossa falhou e ela não escreveu depois
+  if (ultimaNossa?.status === "falhou" && !(ultimaDela && depois(ultimaDela.criado_em, ultimaNossa.criado_em))) return "nao_entregue";
+  // conversa já apagada da Central: olha o registro dos envios (a Meta aceitou e depois disse que não entregou)
+  const ultimoEnvio = envios?.[envios.length - 1];
+  if (!ultimas?.length && ultimoEnvio && !ultimoEnvio.ok && ultimoEnvio.wamid && !ultimoEnvio.erro?.startsWith(PREFIXO_BLOQUEIO)) return "nao_entregue";
+
+  // já recebeu uma pelo WhatsApp e não respondeu nada desde então
+  const primeiroOk = envios?.find((e) => e.ok);
+  if (primeiroOk && !(ultimaDela && depois(ultimaDela.criado_em, primeiroOk.enviado_em))) return "sem_resposta";
+  return null;
+}
 
 /** Já recebeu este tipo (com sucesso, por qualquer canal)? */
 export async function jaRecebeu(admin: Admin, profissionalId: string, tipo: TipoAtivacao, canal?: "whatsapp" | "email") {
@@ -125,7 +161,17 @@ export async function enviarAtivacao(
   if (tipo === "parou") soWhatsapp = true;
   if (!manual && !(await precisaReceber(admin, p, tipo))) return { canal: null, ok: false, erro: "já recebeu" };
   const nome = primeiroNome(p.nome) || "tudo bem";
-  const numero = normalizarTelefone(p.telefone);
+  let numero = normalizarTelefone(p.telefone);
+
+  // o automático não insiste: sem resposta, para; mensagem que não chegou, tenta o e-mail (uma vez)
+  if (numero && !manual) {
+    const motivo = await motivoParaNaoInsistir(admin, p, numero);
+    if (motivo === "sem_resposta") return { canal: null, ok: false, erro: "não respondeu a mensagem anterior", naoInsiste: true };
+    if (motivo === "nao_entregue") {
+      if (soWhatsapp) return { canal: "whatsapp", ok: false, erro: "a última mensagem não foi entregue", naoInsiste: true };
+      numero = null;
+    }
+  }
 
   // A Meta está barrando as mensagens que a gente inicia (ex.: forma de pagamento)? Ela aceitaria o envio e
   // descartaria depois. Então nem tenta: o botão do admin avisa, e o automático vai por e-mail (uma vez) e

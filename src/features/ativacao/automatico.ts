@@ -113,10 +113,9 @@ async function rodarParou(admin: ReturnType<typeof criarClienteAdmin>, uso: Awai
     if (enviados >= MAXIMO_POR_RODADA) break;
     if (receberamHaPouco.has(c.id)) continue;
     const r = await enviarAtivacao(admin, c, "parou");
-    if (r.ok) {
-      enviados++;
-      await admin.from("profiles").update({ aviso_parou_em: new Date().toISOString() }).eq("id", c.id);
-    }
+    if (r.ok) enviados++;
+    // enviada, ou o robô desistiu (não respondeu / não chegou): marca para não conferir de novo a cada hora
+    if (r.ok || r.naoInsiste) await admin.from("profiles").update({ aviso_parou_em: new Date().toISOString() }).eq("id", c.id);
   }
   return { enviados };
 }
